@@ -19,19 +19,19 @@ const Inventory = () => {
   });
 
   useEffect(() => {
-    fetchProducts();
+    axios
+      .get(`${API_URL}?search=${search}`)
+      .then((response) => {
+        setProducts(response.data.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [search]);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${API_URL}?search=${search}`);
-      setProducts(response.data.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false);
-    }
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -62,9 +62,13 @@ const Inventory = () => {
       await axios.post(API_URL, formData);
       setIsModalOpen(false);
       setFormData({ name: '', sku: '', description: '', category_id: '', base_price: 0, variants: [] });
-      fetchProducts();
+      setLoading(true);
+      const response = await axios.get(`${API_URL}?search=${search}`);
+      setProducts(response.data.data);
+      setLoading(false);
     } catch (error) {
       console.error('Error saving product:', error);
+      setLoading(false);
       alert('Gagal menyimpan produk');
     }
   };
@@ -73,9 +77,13 @@ const Inventory = () => {
     if (window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
       try {
         await axios.delete(`${API_URL}/${id}`);
-        fetchProducts();
+        setLoading(true);
+        const response = await axios.get(`${API_URL}?search=${search}`);
+        setProducts(response.data.data);
+        setLoading(false);
       } catch (error) {
         console.error('Error deleting product:', error);
+        setLoading(false);
       }
     }
   };
@@ -106,7 +114,10 @@ const Inventory = () => {
           placeholder="Cari produk berdasarkan nama atau SKU..."
           className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setLoading(true);
+            setSearch(e.target.value);
+          }}
         />
       </div>
 

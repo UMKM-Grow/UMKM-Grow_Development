@@ -107,8 +107,29 @@ const productController = {
         return res.status(404).json({ message: 'Product not found' });
       }
 
+      const normalizedSku = String(sku || '').trim();
+      if (!normalizedSku) {
+        await t.rollback();
+        return res.status(400).json({ message: 'SKU is required' });
+      }
+
+      const skuChanged = normalizedSku !== String(product.sku || '');
+      if (skuChanged) {
+        const existing = await Product.findOne({
+          where: {
+            sku: normalizedSku,
+            id: { [Op.ne]: product.id }
+          },
+          transaction: t
+        });
+        if (existing) {
+          await t.rollback();
+          return res.status(409).json({ message: 'SKU already exists' });
+        }
+      }
+
       await product.update(
-        { name, sku, base_price, is_active, description, category_id },
+        { name, sku: normalizedSku, base_price, is_active, description, category_id },
         { transaction: t }
       );
 
@@ -133,6 +154,10 @@ const productController = {
       res.status(200).json({ message: 'Product updated successfully', data: fullProduct });
     } catch (error) {
       await t.rollback();
+      const isUniqueError = error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
+      if (isUniqueError) {
+        return res.status(409).json({ message: 'SKU already exists' });
+      }
       res.status(500).json({ message: 'Error updating product', error: error.message });
     }
   },

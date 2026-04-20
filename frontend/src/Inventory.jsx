@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Edit2, Trash2 } from 'lucide-react';
 import ProductFormModal from './ProductFormModal';
@@ -11,6 +11,7 @@ const Inventory = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const isSavingRef = useRef(false);
 
   const refreshProducts = async () => {
     try {
@@ -52,8 +53,22 @@ const Inventory = () => {
     return `Rp ${numericValue.toLocaleString('id-ID')}`;
   };
 
-  const getProductImageUrl = (productId) => {
-    return `https://loremflickr.com/400/600/streetwear,apparel?lock=${productId}`;
+  const getProductImageUrl = (product) => {
+    const productId = product?.id ?? 0;
+    const raw = `${product?.name ?? ''} ${product?.sku ?? ''}`.trim().toLowerCase();
+
+    let tags = 'product,apparel';
+    if (raw.includes('kemeja') || raw.includes('shirt') || raw.includes('workshirt')) tags = 'shirt,workwear,office';
+    else if (raw.includes('kaos') || raw.includes('tshirt') || raw.includes('t-shirt')) tags = 'tshirt,streetwear,apparel';
+    else if (raw.includes('jaket') || raw.includes('jacket') || raw.includes('hoodie')) tags = 'jacket,streetwear,apparel';
+    else if (raw.includes('celana') || raw.includes('pants') || raw.includes('trousers')) tags = 'pants,apparel,fashion';
+    else if (raw.includes('rok') || raw.includes('skirt')) tags = 'skirt,apparel,fashion';
+    else if (raw.includes('sepatu') || raw.includes('shoes') || raw.includes('sneakers')) tags = 'sneakers,shoes,streetwear';
+    else if (raw.includes('tas') || raw.includes('bag')) tags = 'bag,leather,accessories';
+    else if (raw.includes('batik')) tags = 'batik,shirt,fashion';
+    else if (raw.includes('hijab') || raw.includes('kerudung')) tags = 'hijab,fashion,apparel';
+
+    return `https://loremflickr.com/400/600/${tags}?lock=${productId}`;
   };
 
   const openCreateModal = () => {
@@ -72,7 +87,9 @@ const Inventory = () => {
   };
 
   const handleSubmitProduct = async (payload, productId) => {
+    if (isSavingRef.current) return;
     try {
+      isSavingRef.current = true;
       setErrorMessage('');
       if (productId) {
         await axios.put(`${API_URL}/${productId}`, payload);
@@ -81,9 +98,15 @@ const Inventory = () => {
       }
       await refreshProducts();
     } catch (error) {
-      const msg = error?.response?.data?.message || 'Gagal menyimpan produk.';
+      const status = error?.response?.status;
+      const msg =
+        status === 409
+          ? 'SKU sudah terpakai. Gunakan SKU yang berbeda.'
+          : (error?.response?.data?.message || 'Gagal menyimpan produk.');
       setErrorMessage(msg);
       throw error;
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
@@ -129,7 +152,7 @@ const Inventory = () => {
             >
               <div className="w-full aspect-[3/4] bg-brand-frost rounded-xl mb-5 overflow-hidden relative border border-white/5">
                 <img
-                  src={getProductImageUrl(product?.id ?? index)}
+                  src={getProductImageUrl(product)}
                   alt={product?.name || 'Produk'}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"

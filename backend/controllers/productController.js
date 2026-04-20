@@ -7,9 +7,20 @@ const productController = {
     const t = await sequelize.transaction();
     try {
       const { name, sku, description, category_id, base_price, variants } = req.body;
+      const normalizedSku = String(sku || '').trim();
+      if (!normalizedSku) {
+        await t.rollback();
+        return res.status(400).json({ message: 'SKU is required' });
+      }
+
+      const existing = await Product.findOne({ where: { sku: normalizedSku }, transaction: t });
+      if (existing) {
+        await t.rollback();
+        return res.status(409).json({ message: 'SKU already exists' });
+      }
 
       const product = await Product.create({
-        name, sku, description, category_id, base_price
+        name, sku: normalizedSku, description, category_id, base_price
       }, { transaction: t });
 
       if (variants && variants.length > 0) {
@@ -28,6 +39,10 @@ const productController = {
       res.status(201).json({ message: 'Product created successfully', data: fullProduct });
     } catch (error) {
       await t.rollback();
+      const isUniqueError = error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
+      if (isUniqueError) {
+        return res.status(409).json({ message: 'SKU already exists' });
+      }
       res.status(500).json({ message: 'Error creating product', error: error.message });
     }
   },

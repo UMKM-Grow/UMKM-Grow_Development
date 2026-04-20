@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { X, Plus, Trash2, Save } from 'lucide-react';
 
 const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
   const isEditing = Boolean(initialProduct?.id);
 
+  const isSubmittingRef = useRef(false);
   const [name, setName] = useState(initialProduct?.name ?? '');
   const [categoryId, setCategoryId] = useState(
     initialProduct?.category_id === null || typeof initialProduct?.category_id === 'undefined'
@@ -47,7 +48,7 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || isSubmittingRef.current) return;
 
     const normalizedCategoryId = categoryId === '' ? null : Number(categoryId);
     const normalizedBasePrice = basePrice === '' ? 0 : Number(basePrice);
@@ -70,11 +71,13 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
     };
 
     try {
+      isSubmittingRef.current = true;
       setSubmitting(true);
       await onSubmit(payload, initialProduct?.id);
       onClose();
     } finally {
       setSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 

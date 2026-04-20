@@ -53,8 +53,9 @@ const Inventory = () => {
     return `Rp ${numericValue.toLocaleString('id-ID')}`;
   };
 
-  const getProductImageUrl = (product) => {
+  const getProductImageSources = (product) => {
     const productId = product?.id ?? 0;
+    const seed = encodeURIComponent(String(product?.id ?? product?.sku ?? productId));
     const raw = `${product?.name ?? ''} ${product?.sku ?? ''}`.trim().toLowerCase();
 
     let tags = 'product,apparel';
@@ -68,7 +69,10 @@ const Inventory = () => {
     else if (raw.includes('batik')) tags = 'batik,shirt,fashion';
     else if (raw.includes('hijab') || raw.includes('kerudung')) tags = 'hijab,fashion,apparel';
 
-    return `https://loremflickr.com/400/600/${tags}?lock=${productId}`;
+    return {
+      primary: `https://loremflickr.com/400/600/${tags}?lock=${productId}`,
+      fallback: `https://picsum.photos/seed/${seed}/400/600?grayscale`
+    };
   };
 
   const openCreateModal = () => {
@@ -151,13 +155,26 @@ const Inventory = () => {
               className="relative bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(163,193,214,0.2)]"
             >
               <div className="w-full aspect-[3/4] bg-brand-frost rounded-xl mb-5 overflow-hidden relative border border-white/5">
-                <img
-                  src={getProductImageUrl(product)}
-                  alt={product?.name || 'Produk'}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
+                {(() => {
+                  const { primary, fallback } = getProductImageSources(product);
+                  return (
+                    <img
+                      src={primary}
+                      data-fallback={fallback}
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        const next = img.dataset.fallback;
+                        if (!next) return;
+                        img.dataset.fallback = '';
+                        img.src = next;
+                      }}
+                      alt={product?.name || 'Produk'}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
+                  );
+                })()}
               </div>
 
               <h2 className="text-xl font-bold text-white tracking-wide uppercase">

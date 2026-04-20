@@ -2,6 +2,10 @@ const sequelize = require('../config/database');
 const Product = require('./Product');
 const ProductVariant = require('./ProductVariant');
 const User = require('./User');
+const Attendance = require('./Attendance');
+
+User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
+Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 const initDb = async () => {
   try {
@@ -16,4 +20,4 @@ const initDb = async () => {
   }
 };
 
-module.exports = { sequelize, Product, ProductVariant, User, initDb };
+module.exports = { sequelize, Product, ProductVariant, User, Attendance, initDb };

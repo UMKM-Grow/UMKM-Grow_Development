@@ -7,6 +7,7 @@ import POS from './POS';
 import CRM from './CRM';
 import Finance from './Finance';
 import Settings from './Settings';
+import Absensi from './Absensi';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pos" element={<POS />} />
         <Route path="/inventory" element={<Inventory />} />
+        <Route path="/absensi" element={<Absensi />} />
         <Route path="/crm" element={<CRM />} />
         <Route path="/finance" element={<Finance />} />
         <Route path="/hrm" element={<HRM />} />

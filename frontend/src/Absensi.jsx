@@ -33,15 +33,40 @@ const Absensi = () => {
   const [gpsMessage, setGpsMessage] = useState(() =>
     navigator.geolocation ? '' : 'Browser Anda tidak mendukung geolocation.'
   );
+  const [locationLabel, setLocationLabel] = useState('');
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(() => Boolean(localStorage.getItem('token')));
   const [submitting, setSubmitting] = useState(false);
 
   const token = useMemo(() => localStorage.getItem('token'), []);
 
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      setLocationLabel('Mencari nama lokasi...');
+      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(
+        latitude
+      )}&longitude=${encodeURIComponent(longitude)}&localityLanguage=id`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        setLocationLabel('');
+        return;
+      }
+      const data = await res.json();
+      const daerah = data?.city || data?.locality || data?.principalSubdivision || '';
+      const provinsi = data?.principalSubdivision || '';
+      const negara = data?.countryName || data?.countryCode || '';
+
+      const parts = [daerah, provinsi, negara].filter(Boolean);
+      setLocationLabel(parts.join(', '));
+    } catch {
+      setLocationLabel('');
+    }
+  };
+
   const requestLocation = () => {
     setGpsStatus('loading');
     setGpsMessage('');
+    setLocationLabel('');
 
     if (!navigator.geolocation) {
       setGpsStatus('error');
@@ -51,12 +76,15 @@ const Absensi = () => {
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        const latitude = pos.coords.latitude;
+        const longitude = pos.coords.longitude;
         setCoords({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
+          latitude,
+          longitude,
         });
         setGpsStatus('ok');
         setGpsMessage('Lokasi Akurat');
+        reverseGeocode(latitude, longitude);
       },
       (err) => {
         setCoords(null);
@@ -76,12 +104,15 @@ const Absensi = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          const latitude = pos.coords.latitude;
+          const longitude = pos.coords.longitude;
           setCoords({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
+            latitude,
+            longitude,
           });
           setGpsStatus('ok');
           setGpsMessage('Lokasi Akurat');
+          reverseGeocode(latitude, longitude);
         },
         (err) => {
           setCoords(null);
@@ -112,7 +143,7 @@ const Absensi = () => {
       .finally(() => {
         setLoadingHistory(false);
       });
-  }, []);
+  }, [token]);
 
   const groupedHistory = useMemo(() => {
     const map = new Map();
@@ -223,6 +254,12 @@ const Absensi = () => {
                   ) : (
                     <div>-</div>
                   )}
+                </div>
+                <div className="mt-3">
+                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Lokasi</div>
+                  <div className="mt-2 text-sm font-semibold text-white/80">
+                    {locationLabel || '-'}
+                  </div>
                 </div>
               </div>
               <button

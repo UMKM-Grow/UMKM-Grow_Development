@@ -1,24 +1,6 @@
 const { Attendance } = require('../models');
 
-const STORE_LATITUDE = -6.200000;
-const STORE_LONGITUDE = 106.816666;
 const MAX_DISTANCE_METERS = 100;
-
-const toRadians = (value) => (Number(value) * Math.PI) / 180;
-
-const haversineDistanceMeters = (lat1, lon1, lat2, lon2) => {
-  const R = 6371000;
-  const dLat = toRadians(lat2 - lat1);
-  const dLon = toRadians(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
 
 const normalizeCoordinate = (value) => {
   const n = typeof value === 'number' ? value : Number(value);
@@ -43,21 +25,6 @@ const attendanceController = {
         return res.status(400).json({ message: 'Invalid action' });
       }
 
-      const distanceMeters = haversineDistanceMeters(
-        lat,
-        lng,
-        STORE_LATITUDE,
-        STORE_LONGITUDE
-      );
-
-      if (distanceMeters > MAX_DISTANCE_METERS) {
-        return res.status(400).json({
-          message: 'Gagal: Anda berada di luar radius lokasi toko!',
-          distance_meters: Math.round(distanceMeters),
-          max_distance_meters: MAX_DISTANCE_METERS,
-        });
-      }
-
       const attendance = await Attendance.create({
         user_id: userId,
         action,
@@ -69,7 +36,7 @@ const attendanceController = {
       res.status(201).json({
         message: 'Attendance recorded',
         data: attendance,
-        distance_meters: Math.round(distanceMeters),
+        distance_meters: 0,
         max_distance_meters: MAX_DISTANCE_METERS,
       });
     } catch (error) {
@@ -88,22 +55,12 @@ const attendanceController = {
         limit: 100,
       });
 
-      const data = rows.map((row) => {
-        const lat = Number(row.latitude);
-        const lng = Number(row.longitude);
-        const distanceMeters = haversineDistanceMeters(
-          lat,
-          lng,
-          STORE_LATITUDE,
-          STORE_LONGITUDE
-        );
-        return {
-          ...row.toJSON(),
-          distance_meters: Math.round(distanceMeters),
-          within_radius: distanceMeters <= MAX_DISTANCE_METERS,
-          max_distance_meters: MAX_DISTANCE_METERS,
-        };
-      });
+      const data = rows.map((row) => ({
+        ...row.toJSON(),
+        distance_meters: 0,
+        within_radius: true,
+        max_distance_meters: MAX_DISTANCE_METERS,
+      }));
 
       res.status(200).json({ data });
     } catch (error) {

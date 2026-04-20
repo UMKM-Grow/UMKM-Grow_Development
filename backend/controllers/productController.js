@@ -83,14 +83,41 @@ const productController = {
 
   // UPDATE Product
   updateProduct: async (req, res) => {
+    const t = await sequelize.transaction();
     try {
-      const { name, base_price, is_active, description, category_id } = req.body;
+      const { name, sku, base_price, is_active, description, category_id, variants } = req.body;
       const product = await Product.findByPk(req.params.id);
-      if (!product) return res.status(404).json({ message: 'Product not found' });
+      if (!product) {
+        await t.rollback();
+        return res.status(404).json({ message: 'Product not found' });
+      }
 
-      await product.update({ name, base_price, is_active, description, category_id });
-      res.status(200).json({ message: 'Product updated successfully', data: product });
+      await product.update(
+        { name, sku, base_price, is_active, description, category_id },
+        { transaction: t }
+      );
+
+      if (Array.isArray(variants)) {
+        await ProductVariant.destroy({ where: { product_id: product.id }, transaction: t });
+
+        if (variants.length > 0) {
+          const variantsData = variants.map(v => ({
+            ...v,
+            product_id: product.id
+          }));
+          await ProductVariant.bulkCreate(variantsData, { transaction: t });
+        }
+      }
+
+      await t.commit();
+
+      const fullProduct = await Product.findByPk(product.id, {
+        include: [{ model: ProductVariant, as: 'variants' }]
+      });
+
+      res.status(200).json({ message: 'Product updated successfully', data: fullProduct });
     } catch (error) {
+      await t.rollback();
       res.status(500).json({ message: 'Error updating product', error: error.message });
     }
   },

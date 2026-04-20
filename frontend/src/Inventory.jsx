@@ -52,25 +52,8 @@ const Inventory = () => {
     return `Rp ${numericValue.toLocaleString('id-ID')}`;
   };
 
-  const getProductImageUrl = (product) => {
-    const raw = `${product?.name ?? ''} ${product?.sku ?? ''}`.trim().toLowerCase();
-    const has = (keyword) => raw.includes(keyword);
-
-    let keywords = 'product';
-    if (has('kopi') || has('coffee') || has('arabica') || has('robusta')) keywords = 'coffee,beans';
-    else if (has('teh') || has('tea')) keywords = 'tea,drink';
-    else if (has('roti') || has('bread')) keywords = 'bread,bakery';
-    else if (has('kue') || has('cake') || has('cookies')) keywords = 'cookies,dessert';
-    else if (has('sambal') || has('chili')) keywords = 'chili,sauce';
-    else if (has('keripik') || has('chips')) keywords = 'chips,snack';
-    else if (has('madu') || has('honey')) keywords = 'honey,jar';
-    else if (has('batik') || has('kain') || has('fashion')) keywords = 'batik,fabric';
-    else if (has('sabun') || has('soap')) keywords = 'soap,skincare';
-    else if (has('parfum') || has('perfume')) keywords = 'perfume,bottle';
-    else if (product?.name) keywords = String(product.name).split(' ').slice(0, 2).join(',');
-
-    const safe = encodeURIComponent(keywords).replaceAll('%2C', ',');
-    return `https://loremflickr.com/600/800/${safe}`;
+  const getProductImageUrl = (productId) => {
+    return `https://loremflickr.com/400/600/streetwear,apparel?lock=${productId}`;
   };
 
   const openCreateModal = () => {
@@ -146,7 +129,7 @@ const Inventory = () => {
             >
               <div className="w-full aspect-[3/4] bg-brand-frost rounded-xl mb-5 overflow-hidden relative border border-white/5">
                 <img
-                  src={getProductImageUrl(product)}
+                  src={getProductImageUrl(product?.id ?? index)}
                   alt={product?.name || 'Produk'}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading="lazy"

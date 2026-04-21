@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Clock, Edit2, Search } from 'lucide-react';
 import CustomerFormModal from './CustomerFormModal';
@@ -7,12 +7,11 @@ import CustomerHistoryModal from './CustomerHistoryModal';
 const API_URL = 'http://localhost:5000/api/customers';
 
 const Customers = () => {
-  const token = useMemo(() => localStorage.getItem('token'), []);
-  const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
+  const initialToken = localStorage.getItem('token');
 
   const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(() => Boolean(token));
-  const [errorMessage, setErrorMessage] = useState(() => (token ? '' : 'Silakan login terlebih dahulu.'));
+  const [loading, setLoading] = useState(() => Boolean(initialToken));
+  const [errorMessage, setErrorMessage] = useState(() => (initialToken ? '' : 'Silakan login terlebih dahulu.'));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const isSavingRef = useRef(false);
@@ -34,13 +33,16 @@ const Customers = () => {
   const [historyTotalPages, setHistoryTotalPages] = useState(1);
 
   const buildApiErrorMessage = (error, fallback) => {
+    const status = error?.response?.status;
     const msg = error?.response?.data?.message;
     const details = error?.response?.data?.error;
+    if (status === 401) return 'Sesi login tidak valid. Silakan login ulang.';
     if (msg && details) return `${msg}: ${details}`;
     return msg || fallback;
   };
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
     if (!token) return;
     let alive = true;
 
@@ -52,7 +54,7 @@ const Customers = () => {
 
     axios
       .get(API_URL, {
-        headers: authHeaders,
+        headers: { Authorization: `Bearer ${token}` },
         params: { page, limit, search: debouncedSearch },
       })
       .then((response) => {
@@ -77,7 +79,7 @@ const Customers = () => {
     return () => {
       alive = false;
     };
-  }, [authHeaders, debouncedSearch, limit, page, reloadNonce, token]);
+  }, [debouncedSearch, limit, page, reloadNonce]);
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -102,6 +104,7 @@ const Customers = () => {
   };
 
   const handleSubmitCustomer = async (payload, customerId) => {
+    const token = localStorage.getItem('token');
     if (!token) {
       setErrorMessage('Silakan login terlebih dahulu.');
       throw new Error('NO_TOKEN');
@@ -112,9 +115,9 @@ const Customers = () => {
       isSavingRef.current = true;
       setErrorMessage('');
       if (customerId) {
-        await axios.put(`${API_URL}/${customerId}`, payload, { headers: authHeaders });
+        await axios.put(`${API_URL}/${customerId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.post(API_URL, payload, { headers: authHeaders });
+        await axios.post(API_URL, payload, { headers: { Authorization: `Bearer ${token}` } });
       }
       setPage(1);
       setReloadNonce((v) => v + 1);
@@ -124,6 +127,7 @@ const Customers = () => {
   };
 
   const handleDeleteCustomer = async (customer) => {
+    const token = localStorage.getItem('token');
     if (!token) {
       setErrorMessage('Silakan login terlebih dahulu.');
       return;
@@ -134,7 +138,7 @@ const Customers = () => {
 
     try {
       setErrorMessage('');
-      await axios.delete(`${API_URL}/${customer.id}`, { headers: authHeaders });
+      await axios.delete(`${API_URL}/${customer.id}`, { headers: { Authorization: `Bearer ${token}` } });
       setPage(1);
       setReloadNonce((v) => v + 1);
     } catch (error) {
@@ -152,6 +156,7 @@ const Customers = () => {
   };
 
   const fetchHistory = useCallback(async (customer, nextPage) => {
+    const token = localStorage.getItem('token');
     if (!token) return;
     if (!customer?.id) return;
 
@@ -159,7 +164,7 @@ const Customers = () => {
       setHistoryLoading(true);
       setHistoryError('');
       const response = await axios.get(`${API_URL}/${customer.id}/transactions`, {
-        headers: authHeaders,
+        headers: { Authorization: `Bearer ${token}` },
         params: { page: nextPage, limit: 10 },
       });
       const data = response?.data?.data ?? [];
@@ -173,9 +178,14 @@ const Customers = () => {
     } finally {
       setHistoryLoading(false);
     }
-  }, [authHeaders, token]);
+  }, []);
 
   const openHistoryModal = async (customer) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setErrorMessage('Silakan login terlebih dahulu.');
+      return;
+    }
     setHistoryCustomer(customer);
     setIsHistoryOpen(true);
     await fetchHistory(customer, 1);

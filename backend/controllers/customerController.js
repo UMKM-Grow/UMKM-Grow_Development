@@ -1,4 +1,4 @@
-const { Customer, isDbReady } = require('../models');
+const { Customer, Transaction, isDbReady } = require('../models');
 const { Op } = require('sequelize');
 
 const isDbConnectionError = (error) => {
@@ -19,13 +19,42 @@ const customerController = {
     }
 
     try {
-      const customers = await Customer.findAll({ order: [['createdAt', 'DESC']] });
-      res.status(200).json({ data: customers });
+      const { page = 1, limit = 10, search = '' } = req.query;
+      const normalizedPage = Math.max(1, parseInt(page, 10) || 1);
+      const normalizedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+      const offset = (normalizedPage - 1) * normalizedLimit;
+
+      const rawSearch = String(search || '').trim();
+      const where = {
+        is_active: true,
+        ...(rawSearch
+          ? {
+              [Op.or]: [
+                { name: { [Op.like]: `%${rawSearch}%` } },
+                { phone: { [Op.like]: `%${rawSearch}%` } },
+              ],
+            }
+          : {}),
+      };
+
+      const { count, rows } = await Customer.findAndCountAll({
+        where,
+        limit: normalizedLimit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      });
+
+      res.status(200).json({
+        data: rows,
+        totalPages: Math.ceil(count / normalizedLimit),
+        currentPage: normalizedPage,
+        totalData: count,
+      });
     } catch (error) {
       if (isDbConnectionError(error)) {
         return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
       }
-      res.status(500).json({ message: 'Error fetching customers', error: error.message });
+      res.status(500).json({ message: error.message || 'Error fetching customers' });
     }
   },
 
@@ -48,7 +77,7 @@ const customerController = {
       const existing = await Customer.findOne({ where: { phone } });
       if (existing) return res.status(409).json({ message: 'No HP sudah terpakai.' });
 
-      const customer = await Customer.create({ name, phone, email: email || null, address });
+      const customer = await Customer.create({ name, phone, email: email || null, address, is_active: true });
       res.status(201).json({ message: 'Customer created successfully', data: customer });
     } catch (error) {
       if (isDbConnectionError(error)) {
@@ -59,7 +88,7 @@ const customerController = {
       if (isUniqueError) {
         return res.status(409).json({ message: 'No HP sudah terpakai.' });
       }
-      res.status(500).json({ message: 'Error creating customer', error: error.message });
+      res.status(500).json({ message: error.message || 'Error creating customer' });
     }
   },
 
@@ -104,7 +133,7 @@ const customerController = {
       if (isUniqueError) {
         return res.status(409).json({ message: 'No HP sudah terpakai.' });
       }
-      res.status(500).json({ message: 'Error updating customer', error: error.message });
+      res.status(500).json({ message: error.message || 'Error updating customer' });
     }
   },
 
@@ -117,13 +146,59 @@ const customerController = {
       const customer = await Customer.findByPk(req.params.id);
       if (!customer) return res.status(404).json({ message: 'Customer not found' });
 
-      await customer.destroy();
-      res.status(200).json({ message: 'Customer deleted successfully' });
+      await customer.update({ is_active: false });
+      res.status(200).json({ message: 'Customer soft deleted successfully' });
     } catch (error) {
       if (isDbConnectionError(error)) {
         return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
       }
-      res.status(500).json({ message: 'Error deleting customer', error: error.message });
+      res.status(500).json({ message: error.message || 'Error deleting customer' });
+    }
+  },
+
+  getCustomerTransactions: async (req, res) => {
+    if (!isDbReady()) {
+      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+    }
+
+    try {
+      const customerId = parseInt(req.params.id, 10);
+      if (!Number.isFinite(customerId)) {
+        return res.status(400).json({ message: 'Customer ID tidak valid.' });
+      }
+
+      const customer = await Customer.findByPk(customerId);
+      if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+      const { page = 1, limit = 10 } = req.query;
+      const normalizedPage = Math.max(1, parseInt(page, 10) || 1);
+      const normalizedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+      const offset = (normalizedPage - 1) * normalizedLimit;
+
+      const { count, rows } = await Transaction.findAndCountAll({
+        where: { customer_id: customerId },
+        limit: normalizedLimit,
+        offset,
+        order: [['createdAt', 'DESC']],
+      });
+
+      res.status(200).json({
+        data: rows.map((t) => ({
+          id: t.id,
+          customer_id: t.customer_id,
+          total_price: t.total_price,
+          status: t.status,
+          date: t.createdAt,
+        })),
+        totalPages: Math.ceil(count / normalizedLimit),
+        currentPage: normalizedPage,
+        totalData: count,
+      });
+    } catch (error) {
+      if (isDbConnectionError(error)) {
+        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+      }
+      res.status(500).json({ message: error.message || 'Error fetching customer transactions' });
     }
   },
 };

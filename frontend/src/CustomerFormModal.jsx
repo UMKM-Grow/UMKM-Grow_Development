@@ -10,10 +10,15 @@ const CustomerFormModal = ({ isOpen, initialCustomer, onClose, onSubmit }) => {
   const [email, setEmail] = useState(initialCustomer?.email ?? '');
   const [address, setAddress] = useState(initialCustomer?.address ?? '');
   const [submitting, setSubmitting] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitting || isSubmittingRef.current) return;
+
+    setPhoneError('');
+    setSubmitError('');
 
     const payload = {
       name: name.trim(),
@@ -27,6 +32,14 @@ const CustomerFormModal = ({ isOpen, initialCustomer, onClose, onSubmit }) => {
       setSubmitting(true);
       await onSubmit(payload, initialCustomer?.id);
       onClose();
+    } catch (error) {
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || 'Gagal menyimpan pelanggan.';
+      if (status === 409) {
+        setPhoneError('Nomor HP sudah terdaftar di sistem!');
+        return;
+      }
+      setSubmitError(message);
     } finally {
       setSubmitting(false);
       isSubmittingRef.current = false;
@@ -74,12 +87,18 @@ const CustomerFormModal = ({ isOpen, initialCustomer, onClose, onSubmit }) => {
               <label className="block text-xs font-bold text-white/70 mb-2">No HP</label>
               <input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (phoneError) setPhoneError('');
+                }}
                 required
                 inputMode="tel"
                 className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
                 placeholder="08xxxxxxxxxx"
               />
+              {phoneError ? (
+                <div className="mt-2 text-sm font-bold text-red-400">{phoneError}</div>
+              ) : null}
             </div>
 
             <div>
@@ -105,6 +124,12 @@ const CustomerFormModal = ({ isOpen, initialCustomer, onClose, onSubmit }) => {
               />
             </div>
           </div>
+
+          {submitError ? (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-200 font-semibold">
+              {submitError}
+            </div>
+          ) : null}
 
           <div className="flex items-center justify-end gap-3">
             <button

@@ -1,3 +1,6 @@
 import React from 'react';
-const CRM = () => <div className="p-6"><h1 className="text-2xl font-bold">Pelanggan (CRM)</h1><p>Halaman manajemen pelanggan.</p></div>;
+import Customers from './Customers';
+
+const CRM = () => <Customers />;
+
 export default CRM;

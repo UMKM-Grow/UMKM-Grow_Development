@@ -1,4 +1,4 @@
-const { Customer, Transaction, isDbReady } = require('../models');
+const { Customer, Transaction, ensureDbReady } = require('../models');
 const { Op } = require('sequelize');
 
 const isDbConnectionError = (error) => {
@@ -12,11 +12,13 @@ const isDbConnectionError = (error) => {
   );
 };
 
+const dbNotReadyResponse = (res) =>
+  res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+
 const customerController = {
   getAllCustomers: async (req, res) => {
-    if (!isDbReady()) {
-      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
-    }
+    const ready = await ensureDbReady();
+    if (!ready) return dbNotReadyResponse(res);
 
     try {
       const { page = 1, limit = 10, search = '' } = req.query;
@@ -52,16 +54,15 @@ const customerController = {
       });
     } catch (error) {
       if (isDbConnectionError(error)) {
-        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+        return dbNotReadyResponse(res);
       }
       res.status(500).json({ message: error.message || 'Error fetching customers' });
     }
   },
 
   createCustomer: async (req, res) => {
-    if (!isDbReady()) {
-      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
-    }
+    const ready = await ensureDbReady();
+    if (!ready) return dbNotReadyResponse(res);
 
     try {
       const name = String(req.body?.name ?? '').trim();
@@ -81,7 +82,7 @@ const customerController = {
       res.status(201).json({ message: 'Customer created successfully', data: customer });
     } catch (error) {
       if (isDbConnectionError(error)) {
-        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+        return dbNotReadyResponse(res);
       }
       const isUniqueError =
         error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
@@ -93,9 +94,8 @@ const customerController = {
   },
 
   updateCustomer: async (req, res) => {
-    if (!isDbReady()) {
-      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
-    }
+    const ready = await ensureDbReady();
+    if (!ready) return dbNotReadyResponse(res);
 
     try {
       const customer = await Customer.findByPk(req.params.id);
@@ -126,7 +126,7 @@ const customerController = {
       res.status(200).json({ message: 'Customer updated successfully', data: customer });
     } catch (error) {
       if (isDbConnectionError(error)) {
-        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+        return dbNotReadyResponse(res);
       }
       const isUniqueError =
         error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
@@ -138,9 +138,8 @@ const customerController = {
   },
 
   deleteCustomer: async (req, res) => {
-    if (!isDbReady()) {
-      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
-    }
+    const ready = await ensureDbReady();
+    if (!ready) return dbNotReadyResponse(res);
 
     try {
       const customer = await Customer.findByPk(req.params.id);
@@ -150,16 +149,15 @@ const customerController = {
       res.status(200).json({ message: 'Customer soft deleted successfully' });
     } catch (error) {
       if (isDbConnectionError(error)) {
-        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+        return dbNotReadyResponse(res);
       }
       res.status(500).json({ message: error.message || 'Error deleting customer' });
     }
   },
 
   getCustomerTransactions: async (req, res) => {
-    if (!isDbReady()) {
-      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
-    }
+    const ready = await ensureDbReady();
+    if (!ready) return dbNotReadyResponse(res);
 
     try {
       const customerId = parseInt(req.params.id, 10);
@@ -196,7 +194,7 @@ const customerController = {
       });
     } catch (error) {
       if (isDbConnectionError(error)) {
-        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+        return dbNotReadyResponse(res);
       }
       res.status(500).json({ message: error.message || 'Error fetching customer transactions' });
     }

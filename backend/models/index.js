@@ -10,6 +10,7 @@ User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 let dbReady = false;
+let initPromise = null;
 
 const initDb = async () => {
   try {
@@ -30,4 +31,13 @@ const initDb = async () => {
 
 const isDbReady = () => dbReady;
 
-module.exports = { sequelize, Product, ProductVariant, User, Attendance, Customer, Transaction, initDb, isDbReady };
+const ensureDbReady = async () => {
+  if (dbReady) return true;
+  if (initPromise) return initPromise;
+  initPromise = initDb().finally(() => {
+    initPromise = null;
+  });
+  return initPromise;
+};
+
+module.exports = { sequelize, Product, ProductVariant, User, Attendance, Customer, Transaction, initDb, isDbReady, ensureDbReady };

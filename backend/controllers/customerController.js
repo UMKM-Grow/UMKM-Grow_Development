@@ -165,9 +165,6 @@ const customerController = {
         return res.status(400).json({ message: 'Customer ID tidak valid.' });
       }
 
-      const customer = await Customer.findByPk(customerId);
-      if (!customer) return res.status(404).json({ message: 'Customer not found' });
-
       const { page = 1, limit = 10 } = req.query;
       const normalizedPage = Math.max(1, parseInt(page, 10) || 1);
       const normalizedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
@@ -188,7 +185,7 @@ const customerController = {
           status: t.status,
           date: t.createdAt,
         })),
-        totalPages: Math.ceil(count / normalizedLimit),
+        totalPages: Math.max(1, Math.ceil(count / normalizedLimit)),
         currentPage: normalizedPage,
         totalData: count,
       });

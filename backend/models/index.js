@@ -8,6 +8,8 @@ const Customer = require('./Customer');
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
+let dbReady = false;
+
 const initDb = async () => {
   try {
     await sequelize.authenticate();
@@ -16,9 +18,15 @@ const initDb = async () => {
     // Sync models (In production, use migrations)
     await sequelize.sync({ alter: true });
     console.log('Database models synchronized.');
+    dbReady = true;
+    return true;
   } catch (error) {
+    dbReady = false;
     console.error('Unable to connect to the database:', error);
+    return false;
   }
 };
 
-module.exports = { sequelize, Product, ProductVariant, User, Attendance, Customer, initDb };
+const isDbReady = () => dbReady;
+
+module.exports = { sequelize, Product, ProductVariant, User, Attendance, Customer, initDb, isDbReady };

@@ -1,17 +1,39 @@
-const { Customer } = require('../models');
+const { Customer, isDbReady } = require('../models');
 const { Op } = require('sequelize');
+
+const isDbConnectionError = (error) => {
+  const name = String(error?.name || '');
+  const parentCode = error?.parent?.code;
+  const originalCode = error?.original?.code;
+  return (
+    name.includes('SequelizeConnection') ||
+    parentCode === 'ECONNREFUSED' ||
+    originalCode === 'ECONNREFUSED'
+  );
+};
 
 const customerController = {
   getAllCustomers: async (req, res) => {
+    if (!isDbReady()) {
+      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+    }
+
     try {
       const customers = await Customer.findAll({ order: [['createdAt', 'DESC']] });
       res.status(200).json({ data: customers });
     } catch (error) {
+      if (isDbConnectionError(error)) {
+        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+      }
       res.status(500).json({ message: 'Error fetching customers', error: error.message });
     }
   },
 
   createCustomer: async (req, res) => {
+    if (!isDbReady()) {
+      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+    }
+
     try {
       const name = String(req.body?.name ?? '').trim();
       const phone = String(req.body?.phone ?? '').trim();
@@ -29,6 +51,9 @@ const customerController = {
       const customer = await Customer.create({ name, phone, email: email || null, address });
       res.status(201).json({ message: 'Customer created successfully', data: customer });
     } catch (error) {
+      if (isDbConnectionError(error)) {
+        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+      }
       const isUniqueError =
         error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
       if (isUniqueError) {
@@ -39,6 +64,10 @@ const customerController = {
   },
 
   updateCustomer: async (req, res) => {
+    if (!isDbReady()) {
+      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+    }
+
     try {
       const customer = await Customer.findByPk(req.params.id);
       if (!customer) return res.status(404).json({ message: 'Customer not found' });
@@ -67,6 +96,9 @@ const customerController = {
       await customer.update({ name, phone, email: email || null, address });
       res.status(200).json({ message: 'Customer updated successfully', data: customer });
     } catch (error) {
+      if (isDbConnectionError(error)) {
+        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+      }
       const isUniqueError =
         error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
       if (isUniqueError) {
@@ -77,6 +109,10 @@ const customerController = {
   },
 
   deleteCustomer: async (req, res) => {
+    if (!isDbReady()) {
+      return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+    }
+
     try {
       const customer = await Customer.findByPk(req.params.id);
       if (!customer) return res.status(404).json({ message: 'Customer not found' });
@@ -84,6 +120,9 @@ const customerController = {
       await customer.destroy();
       res.status(200).json({ message: 'Customer deleted successfully' });
     } catch (error) {
+      if (isDbConnectionError(error)) {
+        return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan dan konfigurasi DB sudah benar.' });
+      }
       res.status(500).json({ message: 'Error deleting customer', error: error.message });
     }
   },

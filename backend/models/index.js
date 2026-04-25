@@ -5,9 +5,22 @@ const User = require('./User');
 const Attendance = require('./Attendance');
 const Customer = require('./Customer');
 const Transaction = require('./Transaction');
+const TransactionDetail = require('./TransactionDetail');
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+Product.hasMany(ProductVariant, { foreignKey: 'product_id', as: 'variants' });
+ProductVariant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+Transaction.hasMany(TransactionDetail, { foreignKey: 'transaction_id', as: 'details' });
+TransactionDetail.belongsTo(Transaction, { foreignKey: 'transaction_id' });
+
+Transaction.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
+Customer.hasMany(Transaction, { foreignKey: 'customer_id', as: 'transactions' });
+
+TransactionDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+Product.hasMany(TransactionDetail, { foreignKey: 'product_id', as: 'transaction_details' });
 
 let dbReady = false;
 let initPromise = null;
@@ -40,4 +53,16 @@ const ensureDbReady = async () => {
   return initPromise;
 };
 
-module.exports = { sequelize, Product, ProductVariant, User, Attendance, Customer, Transaction, initDb, isDbReady, ensureDbReady };
+module.exports = {
+  sequelize,
+  Product,
+  ProductVariant,
+  User,
+  Attendance,
+  Customer,
+  Transaction,
+  TransactionDetail,
+  initDb,
+  isDbReady,
+  ensureDbReady,
+};

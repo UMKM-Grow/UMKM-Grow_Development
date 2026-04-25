@@ -1,7 +1,11 @@
 const Product = require('./Product');
+const ProductVariant = require('./ProductVariant');
 const Customer = require('./Customer');
 const Transaction = require('./Transaction');
 const TransactionDetail = require('./TransactionDetail');
+
+Product.hasMany(ProductVariant, { foreignKey: 'product_id', as: 'variants' });
+ProductVariant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 Transaction.hasMany(TransactionDetail, { foreignKey: 'transaction_id', as: 'details' });
 TransactionDetail.belongsTo(Transaction, { foreignKey: 'transaction_id' });
@@ -14,6 +18,7 @@ Product.hasMany(TransactionDetail, { foreignKey: 'product_id', as: 'transaction_
 
 module.exports = {
   Product,
+  ProductVariant,
   Customer,
   Transaction,
   TransactionDetail,

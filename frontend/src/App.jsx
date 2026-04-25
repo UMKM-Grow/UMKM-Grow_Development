@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import POS from './POS.jsx';
 
 function App() {
   return (
@@ -6,7 +7,7 @@ function App() {
       <Routes>
         <Route path="/" element={<div>Halaman Login (Setup by Luthfi nanti)</div>} />
         <Route path="/dashboard" element={<div>Dashboard (Setup by Zulfikri nanti)</div>} />
-        <Route path="/pos" element={<div>Kasir POS (Setup by Bilal nanti)</div>} />
+        <Route path="/pos" element={<POS />} />
         <Route path="/inventory" element={<div>Inventori (Setup by Afnan nanti)</div>} />
         <Route path="/crm" element={<div>Pelanggan (Setup by Diska nanti)</div>} />
         <Route path="/finance" element={<div>Keuangan (Setup by Nabil nanti)</div>} />

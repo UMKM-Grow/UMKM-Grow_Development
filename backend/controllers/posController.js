@@ -17,9 +17,14 @@ const checkout = async (req, res) => {
   }
 
   const normalizedPayment = String(payment_method || '').trim();
-  if (!['Cash', 'Qris'].includes(normalizedPayment)) {
-    return res.status(400).json({ message: 'Invalid payment method (Cash/Qris)' });
+  const normalizedUpper = normalizedPayment.toUpperCase();
+  const allowedMethods = new Set(['CASH', 'TRANSFER', 'QRIS']);
+  if (!allowedMethods.has(normalizedUpper)) {
+    return res.status(400).json({ message: 'Invalid payment method (Cash/Transfer/QRIS)' });
   }
+
+  const paymentMethodNormalized =
+    normalizedUpper === 'CASH' ? 'Cash' : normalizedUpper === 'TRANSFER' ? 'Transfer' : 'QRIS';
 
   const userId =
     Number(req.user?.id) ||
@@ -115,7 +120,7 @@ const checkout = async (req, res) => {
 
       if (columns?.user_id) txPayload.user_id = userId;
       if (columns?.total_amount) txPayload.total_amount = totalAmount;
-      if (columns?.payment_method) txPayload.payment_method = normalizedPayment;
+      if (columns?.payment_method) txPayload.payment_method = paymentMethodNormalized;
 
       const tx = await Transaction.create(txPayload, { transaction: t });
 

@@ -23,7 +23,7 @@ const listProducts = async (req, res) => {
       })
     );
   } catch (error) {
-    res.status(500).json({ message: 'Failed to load products', error: error?.message || String(error) });
+    res.status(500).json({ message: 'Failed to load products' });
   }
 };
 

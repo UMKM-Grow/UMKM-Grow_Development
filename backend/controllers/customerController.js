@@ -9,7 +9,7 @@ const listCustomers = async (req, res) => {
     });
     res.json(customers);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to load customers', error: error?.message || String(error) });
+    res.status(500).json({ message: 'Failed to load customers' });
   }
 };
 

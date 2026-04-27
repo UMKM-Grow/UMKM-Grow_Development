@@ -24,7 +24,7 @@ const Login = () => {
       if (response.data.data.token) {
         localStorage.setItem('token', response.data.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.data));
-        navigate('/'); // Redirect to Dashboard
+        navigate('/dashboard'); // Redirect to Menu
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login gagal. Periksa kembali email dan password Anda.');

@@ -20,21 +20,48 @@ export default function Expenses() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleAuthError = useCallback(() => {
+    localStorage.removeItem('token');
+    setErrorMessage('Sesi login berakhir. Silakan login ulang.');
+    window.setTimeout(() => {
+      window.location.href = '/login';
+    }, 0);
+  }, []);
 
   const loadExpenses = useCallback(async () => {
     setLoading(true);
+    setErrorMessage('');
     try {
       const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      if (!token) {
+        setItems([]);
+        setErrorMessage('Silakan login terlebih dahulu.');
+        return;
+      }
+      const headers = { Authorization: `Bearer ${token}` };
       const res = await axios.get(`${API_BASE}/expenses`, { headers });
       const list = extractArrayPayload(res.data);
       setItems(list);
-    } catch {
+    } catch (error) {
+      const status = error?.response?.status;
+      if (status === 401) {
+        handleAuthError();
+        setItems([]);
+        return;
+      }
+      if (status === 503) {
+        setErrorMessage('Backend belum tersambung ke database. Pastikan MySQL berjalan.');
+        setItems([]);
+        return;
+      }
+      setErrorMessage('Gagal memuat data pengeluaran.');
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [handleAuthError]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -49,7 +76,14 @@ export default function Expenses() {
 
   async function handleCreateExpense(form) {
     const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    if (!token) {
+      setErrorMessage('Silakan login terlebih dahulu.');
+      window.setTimeout(() => {
+        window.location.href = '/login';
+      }, 0);
+      throw new Error('Silakan login terlebih dahulu.');
+    }
+    const headers = { Authorization: `Bearer ${token}` };
 
     const fd = new FormData();
     fd.append('tanggal', form.tanggal);
@@ -58,10 +92,23 @@ export default function Expenses() {
     fd.append('keterangan', form.keterangan || '');
     if (form.file) fd.append('bukti', form.file);
 
-    await axios.post(`${API_BASE}/expenses`, fd, { headers });
-    alert('Pengeluaran berhasil disimpan');
-    setOpen(false);
-    await loadExpenses();
+    try {
+      await axios.post(`${API_BASE}/expenses`, fd, { headers });
+      alert('Pengeluaran berhasil disimpan');
+      setOpen(false);
+      await loadExpenses();
+    } catch (error) {
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || 'Gagal menyimpan pengeluaran.';
+      if (status === 401) {
+        handleAuthError();
+        throw new Error('Sesi login berakhir. Silakan login ulang.');
+      }
+      if (status === 503) {
+        throw new Error('Backend belum tersambung ke database. Pastikan MySQL berjalan.');
+      }
+      throw new Error(message);
+    }
   }
 
   return (
@@ -88,6 +135,12 @@ export default function Expenses() {
               Total: <span className="font-semibold text-gray-900">{formatIdr(totalNominal)}</span>
             </div>
           </div>
+
+          {errorMessage ? (
+            <div className="border-b border-gray-200 bg-white px-4 py-3 text-sm text-red-600">
+              {errorMessage}
+            </div>
+          ) : null}
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">

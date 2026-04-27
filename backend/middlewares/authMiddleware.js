@@ -24,15 +24,18 @@ const verifyToken = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
-      next();
+      return next();
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      const name = error?.name;
+      if (name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Sesi berakhir, silakan login ulang' });
+      }
+      return res.status(401).json({ message: 'Token tidak valid, silakan login ulang' });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 

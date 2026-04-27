@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { MapPin, Radar, Clock } from 'lucide-react';
 
@@ -207,158 +207,147 @@ const Absensi = () => {
 
   const gpsColor =
     gpsStatus === 'ok'
-      ? 'text-emerald-400'
+      ? 'text-emerald-600'
       : gpsStatus === 'denied'
-        ? 'text-red-400'
+        ? 'text-red-600'
         : gpsStatus === 'error'
-          ? 'text-red-400'
-          : 'text-white/60';
+          ? 'text-red-600'
+          : 'text-gray-500';
 
   return (
-    <div className="min-h-screen bg-brand-dark text-white p-8 md:p-12">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-10">
-        <div>
-          <h1 className="text-5xl md:text-7xl font-black text-brand-ice uppercase tracking-tighter">
-            Absensi
-          </h1>
-          <p className="text-white/60 font-semibold mt-2">
-            Mesin absensi berbasis lokasi dengan validasi radius.
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="text-left">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Absensi</h1>
+          <div className="mt-1 text-sm text-gray-500">Mesin absensi berbasis lokasi dengan validasi radius</div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="lg:col-span-1 bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <Radar size={22} className="text-brand-ice" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Status GPS</div>
-              <div className={`text-lg font-black ${gpsColor}`}>
-                {gpsMessage || 'Mendeteksi lokasi...'}
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-gray-700">
+                <Radar size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Status GPS</div>
+                <div className={`text-base font-bold ${gpsColor}`}>{gpsMessage || 'Mendeteksi lokasi...'}</div>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-2xl bg-brand-dark/40 border border-white/10 p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Koordinat</div>
-                <div className="mt-2 font-mono text-sm text-white/80">
-                  {coords ? (
-                    <>
-                      <div>lat: {coords.latitude.toFixed(6)}</div>
-                      <div>lng: {coords.longitude.toFixed(6)}</div>
-                    </>
-                  ) : (
-                    <div>-</div>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Lokasi</div>
-                  <div className="mt-2 text-sm font-semibold text-white/80">
-                    {locationLabel || '-'}
+            <div className="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Koordinat</div>
+                  <div className="mt-2 font-mono text-sm text-gray-700">
+                    {coords ? (
+                      <>
+                        <div>lat: {coords.latitude.toFixed(6)}</div>
+                        <div>lng: {coords.longitude.toFixed(6)}</div>
+                      </>
+                    ) : (
+                      <div>-</div>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Lokasi</div>
+                    <div className="mt-2 text-sm font-semibold text-gray-700">{locationLabel || '-'}</div>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={requestLocation}
+                  className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  Refresh
+                </button>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm lg:col-span-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-gray-700">
+                <MapPin size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Aksi Absensi</div>
+                <div className="text-base font-bold text-gray-900">Check In / Check Out</div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
               <button
                 type="button"
-                onClick={requestLocation}
-                className="px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold text-sm"
+                disabled={!token || submitting}
+                onClick={() => submitAttendance('CHECK_IN')}
+                className="w-full rounded-md bg-blue-600 py-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
               >
-                Refresh
+                CHECK IN
+              </button>
+              <button
+                type="button"
+                disabled={!token || submitting}
+                onClick={() => submitAttendance('CHECK_OUT')}
+                className="w-full rounded-md border border-gray-200 bg-white py-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                CHECK OUT
               </button>
             </div>
+
+            {!token && (
+              <div className="mt-4 text-sm font-semibold text-red-600">
+                Anda belum login. Silakan login dulu untuk melakukan absensi.
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <MapPin size={22} className="text-brand-ice" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Aksi Absensi</div>
-              <div className="text-lg font-black text-white">Check In / Check Out</div>
-            </div>
+        <div className="mt-8 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-gray-700">
+            <Clock size={18} />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              type="button"
-              disabled={!token || submitting}
-              onClick={() => submitAttendance('CHECK_IN')}
-              className="w-full bg-brand-ice text-brand-dark font-black py-5 rounded-2xl hover:bg-white hover:scale-[1.01] transition-all disabled:opacity-60 disabled:hover:scale-100"
-            >
-              CHECK IN
-            </button>
-            <button
-              type="button"
-              disabled={!token || submitting}
-              onClick={() => submitAttendance('CHECK_OUT')}
-              className="w-full bg-transparent border border-white/20 text-white font-black py-5 rounded-2xl hover:bg-white/5 hover:scale-[1.01] transition-all disabled:opacity-60 disabled:hover:scale-100"
-            >
-              CHECK OUT
-            </button>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Riwayat</div>
+            <div className="text-xl font-bold text-gray-900">History Absensi</div>
           </div>
+        </div>
 
-          {!token && (
-            <div className="mt-4 text-red-400 font-bold">
-              Anda belum login. Silakan login dulu untuk melakukan absensi.
+        <div className="mt-4">
+          {loadingHistory ? (
+            <div className="text-sm font-semibold text-gray-500">Memuat riwayat...</div>
+          ) : groupedHistory.length === 0 ? (
+            <div className="text-sm text-gray-500">Belum ada riwayat absensi.</div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {groupedHistory.map((item) => (
+                <div key={item.key} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                  <div className="text-sm font-bold text-gray-900">{item.dateLabel}</div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Check In</div>
+                      <div className="mt-1 text-lg font-bold text-gray-900">{formatTime(item.checkInAt)}</div>
+                    </div>
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Check Out</div>
+                      <div className="mt-1 text-lg font-bold text-gray-900">{formatTime(item.checkOutAt)}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="text-sm font-semibold text-gray-700">
+                      {Number.isFinite(item.minDistanceMeters) ? `${item.minDistanceMeters}m` : '-'}
+                    </div>
+                    <div className={item.withinRadius ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold'}>
+                      {item.withinRadius ? 'Dalam Radius' : 'Di Luar Radius'}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
       </div>
-
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-          <Clock size={22} className="text-brand-ice" />
-        </div>
-        <div>
-          <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Riwayat</div>
-          <div className="text-2xl font-black text-white">History Absensi</div>
-        </div>
-      </div>
-
-      {loadingHistory ? (
-        <div className="text-brand-ice/80 font-semibold">Memuat riwayat...</div>
-      ) : groupedHistory.length === 0 ? (
-        <div className="text-white/60 font-semibold">Belum ada riwayat absensi.</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {groupedHistory.map((item) => (
-            <div
-              key={item.key}
-              className="bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-5"
-            >
-              <div className="text-brand-ice font-black uppercase tracking-wider">
-                {item.dateLabel}
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="bg-brand-dark/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Check In</div>
-                  <div className="text-lg font-black text-white mt-1">{formatTime(item.checkInAt)}</div>
-                </div>
-                <div className="bg-brand-dark/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Check Out</div>
-                  <div className="text-lg font-black text-white mt-1">{formatTime(item.checkOutAt)}</div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-white/70 font-semibold">
-                  {Number.isFinite(item.minDistanceMeters) ? `${item.minDistanceMeters}m` : '-'}
-                </div>
-                <div className={item.withinRadius ? 'text-emerald-400 font-black' : 'text-red-400 font-black'}>
-                  {item.withinRadius ? 'Dalam Radius' : 'Di Luar Radius'}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

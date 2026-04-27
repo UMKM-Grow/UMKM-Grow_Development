@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Edit2, Trash2 } from 'lucide-react';
 import ProductFormModal from './ProductFormModal';
@@ -128,90 +128,101 @@ const Inventory = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-dark text-white p-8 md:p-12">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-12">
-        <h1 className="text-5xl md:text-7xl font-black text-brand-ice uppercase tracking-tighter">
-          Katalog Produk
-        </h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Inventory</h1>
+            <div className="mt-1 text-sm text-gray-500">Kelola katalog produk & varian</div>
+          </div>
 
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="bg-brand-ice text-brand-dark font-black px-6 py-3 rounded-full hover:bg-white hover:scale-105 transition-all w-fit"
-        >
-          Tambah Produk Baru
-        </button>
-      </div>
-
-      {loading ? (
-        <div className="text-brand-ice/80 font-semibold">Memuat...</div>
-      ) : errorMessage ? (
-        <div className="text-brand-ice/80 font-semibold">{errorMessage}</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {products.map((product, index) => (
-            <div
-              key={product?.id ?? product?.sku ?? `${product?.name ?? 'product'}-${index}`}
-              className="relative bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(163,193,214,0.2)]"
-            >
-              <div className="w-full aspect-[3/4] bg-brand-frost rounded-xl mb-5 overflow-hidden relative border border-white/5">
-                {(() => {
-                  const { primary, fallback } = getProductImageSources(product);
-                  return (
-                    <img
-                      src={primary}
-                      data-fallback={fallback}
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const next = img.dataset.fallback;
-                        if (!next) return;
-                        img.dataset.fallback = '';
-                        img.src = next;
-                      }}
-                      alt={product?.name || 'Produk'}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  );
-                })()}
-              </div>
-
-              <h2 className="text-xl font-bold text-white tracking-wide uppercase">
-                {product?.name || 'Nama Produk'}
-              </h2>
-              <p className="text-brand-ice font-semibold mt-1">{formatRupiah(product?.base_price)}</p>
-
-              <button
-                type="button"
-                onClick={() => openEditModal(product)}
-                className="mt-5 w-full bg-brand-ice text-brand-dark font-bold py-2.5 rounded-lg hover:bg-white transition-colors"
-              >
-                Kelola Varian
-              </button>
-
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => openEditModal(product)}
-                  className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-brand-dark/60 transition-colors"
-                  aria-label="Edit produk"
-                >
-                  <Edit2 size={16} className="text-white" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteProduct(product)}
-                  className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-red-500/70 transition-colors"
-                  aria-label="Hapus produk"
-                >
-                  <Trash2 size={16} className="text-white" />
-                </button>
-              </div>
-            </div>
-          ))}
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            + Tambah Produk
+          </button>
         </div>
-      )}
+
+        <div className="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm p-6">
+          {loading ? (
+            <div className="text-sm font-semibold text-gray-500">Memuat...</div>
+          ) : errorMessage ? (
+            <div className="rounded-md border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600">
+              {errorMessage}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-sm text-gray-500">Belum ada produk.</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {products.map((product, index) => (
+                <div
+                  key={product?.id ?? product?.sku ?? `${product?.name ?? 'product'}-${index}`}
+                  className="relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                >
+                  <div className="relative aspect-[3/4] bg-gray-100">
+                    {(() => {
+                      const { primary, fallback } = getProductImageSources(product);
+                      return (
+                        <img
+                          src={primary}
+                          data-fallback={fallback}
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            const next = img.dataset.fallback;
+                            if (!next) return;
+                            img.dataset.fallback = '';
+                            img.src = next;
+                          }}
+                          alt={product?.name || 'Produk'}
+                          className="absolute inset-0 h-full w-full object-cover"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                        />
+                      );
+                    })()}
+
+                    <div className="absolute right-3 top-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(product)}
+                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50"
+                        aria-label="Edit produk"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProduct(product)}
+                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-2 text-gray-700 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Hapus produk"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4">
+                    <div className="text-sm font-bold text-gray-900 line-clamp-2">{product?.name || 'Nama Produk'}</div>
+                    <div className="mt-1 text-sm font-semibold text-gray-700">
+                      {formatRupiah(product?.base_price)}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(product)}
+                      className="mt-4 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    >
+                      Kelola Varian
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {isModalOpen && (
         <ProductFormModal

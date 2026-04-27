@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Clock, Edit2, Search } from 'lucide-react';
 import CustomerFormModal from './CustomerFormModal';
@@ -202,148 +202,147 @@ const Customers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-dark text-white p-8 md:p-12">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-12">
-        <h1 className="text-5xl md:text-7xl font-black text-brand-ice uppercase tracking-tighter">
-          Database Pelanggan
-        </h1>
-
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-end w-full md:w-auto">
-          <div className="relative w-full md:w-80">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
-              <Search size={18} />
-            </span>
-            <input
-              value={searchInput}
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                if (page !== 1) setPage(1);
-              }}
-              className="w-full bg-brand-slate/30 backdrop-blur-md border border-white/10 text-white placeholder:text-white/50 focus:border-brand-ice focus:outline-none rounded-full pl-11 pr-4 py-3 font-semibold"
-              placeholder="Cari nama / no HP..."
-            />
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">CRM</h1>
+            <div className="mt-1 text-sm text-gray-500">Kelola pelanggan dan riwayat transaksi</div>
           </div>
 
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="bg-brand-ice text-brand-dark font-black px-6 py-3 rounded-full hover:bg-white hover:scale-105 transition-all w-fit"
-          >
-            + Tambah Pelanggan
-          </button>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+            <div className="relative w-full sm:w-80">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search size={18} />
+              </span>
+              <input
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  if (page !== 1) setPage(1);
+                }}
+                className="w-full rounded-md border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Cari nama / no HP..."
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              + Tambah Pelanggan
+            </button>
+          </div>
         </div>
-      </div>
 
-      {loading ? (
-        <div className="text-brand-ice/80 font-semibold">Memuat...</div>
-      ) : errorMessage ? (
-        <div className="text-brand-ice/80 font-semibold">{errorMessage}</div>
-      ) : customers.length === 0 ? (
-        <div className="bg-brand-slate/30 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-white/80 font-semibold">
-          Belum ada pelanggan. Klik "+ Tambah Pelanggan" untuk mulai.
-        </div>
-      ) : (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {customers.map((customer, index) => (
-              <div
-                key={customer?.id ?? `${customer?.phone ?? 'customer'}-${index}`}
-                className="relative bg-brand-slate/30 backdrop-blur-md rounded-2xl border border-white/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(163,193,214,0.15)]"
-              >
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openHistoryModal(customer)}
-                    className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-brand-dark/60 transition-colors"
-                    aria-label="Riwayat transaksi"
+        <div className="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm p-6">
+          {loading ? (
+            <div className="text-sm font-semibold text-gray-500">Memuat...</div>
+          ) : errorMessage ? (
+            <div className="rounded-md border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600">
+              {errorMessage}
+            </div>
+          ) : customers.length === 0 ? (
+            <div className="text-sm text-gray-500">Belum ada pelanggan. Klik "+ Tambah Pelanggan" untuk mulai.</div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {customers.map((customer, index) => (
+                  <div
+                    key={customer?.id ?? `${customer?.phone ?? 'customer'}-${index}`}
+                    className="relative rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
                   >
-                    <Clock size={16} className="text-white" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(customer)}
-                    className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-brand-dark/60 transition-colors"
-                    aria-label="Edit pelanggan"
-                  >
-                    <Edit2 size={16} className="text-white" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCustomer(customer)}
-                    className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-red-500/70 transition-colors"
-                    aria-label="Hapus pelanggan"
-                  >
-                    🗑️
-                  </button>
-                </div>
+                    <div className="absolute right-4 top-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openHistoryModal(customer)}
+                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50"
+                        aria-label="Riwayat transaksi"
+                      >
+                        <Clock size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(customer)}
+                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50"
+                        aria-label="Edit pelanggan"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCustomer(customer)}
+                        className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white p-2 text-gray-700 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Hapus pelanggan"
+                      >
+                        🗑️
+                      </button>
+                    </div>
 
-                <img
-                  src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(
-                    customer?.name || 'customer'
-                  )}`}
-                  alt="Avatar"
-                  className="w-16 h-16 rounded-full bg-brand-ice/20 p-1 mb-4"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
+                    <img
+                      src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(
+                        customer?.name || 'customer'
+                      )}`}
+                      alt="Avatar"
+                      className="h-14 w-14 rounded-full bg-gray-100 p-1"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                    />
 
-                <div className="text-xl font-black text-white tracking-wide">
-                  {customer?.name || 'Nama Pelanggan'}
-                </div>
-                <div className="mt-1 text-brand-ice font-semibold">{customer?.phone || '-'}</div>
+                    <div className="mt-4 text-lg font-bold text-gray-900">{customer?.name || 'Nama Pelanggan'}</div>
+                    <div className="mt-1 text-sm font-semibold text-gray-700">{customer?.phone || '-'}</div>
 
-                <div className="mt-4 space-y-2 text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-white/60 font-bold uppercase tracking-widest text-[11px]">Email</div>
-                    <div className="text-white/80 font-semibold text-right break-all">
-                      {customer?.email || '-'}
+                    <div className="mt-4 space-y-2 text-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Email</div>
+                        <div className="text-right font-semibold text-gray-700 break-all">{customer?.email || '-'}</div>
+                      </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Poin</div>
+                        <div className="text-right font-semibold text-gray-700">
+                          {Number.isFinite(Number(customer?.loyalty_points)) ? Number(customer.loyalty_points) : 0}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Alamat</div>
+                      <div className="mt-2 whitespace-pre-line text-sm font-semibold text-gray-700">
+                        {customer?.address || '-'}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-white/60 font-bold uppercase tracking-widest text-[11px]">Poin</div>
-                    <div className="text-white/80 font-semibold text-right">
-                      {Number.isFinite(Number(customer?.loyalty_points))
-                        ? Number(customer.loyalty_points)
-                        : 0}
-                    </div>
-                  </div>
-                </div>
+                ))}
+              </div>
 
-                <div className="mt-4">
-                  <div className="text-white/60 font-bold uppercase tracking-widest text-[11px]">Alamat</div>
-                  <div className="mt-2 text-white/80 font-semibold text-sm whitespace-pre-line">
-                    {customer?.address || '-'}
-                  </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-gray-500">
+                  Total {totalData} pelanggan • Halaman {page} / {totalPages}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={goPrevPage}
+                    disabled={loading || page <= 1}
+                    className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNextPage}
+                    disabled={loading || totalPages <= page}
+                    className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-white/60 font-bold text-sm">
-              Total {totalData} pelanggan • Halaman {page} / {totalPages}
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={goPrevPage}
-                disabled={loading || page <= 1}
-                className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold disabled:opacity-60"
-              >
-                Prev
-              </button>
-              <button
-                type="button"
-                onClick={goNextPage}
-                disabled={loading || totalPages <= page}
-                className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold disabled:opacity-60"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {isModalOpen && (
         <CustomerFormModal

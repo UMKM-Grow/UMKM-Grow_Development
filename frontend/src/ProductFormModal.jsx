@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { X, Plus, Trash2, Save } from 'lucide-react';
 
 const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
@@ -85,69 +85,67 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-3xl bg-brand-slate/20 border border-white/10 rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+      <div className="w-full max-w-3xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <div>
-            <div className="text-xs uppercase tracking-widest text-white/60 font-bold">
+            <div className="text-xs font-bold uppercase tracking-wide text-gray-500">
               {isEditing ? 'Edit Produk' : 'Tambah Produk Baru'}
             </div>
-            <div className="text-2xl font-black text-brand-ice uppercase tracking-tight">
-              Form Produk
-            </div>
+            <div className="text-2xl font-bold text-gray-900">Form Produk</div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-brand-dark/60 transition-colors"
+            className="rounded-md border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50"
             aria-label="Tutup"
           >
-            <X size={18} className="text-white" />
+            <X size={18} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-white/70 mb-2">Nama Produk</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Nama Produk</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 placeholder="Contoh: Kopi Arabica Gayo"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/70 mb-2">Kategori (ID)</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Kategori (ID)</label>
               <input
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 inputMode="numeric"
-                className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 placeholder="Contoh: 1"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/70 mb-2">Harga Dasar</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">Harga Dasar</label>
               <input
                 value={basePrice}
                 onChange={(e) => setBasePrice(e.target.value)}
                 inputMode="decimal"
                 required
-                className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 placeholder="150000"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-white/70 mb-2">SKU Utama</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-2">SKU Utama</label>
               <input
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 required
-                className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 placeholder="Contoh: PRD-001"
               />
             </div>
@@ -156,15 +154,15 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-lg font-black uppercase tracking-tight text-white">Varian</div>
-                <div className="text-xs text-white/60 font-semibold">
+                <div className="text-lg font-bold text-gray-900">Varian</div>
+                <div className="text-xs font-semibold text-gray-500">
                   Tambahkan varian secara dinamis (nama, harga tambahan, stok)
                 </div>
               </div>
               <button
                 type="button"
                 onClick={addVariant}
-                className="inline-flex items-center gap-2 bg-brand-ice text-brand-dark font-black px-4 py-2 rounded-full hover:bg-white hover:scale-105 transition-all"
+                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
               >
                 <Plus size={16} />
                 Tambah Varian
@@ -172,7 +170,7 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
             </div>
 
             {variants.length === 0 ? (
-              <div className="text-white/60 bg-brand-dark/30 border border-white/10 rounded-xl p-4">
+              <div className="rounded-md border border-gray-200 bg-white p-4 text-sm text-gray-500">
                 Belum ada varian. Klik “Tambah Varian” untuk mulai.
               </div>
             ) : (
@@ -180,36 +178,36 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
                 {variants.map((variant, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-brand-dark/30 border border-white/10 rounded-xl p-4"
+                    className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 md:grid-cols-12"
                   >
                     <div className="md:col-span-5">
-                      <label className="block text-xs font-bold text-white/70 mb-2">Nama Varian</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">Nama Varian</label>
                       <input
                         value={variant.variant_name}
                         onChange={(e) => updateVariant(index, 'variant_name', e.target.value)}
-                        className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                        className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         placeholder='Contoh: "Size L - Putih"'
                       />
                     </div>
 
                     <div className="md:col-span-3">
-                      <label className="block text-xs font-bold text-white/70 mb-2">Harga Tambahan</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">Harga Tambahan</label>
                       <input
                         value={variant.additional_price}
                         onChange={(e) => updateVariant(index, 'additional_price', e.target.value)}
                         inputMode="decimal"
-                        className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                        className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         placeholder="0"
                       />
                     </div>
 
                     <div className="md:col-span-3">
-                      <label className="block text-xs font-bold text-white/70 mb-2">Stok</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">Stok</label>
                       <input
                         value={variant.stock}
                         onChange={(e) => updateVariant(index, 'stock', e.target.value)}
                         inputMode="numeric"
-                        className="w-full bg-brand-dark/50 border border-white/20 text-white focus:border-brand-ice focus:outline-none rounded-lg p-3"
+                        className="w-full rounded-md border border-gray-200 bg-white p-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         placeholder="0"
                       />
                     </div>
@@ -218,10 +216,10 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
                       <button
                         type="button"
                         onClick={() => removeVariant(index)}
-                        className="w-full md:w-auto inline-flex items-center justify-center p-3 rounded-lg bg-brand-dark/40 border border-white/10 hover:bg-red-500/60 transition-colors"
+                        className="inline-flex w-full items-center justify-center rounded-md border border-gray-200 bg-white p-3 text-gray-700 hover:bg-red-50 hover:text-red-600 md:w-auto"
                         aria-label="Hapus varian"
                       >
-                        <Trash2 size={16} className="text-white" />
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
@@ -234,14 +232,14 @@ const ProductFormModal = ({ isOpen, initialProduct, onClose, onSubmit }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 rounded-full bg-brand-dark/40 border border-white/10 text-white font-bold hover:bg-brand-dark/60 transition-colors"
+              className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 bg-brand-ice text-brand-dark font-black px-6 py-3 rounded-full hover:bg-white hover:scale-105 transition-all disabled:opacity-60 disabled:hover:scale-100"
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
             >
               <Save size={16} />
               {submitting ? 'Menyimpan...' : 'Simpan'}

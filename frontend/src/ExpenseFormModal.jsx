@@ -10,6 +10,7 @@ export default function ExpenseFormModal({ open, onClose, onSubmit }) {
   const [keterangan, setKeterangan] = useState('');
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   if (!open) return null;
 
@@ -17,6 +18,7 @@ export default function ExpenseFormModal({ open, onClose, onSubmit }) {
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
+    setErrorMessage('');
     try {
       await onSubmit({
         tanggal,
@@ -25,6 +27,11 @@ export default function ExpenseFormModal({ open, onClose, onSubmit }) {
         keterangan,
         file,
       });
+      setNominal('');
+      setKeterangan('');
+      setFile(null);
+    } catch (error) {
+      setErrorMessage(error?.message || 'Gagal menyimpan pengeluaran.');
     } finally {
       setSubmitting(false);
     }
@@ -48,6 +55,11 @@ export default function ExpenseFormModal({ open, onClose, onSubmit }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
+          {errorMessage ? (
+            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          ) : null}
           <div>
             <label className="block text-sm font-semibold text-gray-800">Tanggal</label>
             <input

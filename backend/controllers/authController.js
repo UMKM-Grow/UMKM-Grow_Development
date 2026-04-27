@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User, ensureDbReady } = require('../models');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
@@ -10,6 +10,9 @@ const generateToken = (id) => {
 const authController = {
   // REGISTER User
   register: async (req, res) => {
+    const ready = await ensureDbReady();
+    if (!ready) return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan.' });
+
     try {
       const { name, email, password, role } = req.body;
 
@@ -38,12 +41,15 @@ const authController = {
         },
       });
     } catch (error) {
-      res.status(500).json({ message: 'Error registering user', error: error.message });
+      res.status(500).json({ message: 'Error registering user' });
     }
   },
 
   // LOGIN User
   login: async (req, res) => {
+    const ready = await ensureDbReady();
+    if (!ready) return res.status(503).json({ message: 'Database belum tersambung. Pastikan MySQL berjalan.' });
+
     try {
       const { email, password } = req.body;
 
@@ -65,7 +71,7 @@ const authController = {
         res.status(401).json({ message: 'Invalid email or password' });
       }
     } catch (error) {
-      res.status(500).json({ message: 'Error logging in', error: error.message });
+      res.status(500).json({ message: 'Error logging in' });
     }
   },
 };

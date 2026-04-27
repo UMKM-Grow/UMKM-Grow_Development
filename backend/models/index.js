@@ -6,6 +6,7 @@ const Attendance = require('./Attendance');
 const Customer = require('./Customer');
 const Transaction = require('./Transaction');
 const TransactionDetail = require('./TransactionDetail');
+const Expense = require('./Expense');
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -21,6 +22,9 @@ Customer.hasMany(Transaction, { foreignKey: 'customer_id', as: 'transactions' })
 
 TransactionDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 Product.hasMany(TransactionDetail, { foreignKey: 'product_id', as: 'transaction_details' });
+
+User.hasMany(Expense, { foreignKey: 'user_id', as: 'expenses' });
+Expense.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 let dbReady = false;
 let initPromise = null;
@@ -62,6 +66,7 @@ module.exports = {
   Customer,
   Transaction,
   TransactionDetail,
+  Expense,
   initDb,
   isDbReady,
   ensureDbReady,

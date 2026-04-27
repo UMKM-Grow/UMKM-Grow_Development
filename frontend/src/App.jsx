@@ -6,6 +6,7 @@ import HRM from './HRM';
 import POS from './POS';
 import CRM from './CRM';
 import Finance from './Finance';
+import Expenses from './Expenses';
 import Settings from './Settings';
 import Absensi from './Absensi';
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/absensi" element={<Absensi />} />
         <Route path="/crm" element={<CRM />} />
         <Route path="/finance" element={<Finance />} />
+        <Route path="/finance/expenses" element={<Expenses />} />
         <Route path="/hrm" element={<HRM />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>

@@ -7,6 +7,7 @@ import POS from './POS';
 import CRM from './CRM';
 import Finance from './Finance';
 import Expenses from './Expenses';
+import FinancialReports from './FinancialReports';
 import Settings from './Settings';
 import Absensi from './Absensi';
 
@@ -29,6 +30,7 @@ function App() {
         <Route path="/crm" element={<RequireAuth><CRM /></RequireAuth>} />
         <Route path="/finance" element={<RequireAuth><Finance /></RequireAuth>} />
         <Route path="/finance/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
+        <Route path="/finance/reports" element={<RequireAuth><FinancialReports /></RequireAuth>} />
         <Route path="/hrm" element={<RequireAuth><HRM /></RequireAuth>} />
         <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

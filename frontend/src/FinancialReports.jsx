@@ -140,7 +140,7 @@ export default function FinancialReports() {
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="text-sm font-bold text-gray-900">Sales Trend</div>
-            <div className="mt-4 h-64">
+            <div className="mt-4 h-[300px] w-full">
               {loading ? (
                  <div className="h-full w-full rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">Loading chart...</div>
               ) : (
@@ -158,7 +158,7 @@ export default function FinancialReports() {
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="text-sm font-bold text-gray-900">Monthly Profit</div>
-            <div className="mt-4 h-64">
+            <div className="mt-4 h-[300px] w-full">
               {loading ? (
                  <div className="h-full w-full rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">Loading chart...</div>
               ) : (

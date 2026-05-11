@@ -1,3 +1,4 @@
+import React from 'react';
 import Customers from './Customers';
 
 const CRM = () => <Customers />;

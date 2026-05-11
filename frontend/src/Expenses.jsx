@@ -21,10 +21,6 @@ export default function Expenses() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [proofOpen, setProofOpen] = useState(false);
-  const [proofUrl, setProofUrl] = useState('');
-  const [proofFilename, setProofFilename] = useState('');
-  const [proofLoadError, setProofLoadError] = useState(false);
 
   const handleAuthError = useCallback(() => {
     localStorage.removeItem('token');
@@ -115,20 +111,6 @@ export default function Expenses() {
     }
   }
 
-  const openProof = useCallback((url, filename) => {
-    setProofUrl(url);
-    setProofFilename(filename || '');
-    setProofLoadError(false);
-    setProofOpen(true);
-  }, []);
-
-  const closeProof = useCallback(() => {
-    setProofOpen(false);
-    setProofUrl('');
-    setProofFilename('');
-    setProofLoadError(false);
-  }, []);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-6">
@@ -186,7 +168,7 @@ export default function Expenses() {
                   </tr>
                 ) : (
                   items.map((x) => {
-                    const url = x?.bukti_foto ? `${SERVER_BASE}/uploads/${x.bukti_foto}` : null;
+                    const proofUrl = x?.bukti_foto ? `${SERVER_BASE}/uploads/${x.bukti_foto}` : null;
                     return (
                       <tr key={x.id}>
                         <td className="px-4 py-4 text-gray-700">{x.tanggal || '-'}</td>
@@ -196,14 +178,15 @@ export default function Expenses() {
                         </td>
                         <td className="px-4 py-4 text-gray-700">{x.keterangan || '-'}</td>
                         <td className="px-4 py-4">
-                          {url ? (
-                            <button
-                              type="button"
-                              onClick={() => openProof(url, x?.bukti_foto)}
+                          {proofUrl ? (
+                            <a
+                              href={proofUrl}
+                              target="_blank"
+                              rel="noreferrer"
                               className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                             >
                               Lihat Struk
-                            </button>
+                            </a>
                           ) : (
                             <span className="text-xs text-gray-400">-</span>
                           )}
@@ -223,54 +206,6 @@ export default function Expenses() {
         onClose={() => setOpen(false)}
         onSubmit={handleCreateExpense}
       />
-
-      {proofOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-3xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Bukti Pengeluaran</div>
-                <div className="mt-1 text-sm font-semibold text-gray-900">{proofFilename || 'Struk'}</div>
-              </div>
-              <button
-                type="button"
-                onClick={closeProof}
-                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                Tutup
-              </button>
-            </div>
-
-            <div className="p-5">
-              {proofLoadError ? (
-                <div className="rounded-md border border-red-200 bg-white p-4 text-sm text-red-600">
-                  File struk tidak ditemukan di server (404). Biasanya ini terjadi karena file upload di folder
-                  backend/public/uploads hilang atau kamu menjalankan backend dari folder project yang berbeda.
-                  <div className="mt-3">
-                    <a
-                      href={proofUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                      Coba buka link langsung
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <img
-                    src={proofUrl}
-                    alt="Bukti pengeluaran"
-                    className="mx-auto max-h-[70vh] w-auto rounded-md bg-white"
-                    onError={() => setProofLoadError(true)}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

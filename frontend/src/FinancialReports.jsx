@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -139,11 +140,45 @@ export default function FinancialReports() {
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="text-sm font-bold text-gray-900">Sales Trend</div>
-            <div className="mt-4 h-64 rounded-md border border-dashed border-gray-200 bg-gray-50" />
+            <div className="mt-4 h-64">
+              {loading ? (
+                 <div className="h-full w-full rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">Loading chart...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={report?.salesTrend || []}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} tick={{fill: '#6b7280', fontSize: 12}} />
+                    <YAxis axisLine={false} tickLine={false} tickMargin={10} tick={{fill: '#6b7280', fontSize: 12}} tickFormatter={(val) => `Rp${val/1000}k`} />
+                    <Tooltip formatter={(value) => formatIdr(value)} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="text-sm font-bold text-gray-900">Monthly Profit</div>
-            <div className="mt-4 h-64 rounded-md border border-dashed border-gray-200 bg-gray-50" />
+            <div className="mt-4 h-64">
+              {loading ? (
+                 <div className="h-full w-full rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">Loading chart...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={report?.salesTrend || []}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} tick={{fill: '#6b7280', fontSize: 12}} />
+                    <YAxis axisLine={false} tickLine={false} tickMargin={10} tick={{fill: '#6b7280', fontSize: 12}} tickFormatter={(val) => `Rp${val/1000}k`} />
+                    <Tooltip formatter={(value) => formatIdr(value)} cursor={{fill: 'transparent'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                    <Bar dataKey="profit" radius={[4, 4, 0, 0]}>
+                      {
+                        (report?.salesTrend || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.profit >= 0 ? '#16a34a' : '#dc2626'} />
+                        ))
+                      }
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
         </div>
       </div>

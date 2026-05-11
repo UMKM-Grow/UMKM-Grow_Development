@@ -1,29 +1,5 @@
 const { Op } = require('sequelize');
-const { sequelize, Transaction, TransactionDetail, Product, Expense } = require('../models');
-
-let transactionColumnsPromise;
-const getTransactionColumns = async () => {
-  if (!transactionColumnsPromise) {
-    transactionColumnsPromise = sequelize.getQueryInterface().describeTable('transactions').catch(() => null);
-  }
-  return transactionColumnsPromise;
-};
-
-let detailColumnsPromise;
-const getTransactionDetailColumns = async () => {
-  if (!detailColumnsPromise) {
-    detailColumnsPromise = sequelize.getQueryInterface().describeTable('transaction_details').catch(() => null);
-  }
-  return detailColumnsPromise;
-};
-
-let productColumnsPromise;
-const getProductColumns = async () => {
-  if (!productColumnsPromise) {
-    productColumnsPromise = sequelize.getQueryInterface().describeTable('products').catch(() => null);
-  }
-  return productColumnsPromise;
-};
+const { Transaction, Expense } = require('../models');
 
 function startOfWeek(date) {
   const d = new Date(date);
@@ -58,123 +34,69 @@ function toDateOnlyString(date) {
 
 function buildDateRange(period) {
   const now = new Date();
-  if (period === 'day' || period === 'today') {
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    return { start, end: now };
-  }
   if (period === 'week') return { start: startOfWeek(now), end: now };
   if (period === 'month') return { start: startOfMonth(now), end: now };
   if (period === 'year') return { start: startOfYear(now), end: now };
   return { start: null, end: null };
 }
 
-function parseDateOrNull(value) {
-  if (!value) return null;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  return d;
-}
-
-async function computeCogs(txWhere) {
-  const candidates = ['cogs', 'cost', 'cost_price', 'purchase_price', 'buy_price', 'harga_beli', 'modal'];
-
-  const [detailColumns, productColumns] = await Promise.all([getTransactionDetailColumns(), getProductColumns()]);
-  const detailCostColumn = candidates.find((c) => Boolean(detailColumns?.[c]));
-  const productCostColumn = candidates.find((c) => Boolean(productColumns?.[c]));
-
-  if (detailCostColumn) {
-    const rows = await TransactionDetail.findAll({
-      attributes: [
-        [
-          sequelize.fn(
-            'SUM',
-            sequelize.literal(`\`TransactionDetail\`.\`quantity\` * \`TransactionDetail\`.\`${detailCostColumn}\``)
-          ),
-          'cogs',
-        ],
-      ],
-      include: [
-        {
-          model: Transaction,
-          attributes: [],
-          where: txWhere,
-          required: true,
-        },
-      ],
-      raw: true,
-    });
-
-    const value = Number(rows?.[0]?.cogs);
-    return { cogs: Number.isFinite(value) ? value : 0, cogsAvailable: true, cogsSource: `transaction_details.${detailCostColumn}` };
-  }
-
-  if (productCostColumn) {
-    const rows = await TransactionDetail.findAll({
-      attributes: [
-        [
-          sequelize.fn(
-            'SUM',
-            sequelize.literal(`\`TransactionDetail\`.\`quantity\` * \`product\`.\`${productCostColumn}\``)
-          ),
-          'cogs',
-        ],
-      ],
-      include: [
-        {
-          model: Transaction,
-          attributes: [],
-          where: txWhere,
-          required: true,
-        },
-        {
-          model: Product,
-          as: 'product',
-          attributes: [],
-          required: true,
-        },
-      ],
-      raw: true,
-    });
-
-    const value = Number(rows?.[0]?.cogs);
-    return { cogs: Number.isFinite(value) ? value : 0, cogsAvailable: true, cogsSource: `products.${productCostColumn}` };
-  }
-
-  return { cogs: 0, cogsAvailable: false, cogsSource: null };
-}
-
-async function getFinancialReport(period = 'month', options = {}) {
-  const normalized = ['day', 'today', 'week', 'month', 'year', 'all'].includes(period) ? period : 'month';
-
-  const forcedStart = parseDateOrNull(options?.startDate);
-  const forcedEnd = parseDateOrNull(options?.endDate);
-  const { start, end } = forcedStart && forcedEnd ? { start: forcedStart, end: forcedEnd } : buildDateRange(normalized);
+async function getFinancialReport(period = 'month') {
+  const normalized = ['week', 'month', 'year', 'all'].includes(period) ? period : 'month';
+  const { start, end } = buildDateRange(normalized);
 
   const txWhere = start && end ? { createdAt: { [Op.between]: [start, end] } } : {};
   const expenseWhere =
-    start && end ? { tanggal: { [Op.between]: [toDateOnlyString(start), toDateOnlyString(end)] } } : {};
+    start && end
+      ? { tanggal: { [Op.between]: [toDateOnlyString(start), toDateOnlyString(end)] } }
+      : {};
 
-  const txColumns = await getTransactionColumns();
-  const revenueColumn = txColumns?.total_belanja
-    ? 'total_belanja'
-    : txColumns?.total_price
-      ? 'total_price'
-      : txColumns?.total_amount
-        ? 'total_amount'
-        : 'total_price';
+  const txs = await Transaction.findAll({ where: txWhere, attributes: ['createdAt', 'total_price'] });
+  const exps = await Expense.findAll({ where: expenseWhere, attributes: ['tanggal', 'nominal'] });
 
-  const revenueRaw = await Transaction.sum(revenueColumn, { where: txWhere });
+  const trendMap = {};
+  
+  const getLabel = (date) => {
+    const d = new Date(date);
+    if (normalized === 'week') {
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      return days[d.getDay()];
+    }
+    if (normalized === 'month') return String(d.getDate());
+    if (normalized === 'year') {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return months[d.getMonth()];
+    }
+    return toDateOnlyString(d);
+  };
+
+  txs.forEach(t => {
+    const label = getLabel(t.createdAt);
+    if (!trendMap[label]) trendMap[label] = { revenue: 0, expense: 0 };
+    trendMap[label].revenue += Number(t.total_price) || 0;
+  });
+
+  exps.forEach(e => {
+    const label = getLabel(e.tanggal);
+    if (!trendMap[label]) trendMap[label] = { revenue: 0, expense: 0 };
+    trendMap[label].expense += Number(e.nominal) || 0;
+  });
+
+  const salesTrend = Object.keys(trendMap).map(name => ({
+    name,
+    revenue: trendMap[name].revenue,
+    profit: trendMap[name].revenue - trendMap[name].expense
+  }));
+
+  const revenueRaw = await Transaction.sum('total_price', { where: txWhere });
   const expensesRaw = await Expense.sum('nominal', { where: expenseWhere });
 
   const revenue = Number(revenueRaw) || 0;
   const expenses = Number(expensesRaw) || 0;
 
-  const cogsResult = await computeCogs(txWhere);
-  const cogs = Number(cogsResult.cogs) || 0;
+  const cogs = 0;
   const grossProfit = revenue - cogs;
   const netProfit = grossProfit - expenses;
-  const totalCost = cogs;
+  const totalCost = expenses + cogs;
   const profitMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
   return {
@@ -188,9 +110,8 @@ async function getFinancialReport(period = 'month', options = {}) {
     grossProfit,
     netProfit,
     profitMargin,
-    cogsAvailable: cogsResult.cogsAvailable,
-    cogsSource: cogsResult.cogsSource,
-    revenueSource: `transactions.${revenueColumn}`,
+    cogsAvailable: false,
+    salesTrend
   };
 }
 

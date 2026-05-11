@@ -63,13 +63,13 @@ export default function FinancialReports() {
   const cards = useMemo(() => {
     const revenue = Number(report?.revenue) || 0;
     const totalCost = Number(report?.totalCost) || 0;
-    const grossProfit = Number(report?.grossProfit) || 0;
+    const grossProfit = revenue - totalCost;
     const profitMargin = Number(report?.profitMargin) || 0;
 
     return [
       { label: 'Total Revenue', value: formatIdr(revenue) },
       { label: 'Total Cost', value: formatIdr(totalCost) },
-      { label: 'Gross Profit', value: formatIdr(grossProfit) },
+      { label: 'Gross Profit', value: formatIdr(grossProfit), isNegative: grossProfit < 0 },
       { label: 'Profit Margin', value: formatPercent(profitMargin) },
     ];
   }, [report]);
@@ -129,7 +129,7 @@ export default function FinancialReports() {
           {cards.map((c) => (
             <div key={c.label} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
               <div className="text-xs font-bold uppercase tracking-wide text-gray-500">{c.label}</div>
-              <div className="mt-2 text-xl font-black text-gray-900">
+              <div className={`mt-2 text-xl font-black ${c.isNegative ? 'text-red-600' : 'text-gray-900'}`}>
                 {loading ? 'Loading…' : c.value}
               </div>
             </div>

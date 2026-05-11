@@ -144,7 +144,7 @@ export default function FinancialReports() {
               {loading ? (
                  <div className="h-full w-full rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">Loading chart...</div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={report?.salesTrend || []}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} tick={{fill: '#6b7280', fontSize: 12}} />
@@ -162,7 +162,7 @@ export default function FinancialReports() {
               {loading ? (
                  <div className="h-full w-full rounded-md border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-400 font-medium">Loading chart...</div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={report?.salesTrend || []}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} tick={{fill: '#6b7280', fontSize: 12}} />

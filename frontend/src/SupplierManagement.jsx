@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Edit2, Trash2, Plus, MessageCircle, X } from 'lucide-react';
+import { Edit2, Trash2, Plus, MessageCircle, X, History } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api/suppliers';
 
@@ -14,8 +14,13 @@ const SupplierManagement = () => {
     kontak_person: '',
     nomor_wa: '',
     alamat: '',
+    alamat: '',
     kategori_pasokan: ''
   });
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [supplierHistory, setSupplierHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedSupplierForHistory, setSelectedSupplierForHistory] = useState(null);
 
   const fetchSuppliers = async () => {
     try {
@@ -59,6 +64,27 @@ const SupplierManagement = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingSupplier(null);
+  };
+
+  const openHistoryModal = async (supplier) => {
+    setSelectedSupplierForHistory(supplier);
+    setHistoryModalOpen(true);
+    setHistoryLoading(true);
+    try {
+      const res = await axios.get(`${API_URL}/${supplier.id}/history`);
+      setSupplierHistory(res.data.data || []);
+    } catch (error) {
+      console.error('Error fetching history', error);
+      setSupplierHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const closeHistoryModal = () => {
+    setHistoryModalOpen(false);
+    setSelectedSupplierForHistory(null);
+    setSupplierHistory([]);
   };
 
   const handleInputChange = (e) => {
@@ -168,6 +194,13 @@ const SupplierManagement = () => {
                             title="Hubungi via WhatsApp"
                           >
                             <MessageCircle size={18} />
+                          </button>
+                          <button
+                            onClick={() => openHistoryModal(supplier)}
+                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
+                            title="Riwayat Pembelian"
+                          >
+                            <History size={18} />
                           </button>
                           <button
                             onClick={() => openModal(supplier)}
@@ -290,6 +323,65 @@ const SupplierManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {historyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900">
+                Riwayat Pembelian - {selectedSupplierForHistory?.nama_supplier}
+              </h2>
+              <button onClick={closeHistoryModal} className="text-gray-400 hover:text-gray-600 transition">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {historyLoading ? (
+                <div className="text-center py-8 text-gray-500">Memuat riwayat...</div>
+              ) : supplierHistory.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">Belum ada riwayat pembelian dari supplier ini.</div>
+              ) : (
+                <div className="space-y-4">
+                  {supplierHistory.map((po) => (
+                    <div key={po.id_po} className="border border-gray-200 rounded-lg p-4 shadow-sm">
+                      <div className="flex justify-between items-center mb-3">
+                        <div>
+                          <span className="font-semibold text-gray-800">Tanggal:</span> {new Date(po.tanggal_pesanan).toLocaleDateString('id-ID')}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${po.status === 'Received' ? 'bg-green-100 text-green-700' : po.status === 'Ordered' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                            {po.status}
+                          </span>
+                          <span className="font-bold text-gray-900">Rp {Number(po.total_nilai).toLocaleString('id-ID')}</span>
+                        </div>
+                      </div>
+                      <table className="w-full text-sm text-left border-t border-gray-100 mt-2 pt-2">
+                        <thead>
+                          <tr className="text-gray-500">
+                            <th className="py-1">Produk</th>
+                            <th className="py-1 text-center">Qty</th>
+                            <th className="py-1 text-right">Harga Satuan</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {po.details?.map((detail) => (
+                            <tr key={detail.id_detail_po}>
+                              <td className="py-1 font-medium text-gray-800">{detail.product?.name || 'Produk Tidak Ditemukan'}</td>
+                              <td className="py-1 text-center">{detail.kuantitas_pesanan}</td>
+                              <td className="py-1 text-right">Rp {Number(detail.harga_beli).toLocaleString('id-ID')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

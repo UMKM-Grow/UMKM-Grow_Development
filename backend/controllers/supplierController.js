@@ -1,4 +1,4 @@
-const { Supplier } = require('../models');
+const { Supplier, PurchaseOrder, PurchaseOrderDetail, Product } = require('../models');
 
 // GET all suppliers
 const getAllSuppliers = async (req, res) => {
@@ -77,9 +77,44 @@ const deleteSupplier = async (req, res) => {
   }
 };
 
+// GET supplier history (PO and Details)
+const getSupplierHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const supplier = await Supplier.findByPk(id);
+    if (!supplier) {
+      return res.status(404).json({ success: false, message: 'Supplier tidak ditemukan' });
+    }
+
+    const history = await PurchaseOrder.findAll({
+      where: { supplier_id: id },
+      include: [
+        {
+          model: PurchaseOrderDetail,
+          as: 'details',
+          include: [
+            {
+              model: Product,
+              as: 'product',
+              attributes: ['name']
+            }
+          ]
+        }
+      ],
+      order: [['tanggal_pesanan', 'DESC']]
+    });
+
+    res.status(200).json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
 module.exports = {
   getAllSuppliers,
   createSupplier,
   updateSupplier,
-  deleteSupplier
+  deleteSupplier,
+  getSupplierHistory
 };

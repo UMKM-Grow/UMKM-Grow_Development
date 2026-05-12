@@ -1,0 +1,10 @@
+{
+  "name": "umkm-grow-root",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c magenta,cyan \"npm --prefix backend start\" \"npm --prefix frontend run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

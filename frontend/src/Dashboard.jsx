@@ -1,6 +1,6 @@
 import { createElement, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Boxes, Building2, ClipboardList, CreditCard, LogOut, Settings, ShoppingCart, Users, Wallet } from 'lucide-react';
+import { Boxes, Building2, ClipboardList, CreditCard, LogOut, Settings, ShoppingCart, Users, Wallet, Truck } from 'lucide-react';
 
 function readUser() {
   try {
@@ -40,6 +40,12 @@ export default function Dashboard() {
         title: 'Keuangan',
         desc: 'Modul manajemen keuangan',
         Icon: Wallet,
+      },
+      {
+        to: '/suppliers',
+        title: 'Manajemen Pemasok',
+        desc: 'Data supplier & riwayat PO',
+        Icon: Truck,
       },
       {
         to: '/finance/expenses',
@@ -124,6 +130,7 @@ export default function Dashboard() {
                 </div>
               </Link>
             ))}
+          </div>
           </div>
         </div>
       </div>

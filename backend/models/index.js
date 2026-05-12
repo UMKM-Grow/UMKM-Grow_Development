@@ -7,6 +7,9 @@ const Customer = require('./Customer');
 const Transaction = require('./Transaction');
 const TransactionDetail = require('./TransactionDetail');
 const Expense = require('./Expense');
+const Supplier = require('./Supplier');
+const PurchaseOrder = require('./PurchaseOrder');
+const PurchaseOrderDetail = require('./PurchaseOrderDetail');
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -34,6 +37,19 @@ Product.hasMany(TransactionDetail, { foreignKey: 'product_id', as: 'transaction_
 
 User.hasMany(Expense, { foreignKey: 'user_id', as: 'expenses' });
 Expense.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+// Supplier and Purchase Order Relations
+Supplier.hasMany(PurchaseOrder, { foreignKey: 'supplier_id', as: 'purchase_orders' });
+PurchaseOrder.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
+
+PurchaseOrder.hasMany(PurchaseOrderDetail, { foreignKey: 'po_id', as: 'details' });
+PurchaseOrderDetail.belongsTo(PurchaseOrder, { foreignKey: 'po_id', as: 'purchase_order' });
+
+Product.hasMany(PurchaseOrderDetail, { foreignKey: 'product_id', as: 'po_details' });
+PurchaseOrderDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+User.hasMany(PurchaseOrder, { foreignKey: 'user_id', as: 'purchase_orders' });
+PurchaseOrder.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 let dbReady = false;
 let initPromise = null;
@@ -76,6 +92,9 @@ module.exports = {
   Transaction,
   TransactionDetail,
   Expense,
+  Supplier,
+  PurchaseOrder,
+  PurchaseOrderDetail,
   initDb,
   isDbReady,
   ensureDbReady,

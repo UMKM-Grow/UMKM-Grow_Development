@@ -10,6 +10,7 @@ import Expenses from './Expenses';
 import FinancialReports from './FinancialReports';
 import Settings from './Settings';
 import Absensi from './Absensi';
+import SupplierManagement from './SupplierManagement';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -26,6 +27,7 @@ function App() {
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/pos" element={<RequireAuth><POS /></RequireAuth>} />
         <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
+        <Route path="/suppliers" element={<RequireAuth><SupplierManagement /></RequireAuth>} />
         <Route path="/absensi" element={<RequireAuth><Absensi /></RequireAuth>} />
         <Route path="/crm" element={<RequireAuth><CRM /></RequireAuth>} />
         <Route path="/finance" element={<RequireAuth><Finance /></RequireAuth>} />

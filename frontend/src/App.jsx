@@ -1,19 +1,50 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BranchProvider } from './BranchContext';
+import Navbar from './Navbar';
+import Branches from './Branches';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<div>Halaman Login (Setup by Luthfi nanti)</div>} />
-        <Route path="/dashboard" element={<div>Dashboard (Setup by Zulfikri nanti)</div>} />
-        <Route path="/pos" element={<div>Kasir POS (Setup by Bilal nanti)</div>} />
-        <Route path="/inventory" element={<div>Inventori (Setup by Afnan nanti)</div>} />
-        <Route path="/crm" element={<div>Pelanggan (Setup by Diska nanti)</div>} />
-        <Route path="/finance" element={<div>Keuangan (Setup by Nabil nanti)</div>} />
-        <Route path="/hrm" element={<div>HRD & Absensi (Setup by Luthfi nanti)</div>} />
-        <Route path="/settings" element={<div>Pengaturan Multi-Cabang (Setup by Lavio)</div>} />
-      </Routes>
-    </BrowserRouter>
+    <BranchProvider>
+      <BrowserRouter>
+        <Navbar />
+        <main className="min-h-screen bg-gray-50">
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="/dashboard"
+              element={
+                <div className="mx-auto max-w-7xl p-6">
+                  <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                  <p className="mt-2 text-gray-600">
+                    Mulai dari sini untuk melihat ringkasan cabang dan performa operasional.
+                  </p>
+                </div>
+              }
+            />
+            <Route
+              path="/inventory"
+              element={
+                <div className="mx-auto max-w-7xl p-6">
+                  <h1 className="text-2xl font-bold text-gray-900">Inventori</h1>
+                  <p className="mt-2 text-gray-600">Filter produk per cabang dan kelola stok dengan lebih baik.</p>
+                </div>
+              }
+            />
+            <Route path="/admin/branches" element={<Branches />} />
+            <Route
+              path="/settings"
+              element={
+                <div className="mx-auto max-w-7xl p-6">
+                  <h1 className="text-2xl font-bold text-gray-900">Pengaturan Multi-Cabang</h1>
+                  <p className="mt-2 text-gray-600">Pengaturan global untuk cabang dan manajemen user.</p>
+                </div>
+              }
+            />
+          </Routes>
+        </main>
+      </BrowserRouter>
+    </BranchProvider>
   );
 }
 

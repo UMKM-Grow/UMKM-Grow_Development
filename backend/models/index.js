@@ -2,6 +2,7 @@ const sequelize = require('../config/database');
 const Product = require('./Product');
 const ProductVariant = require('./ProductVariant');
 const User = require('./User');
+const Supplier = require('./Supplier');
 
 const initDb = async () => {
   try {
@@ -16,4 +17,4 @@ const initDb = async () => {
   }
 };
 
-module.exports = { sequelize, Product, ProductVariant, User, initDb };
+module.exports = { sequelize, Product, ProductVariant, User, Supplier, initDb };

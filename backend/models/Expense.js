@@ -8,7 +8,7 @@ module.exports = (sequelize) => {
       amount: { type: DataTypes.DECIMAL(14, 2), allowNull: false, defaultValue: 0 },
       description: { type: DataTypes.TEXT, allowNull: true },
       branch_id: { type: DataTypes.INTEGER, allowNull: true },
-      date: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+      date: { type: DataTypes.DATE, allowNull: true },
     },
     {
       tableName: 'expenses',

@@ -9,7 +9,7 @@ module.exports = (sequelize) => {
       from_branch_id: { type: DataTypes.INTEGER, allowNull: false },
       to_branch_id: { type: DataTypes.INTEGER, allowNull: false },
       quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-      tanggal: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
+      tanggal: { type: DataTypes.DATE, allowNull: true },
     },
     {
       tableName: 'stock_mutations',

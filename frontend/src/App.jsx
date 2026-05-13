@@ -1,50 +1,43 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { BranchProvider } from './BranchContext';
-import Navbar from './Navbar';
-import Branches from './Branches';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Login from './Login';
+import Dashboard from './Dashboard';
+import Inventory from './Inventory';
+import HRM from './HRM';
+import POS from './POS';
+import CRM from './CRM';
+import Finance from './Finance';
+import Expenses from './Expenses';
+import FinancialReports from './FinancialReports';
+import Settings from './Settings';
+import Absensi from './Absensi';
+import SupplierManagement from './SupplierManagement';
+
+function RequireAuth({ children }) {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
 
 function App() {
   return (
-    <BranchProvider>
-      <BrowserRouter>
-        <Navbar />
-        <main className="min-h-screen bg-gray-50">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route
-              path="/dashboard"
-              element={
-                <div className="mx-auto max-w-7xl p-6">
-                  <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                  <p className="mt-2 text-gray-600">
-                    Mulai dari sini untuk melihat ringkasan cabang dan performa operasional.
-                  </p>
-                </div>
-              }
-            />
-            <Route
-              path="/inventory"
-              element={
-                <div className="mx-auto max-w-7xl p-6">
-                  <h1 className="text-2xl font-bold text-gray-900">Inventori</h1>
-                  <p className="mt-2 text-gray-600">Filter produk per cabang dan kelola stok dengan lebih baik.</p>
-                </div>
-              }
-            />
-            <Route path="/admin/branches" element={<Branches />} />
-            <Route
-              path="/settings"
-              element={
-                <div className="mx-auto max-w-7xl p-6">
-                  <h1 className="text-2xl font-bold text-gray-900">Pengaturan Multi-Cabang</h1>
-                  <p className="mt-2 text-gray-600">Pengaturan global untuk cabang dan manajemen user.</p>
-                </div>
-              }
-            />
-          </Routes>
-        </main>
-      </BrowserRouter>
-    </BranchProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+        <Route path="/pos" element={<RequireAuth><POS /></RequireAuth>} />
+        <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
+        <Route path="/suppliers" element={<RequireAuth><SupplierManagement /></RequireAuth>} />
+        <Route path="/absensi" element={<RequireAuth><Absensi /></RequireAuth>} />
+        <Route path="/crm" element={<RequireAuth><CRM /></RequireAuth>} />
+        <Route path="/finance" element={<RequireAuth><Finance /></RequireAuth>} />
+        <Route path="/finance/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
+        <Route path="/finance/reports" element={<RequireAuth><FinancialReports /></RequireAuth>} />
+        <Route path="/hrm" element={<RequireAuth><HRM /></RequireAuth>} />
+        <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

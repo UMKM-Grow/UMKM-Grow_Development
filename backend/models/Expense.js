@@ -1,24 +1,21 @@
 const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-module.exports = (sequelize) => {
-  const Expense = sequelize.define(
-    'Expense',
-    {
-      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-      amount: { type: DataTypes.DECIMAL(14, 2), allowNull: false, defaultValue: 0 },
-      description: { type: DataTypes.TEXT, allowNull: true },
-      branch_id: { type: DataTypes.INTEGER, allowNull: true },
-      date: { type: DataTypes.DATE, allowNull: true },
-    },
-    {
-      tableName: 'expenses',
-      timestamps: true,
-    },
-  );
+const Expense = sequelize.define(
+  'Expense',
+  {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    user_id: { type: DataTypes.INTEGER, allowNull: false },
+    tanggal: { type: DataTypes.DATEONLY, allowNull: false },
+    kategori: { type: DataTypes.STRING, allowNull: false },
+    nominal: { type: DataTypes.DECIMAL(14, 2), allowNull: false, defaultValue: 0 },
+    keterangan: { type: DataTypes.TEXT, allowNull: true },
+    bukti_foto: { type: DataTypes.STRING, allowNull: true },
+  },
+  {
+    tableName: 'expenses',
+    timestamps: true,
+  }
+);
 
-  Expense.associate = (models) => {
-    Expense.belongsTo(models.Branch, { foreignKey: 'branch_id', as: 'branch' });
-  };
-
-  return Expense;
-};
+module.exports = Expense;

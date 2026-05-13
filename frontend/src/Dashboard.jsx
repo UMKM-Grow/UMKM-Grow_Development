@@ -83,21 +83,21 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4">
+        <div className="rounded-[28px] border border-slate-200 bg-white shadow-soft p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="text-left">
-              <h1 className="text-2xl font-bold text-gray-900">Menu Fitur</h1>
-              <div className="mt-1 text-sm text-gray-500">
+              <h1 className="text-3xl font-semibold text-slate-900">Dashboard</h1>
+              <p className="mt-2 text-sm text-slate-600">
                 {user?.name ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.` : 'Pilih modul untuk mulai bekerja.'}
-              </div>
+              </p>
             </div>
 
             <button
               type="button"
               onClick={logout}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
             >
               <LogOut size={16} />
               Logout
@@ -110,22 +110,24 @@ export default function Dashboard() {
                 key={to}
                 to={to}
                 className={[
-                  'rounded-lg border bg-white p-5 transition-colors',
-                  highlight ? 'border-blue-200 ring-1 ring-blue-100 hover:bg-blue-50/30' : 'border-gray-200 hover:bg-gray-50',
+                  'rounded-[24px] border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md',
+                  highlight
+                    ? 'border-brand-200 ring-1 ring-brand-100 bg-brand-50/70 hover:bg-brand-50'
+                    : 'border-slate-200 hover:bg-slate-50',
                 ].join(' ')}
               >
                 <div className="flex items-start gap-3">
                   <div
                     className={[
-                      'flex h-10 w-10 items-center justify-center rounded-md',
-                      highlight ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700',
+                      'flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm',
+                      highlight ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700',
                     ].join(' ')}
                   >
                     {createElement(Icon, { size: 18 })}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-gray-900">{title}</div>
-                    <div className="mt-1 text-sm text-gray-500">{desc}</div>
+                    <div className="text-sm font-semibold text-slate-900">{title}</div>
+                    <div className="mt-1 text-sm text-slate-500">{desc}</div>
                   </div>
                 </div>
               </Link>

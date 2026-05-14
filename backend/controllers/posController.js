@@ -1,5 +1,6 @@
+const { Op } = require('sequelize');
 const sequelize = require('../config/database');
-const { Product, ProductVariant, Transaction, TransactionDetail } = require('../models');
+const { Product, ProductVariant, Transaction, TransactionDetail, Promo } = require('../models');
 
 let transactionColumnsPromise;
 const getTransactionColumns = async () => {
@@ -10,7 +11,7 @@ const getTransactionColumns = async () => {
 };
 
 const checkout = async (req, res) => {
-  const { customer_id, payment_method, items, branch_id } = req.body || {};
+  const { customer_id, payment_method, items, branch_id, promo_code } = req.body || {};
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'Cart items are required' });
@@ -114,17 +115,65 @@ const checkout = async (req, res) => {
 
       const totalAmount = detailsPayload.reduce((sum, d) => sum + d.subtotal, 0);
 
+      let discountAmount = 0;
+      let normalizedPromoCode = null;
+      if (promo_code) {
+        normalizedPromoCode = String(promo_code).trim().toUpperCase();
+        if (normalizedPromoCode) {
+          const promoWhere = {
+            kode_promo: normalizedPromoCode,
+            is_active: true,
+            tanggal_mulai: { [Op.lte]: new Date() },
+            tanggal_berakhir: { [Op.gte]: new Date() },
+          };
+          if (Number.isInteger(selectedBranchId) && selectedBranchId > 0) {
+            promoWhere[Op.or] = [{ branch_id: selectedBranchId }, { branch_id: null }];
+          } else {
+            promoWhere.branch_id = null;
+          }
+
+          const promo = await Promo.findOne({ where: promoWhere, transaction: t });
+          if (!promo) {
+            const error = new Error('Kode promo tidak ditemukan atau tidak aktif');
+            error.statusCode = 400;
+            throw error;
+          }
+
+          const minimal = Number(promo.minimal_belanja) || 0;
+          if (totalAmount < minimal) {
+            const error = new Error('Total belanja belum memenuhi syarat promo');
+            error.statusCode = 400;
+            throw error;
+          }
+
+          if (promo.tipe_diskon === 'Nominal') {
+            discountAmount = Number(promo.nilai_diskon) || 0;
+          } else {
+            discountAmount = ((Number(promo.nilai_diskon) || 0) / 100) * totalAmount;
+          }
+
+          discountAmount = Number.isFinite(discountAmount) ? Math.min(discountAmount, totalAmount) : 0;
+          discountAmount = Math.round(discountAmount);
+        }
+      }
+
+      const finalTotalPrice = Math.max(0, Math.round(totalAmount - discountAmount));
+
       const columns = await getTransactionColumns();
       const txPayload = {
         customer_id: customer_id ? Number(customer_id) : null,
         branch_id: Number.isInteger(selectedBranchId) && selectedBranchId > 0 ? selectedBranchId : null,
-        total_price: totalAmount,
+        total_price: finalTotalPrice,
+        discount_amount: discountAmount,
+        promo_code: normalizedPromoCode || null,
         status: 'paid',
       };
 
       if (columns?.user_id) txPayload.user_id = userId;
       if (columns?.total_amount) txPayload.total_amount = totalAmount;
       if (columns?.payment_method) txPayload.payment_method = paymentMethodNormalized;
+      if (columns?.discount_amount) txPayload.discount_amount = discountAmount;
+      if (columns?.promo_code) txPayload.promo_code = normalizedPromoCode || null;
 
       const tx = await Transaction.create(txPayload, { transaction: t });
 

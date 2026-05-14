@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from 'react';
 import BranchContext from './BranchContext';
 
+const MUTATION_EVENT = 'stock-mutation-updated';
+
 export default function StockMutation() {
   const { branches, selectedBranchId } = useContext(BranchContext);
   const [form, setForm] = useState({
@@ -36,7 +38,8 @@ export default function StockMutation() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       const data = await response.json();
-      setProducts(Array.isArray(data) ? data : []);
+      const productsData = Array.isArray(data) ? data : data?.data ?? [];
+      setProducts(productsData);
     } catch (error) {
       console.error('Failed to load products:', error);
       setProducts([]);
@@ -109,6 +112,10 @@ export default function StockMutation() {
       }
 
       setMessage('success|Mutasi stok berhasil diproses!');
+      
+      // Broadcast event ke semua listeners (termasuk Inventory page)
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+      
       setForm({
         product_id: '',
         from_branch_id: selectedBranchId,
@@ -187,7 +194,7 @@ export default function StockMutation() {
             ) : (
               products.map((product) => (
                 <option key={product.id} value={product.id}>
-                  {product.nama_produk} (SKU: {product.sku}, Stok: {product.stok})
+                  {product.nama_produk || product.name}
                 </option>
               ))
             )}

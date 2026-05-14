@@ -1,4 +1,5 @@
-const { Product, Branch, StockMutation, sequelize } = require('../models');
+const { Product, ProductVariant, Branch, StockMutation, sequelize } = require('../models');
+const { Op } = require('sequelize');
 
 exports.createMutation = async (req, res) => {
   const t = await sequelize.transaction(); // Mulai transaksi untuk keamanan
@@ -23,53 +24,86 @@ exports.createMutation = async (req, res) => {
     }
 
     // 1. Cek stok di Cabang Asal
-    const productAsal = await Product.findOne(
-      {
-        where: { id: product_id, branch_id: from_branch_id },
-      },
-      { transaction: t }
-    );
+    const productAsal = await Product.findOne({
+      where: { id: product_id, branch_id: from_branch_id },
+      include: [{ model: ProductVariant, as: 'variants' }],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
 
     if (!productAsal) {
       await t.rollback();
       return res.status(404).json({ error: 'Produk tidak ditemukan di cabang asal' });
     }
 
-    if (productAsal.stok < quantity) {
+    const variantStock = Array.isArray(productAsal.variants)
+      ? productAsal.variants.reduce((sum, variant) => sum + (Number(variant.stock) || 0), 0)
+      : 0;
+    const totalAvailableStock = Number(productAsal.stok || 0) + variantStock;
+
+    if (totalAvailableStock < quantity) {
       await t.rollback();
       return res.status(400).json({
-        error: `Stok tidak mencukupi. Stok tersedia: ${productAsal.stok}, diminta: ${quantity}`,
+        error: `Stok tidak mencukupi. Stok tersedia: ${totalAvailableStock}, diminta: ${quantity}`,
       });
     }
 
     // 2. Kurangi stok Cabang Asal
-    productAsal.stok -= quantity;
-    await productAsal.save({ transaction: t });
+    let remaining = quantity;
+    if (productAsal.stok > 0) {
+      const deductFromProduct = Math.min(productAsal.stok, remaining);
+      productAsal.stok -= deductFromProduct;
+      remaining -= deductFromProduct;
+      await productAsal.save({ transaction: t });
+    }
+
+    if (remaining > 0 && Array.isArray(productAsal.variants)) {
+      for (const variant of productAsal.variants) {
+        if (remaining <= 0) break;
+
+        const deductFromVariant = Math.min(Number(variant.stock) || 0, remaining);
+        if (deductFromVariant <= 0) continue;
+
+        variant.stock -= deductFromVariant;
+        remaining -= deductFromVariant;
+        await variant.save({ transaction: t });
+      }
+    }
 
     // 3. Cari barang yang sama (berdasarkan SKU) di Cabang Tujuan
-    let productTujuan = await Product.findOne(
-      {
-        where: { sku: productAsal.sku, branch_id: to_branch_id },
-      },
-      { transaction: t }
-    );
+    let productTujuan = await Product.findOne({
+      where: { sku: productAsal.sku, branch_id: to_branch_id },
+      transaction: t,
+      lock: t.LOCK.UPDATE,
+    });
 
     // 4. Jika sudah ada, tambah stoknya. Jika belum, buat produk baru di cabang tujuan.
     if (productTujuan) {
       productTujuan.stok += quantity;
       await productTujuan.save({ transaction: t });
     } else {
-      await Product.create(
-        {
-          sku: productAsal.sku,
-          nama_produk: productAsal.nama_produk,
-          harga_jual: productAsal.harga_jual,
-          harga_beli: productAsal.harga_beli,
-          stok: quantity,
-          branch_id: to_branch_id,
-        },
-        { transaction: t }
-      );
+      try {
+        await Product.create(
+          {
+            sku: productAsal.sku,
+            name: productAsal.name,
+            description: productAsal.description,
+            category_id: productAsal.category_id,
+            base_price: productAsal.base_price,
+            branch_id: to_branch_id,
+            is_active: productAsal.is_active,
+            stok: quantity, // Set initial stock for new product
+          },
+          { transaction: t }
+        );
+      } catch (createError) {
+        // Jika masih ada error unique constraint atau lainnya
+        if (createError.name === 'SequelizeUniqueConstraintError') {
+          await t.rollback();
+          return res.status(409).json({ error: 'Produk dengan SKU ini sudah ada di cabang tujuan' });
+        }
+        throw createError; // Re-throw untuk error lainnya
+      }
     }
 
     // 5. Catat riwayat ke tabel StockMutations
@@ -105,14 +139,14 @@ exports.getMutationHistory = async (req, res) => {
     let where = {};
     if (branch_id) {
       where = {
-        [sequelize.Op.or]: [{ from_branch_id: branch_id }, { to_branch_id: branch_id }],
+        [Op.or]: [{ from_branch_id: branch_id }, { to_branch_id: branch_id }],
       };
     }
 
     const mutations = await StockMutation.findAll({
       where,
       include: [
-        { model: Product, as: 'product', attributes: ['id', 'sku', 'nama_produk'] },
+        { model: Product, as: 'product', attributes: ['id', 'sku', ['name', 'nama_produk']] },
         { model: Branch, as: 'fromBranch', attributes: ['id_cabang', 'nama_cabang'] },
         { model: Branch, as: 'toBranch', attributes: ['id_cabang', 'nama_cabang'] },
       ],

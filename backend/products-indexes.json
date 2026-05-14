@@ -1,0 +1,717 @@
+[
+  {
+    "primary": true,
+    "fields": [
+      {
+        "attribute": "id",
+        "order": "ASC"
+      }
+    ],
+    "name": "PRIMARY",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_2",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_3",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_4",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_5",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_6",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_7",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_8",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_9",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_10",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_11",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_12",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_13",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_14",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_15",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_16",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_17",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_18",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_19",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_20",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_21",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_22",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_23",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_24",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_25",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_26",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_27",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_28",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_29",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_30",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_31",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_32",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_33",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_34",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_35",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_36",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_37",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_38",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_39",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_40",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_41",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_42",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_43",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_44",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_45",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_46",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_47",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_48",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_49",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_50",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_51",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_52",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "sku",
+        "order": "ASC"
+      }
+    ],
+    "name": "sku_53",
+    "tableName": "products",
+    "unique": true,
+    "type": "BTREE"
+  },
+  {
+    "primary": false,
+    "fields": [
+      {
+        "attribute": "branch_id",
+        "order": "ASC"
+      }
+    ],
+    "name": "branch_id",
+    "tableName": "products",
+    "unique": false,
+    "type": "BTREE"
+  }
+]

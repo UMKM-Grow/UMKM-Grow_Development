@@ -3,6 +3,7 @@ import axios from 'axios';
 import BranchContext from './BranchContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const MUTATION_EVENT = 'stock-mutation-updated';
 
 function formatIdr(value) {
   const num = Number(value) || 0;
@@ -82,7 +83,11 @@ export default function POS() {
   const [processing, setProcessing] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [discountInput, setDiscountInput] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoMessage, setPromoMessage] = useState('');
+  const [promoApplying, setPromoApplying] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState(false);
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
   const { selectedBranchId } = useContext(BranchContext);
@@ -138,6 +143,12 @@ export default function POS() {
     };
   }, [selectedBranchId]);
 
+  useEffect(() => {
+    setAppliedPromo(false);
+    setPromoDiscount(0);
+    setPromoMessage('');
+  }, [subtotal, selectedBranchId]);
+
   const filteredProducts = useMemo(() => {
     const q = normalizeText(search);
 
@@ -153,10 +164,10 @@ export default function POS() {
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
   const discount = useMemo(() => {
-    const raw = Number(discountInput);
+    const raw = Number(promoDiscount);
     if (!Number.isFinite(raw) || raw <= 0) return 0;
     return Math.min(Math.floor(raw), subtotal);
-  }, [discountInput, subtotal]);
+  }, [promoDiscount, subtotal]);
 
   const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
 
@@ -189,6 +200,45 @@ export default function POS() {
       setCustomers([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleApplyPromo() {
+    if (promoApplying) return;
+    if (!promoCode.trim()) {
+      setPromoMessage('Masukkan kode promo terlebih dahulu');
+      return;
+    }
+    if (subtotal <= 0) {
+      setPromoMessage('Keranjang kosong');
+      return;
+    }
+
+    setPromoApplying(true);
+    setPromoMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      const response = await axios.post(
+        `${API_BASE}/promos/verify`,
+        {
+          kode_promo: promoCode.trim(),
+          total_belanja: subtotal,
+          branch_id: selectedBranchId || null,
+        },
+        { headers }
+      );
+
+      const discountAmount = Number(response.data?.total_diskon) || 0;
+      setPromoDiscount(discountAmount);
+      setAppliedPromo(true);
+      setPromoMessage(`Promo berhasil diterapkan: -${formatIdr(discountAmount)}`);
+    } catch (error) {
+      setAppliedPromo(false);
+      setPromoDiscount(0);
+      setPromoMessage(error?.response?.data?.message || error?.message || 'Kode promo tidak valid');
+    } finally {
+      setPromoApplying(false);
     }
   }
 
@@ -255,6 +305,8 @@ export default function POS() {
           product_id: i.product_id,
           quantity: i.quantity,
         })),
+        promo_code: appliedPromo && promoCode.trim() ? promoCode.trim().toUpperCase() : null,
+        discount_amount: appliedPromo ? discount : 0,
       };
 
       const token = localStorage.getItem('token');
@@ -263,8 +315,15 @@ export default function POS() {
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
 
       alert('Transaksi Berhasil!');
+      
+      // Broadcast event ke semua listeners (termasuk Inventory page)
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+      
       setCart([]);
-      setDiscountInput('');
+      setPromoCode('');
+      setPromoDiscount(0);
+      setPromoMessage('');
+      setAppliedPromo(false);
       setCashReceivedInput('');
       await refreshData();
     } catch (error) {
@@ -281,7 +340,10 @@ export default function POS() {
   function clearCart() {
     if (processing) return;
     setCart([]);
-    setDiscountInput('');
+    setPromoCode('');
+    setPromoDiscount(0);
+    setPromoMessage('');
+    setAppliedPromo(false);
     setCashReceivedInput('');
   }
 
@@ -453,16 +515,34 @@ export default function POS() {
         </div>
 
         <div className="mt-5">
-          <label className="block text-sm font-semibold text-gray-800">Discount (Rp)</label>
-          <input
-            value={discountInput}
-            onChange={(e) => setDiscountInput(e.target.value)}
-            type="number"
-            inputMode="numeric"
-            min="0"
-            className="mt-2 w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            placeholder="0"
-          />
+          <label className="block text-sm font-semibold text-gray-800">Input Kode Promo</label>
+          <div className="mt-2 flex gap-2">
+            <input
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value);
+                if (appliedPromo) {
+                  setAppliedPromo(false);
+                  setPromoDiscount(0);
+                  setPromoMessage('');
+                }
+              }}
+              type="text"
+              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="e.g. KEMERDEKAAN"
+            />
+            <button
+              type="button"
+              onClick={handleApplyPromo}
+              disabled={promoApplying || !promoCode.trim() || subtotal <= 0}
+              className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {promoApplying ? 'Applying…' : 'Terapkan'}
+            </button>
+          </div>
+          {promoMessage ? (
+            <div className="mt-2 text-sm text-gray-600">{promoMessage}</div>
+          ) : null}
         </div>
 
         <div className="mt-5 rounded-lg bg-gray-50 p-4">
@@ -471,11 +551,11 @@ export default function POS() {
             <div className="font-semibold text-gray-900">{formatIdr(subtotal)}</div>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-gray-700">
-            <div>Discount</div>
+            <div>Diskon</div>
             <div className="font-semibold text-red-600">-{formatIdr(discount)}</div>
           </div>
           <div className="mt-4 flex items-end justify-between">
-            <div className="text-sm font-semibold text-gray-800">Total</div>
+            <div className="text-sm font-semibold text-gray-800">Total Bayar</div>
             <div className="text-2xl font-bold text-gray-900">{formatIdr(total)}</div>
           </div>
         </div>

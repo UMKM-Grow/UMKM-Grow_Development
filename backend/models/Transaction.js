@@ -8,6 +8,8 @@ const Transaction = sequelize.define(
     customer_id: { type: DataTypes.INTEGER, allowNull: true },
     branch_id: { type: DataTypes.INTEGER, allowNull: true },
     total_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+    promo_code: { type: DataTypes.STRING, allowNull: true },
+    discount_amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
     status: { type: DataTypes.STRING, allowNull: true, defaultValue: 'paid' },
     user_id: { type: DataTypes.INTEGER, allowNull: true },
     total_amount: { type: DataTypes.INTEGER, allowNull: true },

@@ -14,10 +14,16 @@ const productController = {
         return res.status(400).json({ message: 'SKU is required' });
       }
 
-      const existing = await Product.findOne({ where: { sku: normalizedSku }, transaction: t });
+      const existing = await Product.findOne({ 
+        where: { 
+          sku: normalizedSku, 
+          branch_id: selectedBranchId 
+        }, 
+        transaction: t 
+      });
       if (existing) {
         await t.rollback();
-        return res.status(409).json({ message: 'SKU already exists' });
+        return res.status(409).json({ message: 'SKU already exists in this branch' });
       }
 
       const product = await Product.create({
@@ -27,6 +33,7 @@ const productController = {
         category_id,
         base_price,
         branch_id: selectedBranchId,
+        stok: 0, // Initialize stock to 0
       }, { transaction: t });
 
       if (variants && variants.length > 0) {
@@ -47,7 +54,7 @@ const productController = {
       await t.rollback();
       const isUniqueError = error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
       if (isUniqueError) {
-        return res.status(409).json({ message: 'SKU already exists' });
+        return res.status(409).json({ message: 'SKU already exists in this branch' });
       }
       res.status(500).json({ message: 'Error creating product', error: error.message });
     }
@@ -130,13 +137,14 @@ const productController = {
         const existing = await Product.findOne({
           where: {
             sku: normalizedSku,
+            branch_id: selectedBranchId,
             id: { [Op.ne]: product.id }
           },
           transaction: t
         });
         if (existing) {
           await t.rollback();
-          return res.status(409).json({ message: 'SKU already exists' });
+          return res.status(409).json({ message: 'SKU already exists in this branch' });
         }
       }
 
@@ -176,7 +184,7 @@ const productController = {
       await t.rollback();
       const isUniqueError = error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
       if (isUniqueError) {
-        return res.status(409).json({ message: 'SKU already exists' });
+        return res.status(409).json({ message: 'SKU already exists in this branch' });
       }
       res.status(500).json({ message: 'Error updating product', error: error.message });
     }

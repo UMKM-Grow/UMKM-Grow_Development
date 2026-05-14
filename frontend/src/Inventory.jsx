@@ -5,6 +5,7 @@ import ProductFormModal from './ProductFormModal';
 import BranchContext from './BranchContext';
 
 const API_URL = 'http://localhost:5000/api/products';
+const MUTATION_EVENT = 'stock-mutation-updated';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,7 @@ const Inventory = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const isSavingRef = useRef(false);
+  const pollingIntervalRef = useRef(null);
 
   const { selectedBranchId } = useContext(BranchContext);
 
@@ -63,6 +65,38 @@ const Inventory = () => {
 
     run();
   }, [selectedBranchId]);
+
+  // Setup event listener untuk real-time update saat ada mutasi stok
+  useEffect(() => {
+    const handleMutationUpdate = () => {
+      refreshProducts();
+    };
+
+    window.addEventListener(MUTATION_EVENT, handleMutationUpdate);
+
+    return () => {
+      window.removeEventListener(MUTATION_EVENT, handleMutationUpdate);
+    };
+  }, []);
+
+  // Setup polling untuk auto-refresh setiap 10 detik
+  useEffect(() => {
+    const startPolling = () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      
+      pollingIntervalRef.current = setInterval(() => {
+        refreshProducts();
+      }, 10000); // Refresh setiap 10 detik
+    };
+
+    startPolling();
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const formatRupiah = (value) => {
     const numericValue = typeof value === 'number' ? value : Number(value);
@@ -122,6 +156,10 @@ const Inventory = () => {
       } else {
         await axios.post(API_URL, payloadWithBranch);
       }
+      
+      // Trigger event untuk update inventory page
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+      
       await refreshProducts();
     } catch (error) {
       const status = error?.response?.status;
@@ -143,6 +181,10 @@ const Inventory = () => {
     try {
       setErrorMessage('');
       await axios.delete(`${API_URL}/${product.id}`);
+      
+      // Trigger event untuk update inventory page
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+      
       await refreshProducts();
     } catch (error) {
       setErrorMessage(error?.response?.data?.message || 'Gagal menghapus produk.');

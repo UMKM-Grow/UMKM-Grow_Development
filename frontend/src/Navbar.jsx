@@ -19,6 +19,9 @@ export default function Navbar() {
             <Link to="/inventory" className="hover:text-gray-900">
               Inventory
             </Link>
+            <Link to="/inventory/mutations" className="hover:text-gray-900">
+              Mutasi Stok
+            </Link>
             <Link to="/admin/branches" className="hover:text-gray-900">
               Cabang
             </Link>

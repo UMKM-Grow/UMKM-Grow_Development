@@ -12,6 +12,7 @@ import Settings from './Settings';
 import Absensi from './Absensi';
 import SupplierManagement from './SupplierManagement';
 import Branches from './Branches';
+import StockMutation from './StockMutation';
 import Navbar from './Navbar';
 import { BranchProvider } from './BranchContext';
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/hrm" element={<RequireAuth><AuthenticatedLayout><HRM /></AuthenticatedLayout></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><AuthenticatedLayout><Settings /></AuthenticatedLayout></RequireAuth>} />
           <Route path="/admin/branches" element={<RequireAuth><AuthenticatedLayout><Branches /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/inventory/mutations" element={<RequireAuth><AuthenticatedLayout><StockMutation /></AuthenticatedLayout></RequireAuth>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BranchProvider>

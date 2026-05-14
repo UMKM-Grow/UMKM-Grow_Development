@@ -11,6 +11,9 @@ import FinancialReports from './FinancialReports';
 import Settings from './Settings';
 import Absensi from './Absensi';
 import SupplierManagement from './SupplierManagement';
+import Branches from './Branches';
+import Navbar from './Navbar';
+import { BranchProvider } from './BranchContext';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -18,25 +21,37 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function AuthenticatedLayout({ children }) {
+  return (
+    <>
+      <Navbar />
+      {children}
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<RequireAuth><Dashboard /></RequireAuth>} />
-        <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-        <Route path="/pos" element={<RequireAuth><POS /></RequireAuth>} />
-        <Route path="/inventory" element={<RequireAuth><Inventory /></RequireAuth>} />
-        <Route path="/suppliers" element={<RequireAuth><SupplierManagement /></RequireAuth>} />
-        <Route path="/absensi" element={<RequireAuth><Absensi /></RequireAuth>} />
-        <Route path="/crm" element={<RequireAuth><CRM /></RequireAuth>} />
-        <Route path="/finance" element={<RequireAuth><Finance /></RequireAuth>} />
-        <Route path="/finance/expenses" element={<RequireAuth><Expenses /></RequireAuth>} />
-        <Route path="/finance/reports" element={<RequireAuth><FinancialReports /></RequireAuth>} />
-        <Route path="/hrm" element={<RequireAuth><HRM /></RequireAuth>} />
-        <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+      <BranchProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<RequireAuth><AuthenticatedLayout><Dashboard /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/dashboard" element={<RequireAuth><AuthenticatedLayout><Dashboard /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/pos" element={<RequireAuth><AuthenticatedLayout><POS /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/inventory" element={<RequireAuth><AuthenticatedLayout><Inventory /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/suppliers" element={<RequireAuth><AuthenticatedLayout><SupplierManagement /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/absensi" element={<RequireAuth><AuthenticatedLayout><Absensi /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/crm" element={<RequireAuth><AuthenticatedLayout><CRM /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/finance" element={<RequireAuth><AuthenticatedLayout><Finance /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/finance/expenses" element={<RequireAuth><AuthenticatedLayout><Expenses /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/finance/reports" element={<RequireAuth><AuthenticatedLayout><FinancialReports /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/hrm" element={<RequireAuth><AuthenticatedLayout><HRM /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><AuthenticatedLayout><Settings /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/admin/branches" element={<RequireAuth><AuthenticatedLayout><Branches /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BranchProvider>
     </BrowserRouter>
   );
 }

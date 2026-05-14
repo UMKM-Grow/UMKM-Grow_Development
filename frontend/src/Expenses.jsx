@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import ExpenseFormModal from './ExpenseFormModal';
+import BranchContext from './BranchContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const SERVER_BASE = API_BASE.endsWith('/api') ? API_BASE.slice(0, -4) : API_BASE;
@@ -30,6 +31,8 @@ export default function Expenses() {
     }, 0);
   }, []);
 
+  const { selectedBranchId } = useContext(BranchContext);
+
   const loadExpenses = useCallback(async () => {
     setLoading(true);
     setErrorMessage('');
@@ -41,7 +44,8 @@ export default function Expenses() {
         return;
       }
       const headers = { Authorization: `Bearer ${token}` };
-      const res = await axios.get(`${API_BASE}/expenses`, { headers });
+      const params = selectedBranchId ? { branch_id: selectedBranchId } : undefined;
+      const res = await axios.get(`${API_BASE}/expenses`, { headers, params });
       const list = extractArrayPayload(res.data);
       setItems(list);
     } catch (error) {
@@ -61,7 +65,7 @@ export default function Expenses() {
     } finally {
       setLoading(false);
     }
-  }, [handleAuthError]);
+  }, [handleAuthError, selectedBranchId]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -90,6 +94,7 @@ export default function Expenses() {
     fd.append('kategori', form.kategori);
     fd.append('nominal', String(form.nominal));
     fd.append('keterangan', form.keterangan || '');
+    if (selectedBranchId) fd.append('branch_id', String(selectedBranchId));
     if (form.file) fd.append('bukti', form.file);
 
     try {

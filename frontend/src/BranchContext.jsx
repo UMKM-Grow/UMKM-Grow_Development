@@ -1,5 +1,7 @@
 import { createContext, useEffect, useState } from 'react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const BranchContext = createContext({
   branches: [],
   selectedBranchId: null,
@@ -16,7 +18,7 @@ export function BranchProvider({ children }) {
 
   const loadBranches = async () => {
     try {
-      const response = await fetch('http://localhost:4000/api/branches');
+      const response = await fetch(`${API_BASE}/branches`);
       const data = await response.json();
       setBranches(data);
       if (!selectedBranchId && data.length > 0) {

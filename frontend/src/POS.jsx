@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import BranchContext from './BranchContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -84,6 +85,7 @@ export default function POS() {
   const [discountInput, setDiscountInput] = useState('');
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
+  const { selectedBranchId } = useContext(BranchContext);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
 
@@ -97,7 +99,10 @@ export default function POS() {
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
         const [productRes, customerRes] = await Promise.allSettled([
-          axios.get(`${API_BASE}/products`, { headers }),
+          axios.get(`${API_BASE}/products`, {
+            headers,
+            params: selectedBranchId ? { branch_id: selectedBranchId } : undefined,
+          }),
           axios.get(`${API_BASE}/customers`, { headers }),
         ]);
 
@@ -131,7 +136,7 @@ export default function POS() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedBranchId]);
 
   const filteredProducts = useMemo(() => {
     const q = normalizeText(search);
@@ -244,6 +249,7 @@ export default function POS() {
     try {
       const payload = {
         customer_id: customerId ? Number(customerId) : null,
+        branch_id: selectedBranchId || null,
         payment_method: paymentMethod,
         items: cart.map((i) => ({
           product_id: i.product_id,

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import BranchContext from './BranchContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -20,6 +21,7 @@ export default function FinancialReports() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [report, setReport] = useState(null);
+  const { selectedBranchId } = useContext(BranchContext);
 
   const token = useMemo(() => localStorage.getItem('token'), []);
 
@@ -38,7 +40,10 @@ export default function FinancialReports() {
         setErrorMessage('');
         const res = await axios.get(`${API_BASE}/reports/financial`, {
           headers: { Authorization: `Bearer ${token}` },
-          params: { period },
+          params: {
+            period,
+            branch_id: selectedBranchId || undefined,
+          },
         });
         setReport(res?.data?.data || null);
       } catch (error) {
@@ -59,7 +64,7 @@ export default function FinancialReports() {
     };
 
     load();
-  }, [period, token]);
+  }, [period, token, selectedBranchId]);
 
   const cards = useMemo(() => {
     const revenue = Number(report?.revenue) || 0;

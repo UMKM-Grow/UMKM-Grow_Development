@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Edit2, Trash2 } from 'lucide-react';
 import ProductFormModal from './ProductFormModal';
+import BranchContext from './BranchContext';
 
 const API_URL = 'http://localhost:5000/api/products';
 
@@ -13,11 +14,20 @@ const Inventory = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const isSavingRef = useRef(false);
 
+  const { selectedBranchId } = useContext(BranchContext);
+
   const refreshProducts = async () => {
     try {
       setLoading(true);
       setErrorMessage('');
-      const response = await axios.get(API_URL, { params: { page: 1, limit: 1000, search: '' } });
+      const response = await axios.get(API_URL, {
+        params: {
+          page: 1,
+          limit: 1000,
+          search: '',
+          branch_id: selectedBranchId || undefined,
+        },
+      });
       const data = response?.data?.data ?? response?.data ?? [];
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -33,7 +43,14 @@ const Inventory = () => {
       try {
         setLoading(true);
         setErrorMessage('');
-        const response = await axios.get(API_URL, { params: { page: 1, limit: 1000, search: '' } });
+        const response = await axios.get(API_URL, {
+          params: {
+            page: 1,
+            limit: 1000,
+            search: '',
+            branch_id: selectedBranchId || undefined,
+          },
+        });
         const data = response?.data?.data ?? response?.data ?? [];
         setProducts(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -45,7 +62,7 @@ const Inventory = () => {
     };
 
     run();
-  }, []);
+  }, [selectedBranchId]);
 
   const formatRupiah = (value) => {
     const numericValue = typeof value === 'number' ? value : Number(value);
@@ -95,10 +112,15 @@ const Inventory = () => {
     try {
       isSavingRef.current = true;
       setErrorMessage('');
+      const payloadWithBranch = {
+        ...payload,
+        branch_id: selectedBranchId || null,
+      };
+
       if (productId) {
-        await axios.put(`${API_URL}/${productId}`, payload);
+        await axios.put(`${API_URL}/${productId}`, payloadWithBranch);
       } else {
-        await axios.post(API_URL, payload);
+        await axios.post(API_URL, payloadWithBranch);
       }
       await refreshProducts();
     } catch (error) {

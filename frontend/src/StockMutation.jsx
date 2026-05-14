@@ -31,7 +31,10 @@ export default function StockMutation() {
   const loadProducts = async (branchId) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/products?branch_id=${branchId}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/products?branch_id=${branchId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
       const data = await response.json();
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -45,7 +48,10 @@ export default function StockMutation() {
   // Load mutation history
   const loadMutations = async () => {
     try {
-      const response = await fetch(`${API_BASE}/mutations?branch_id=${selectedBranchId}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/mutations?branch_id=${selectedBranchId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
       const data = await response.json();
       setMutations(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -78,9 +84,13 @@ export default function StockMutation() {
         return;
       }
 
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/mutations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           product_id: parseInt(form.product_id),
           from_branch_id: parseInt(form.from_branch_id),
@@ -89,6 +99,7 @@ export default function StockMutation() {
           notes: form.notes || '',
         }),
       });
+
 
       const data = await response.json();
 

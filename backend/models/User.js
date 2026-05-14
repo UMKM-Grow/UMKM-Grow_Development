@@ -29,6 +29,10 @@ const User = sequelize.define('User', {
     allowNull: false,
     defaultValue: 'kasir',
   },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

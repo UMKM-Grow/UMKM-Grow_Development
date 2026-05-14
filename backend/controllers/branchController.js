@@ -1,4 +1,4 @@
-const { Branch } = require('../models');
+const { Branch, User } = require('../models');
 
 exports.listBranches = async (req, res) => {
   try {
@@ -10,14 +10,33 @@ exports.listBranches = async (req, res) => {
   }
 };
 
+exports.listUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({ 
+      where: { is_active: true },
+      attributes: ['id', 'name', 'email', 'role'],
+      order: [['name', 'ASC']]
+    });
+    res.json(users);
+  } catch (error) {
+    console.error('listUsers error', error);
+    res.status(500).json({ error: 'Unable to load users' });
+  }
+};
+
 exports.createBranch = async (req, res) => {
   try {
     const { nama_cabang, lokasi, manager_id } = req.body;
-    const branch = await Branch.create({ nama_cabang, lokasi, manager_id });
+    // manager_id is optional - can be null
+    const branch = await Branch.create({ 
+      nama_cabang, 
+      lokasi, 
+      manager_id: manager_id || null 
+    });
     res.status(201).json(branch);
   } catch (error) {
     console.error('createBranch error', error);
-    res.status(500).json({ error: 'Unable to create branch' });
+    res.status(500).json({ error: 'Unable to create branch', details: error.message });
   }
 };
 

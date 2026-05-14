@@ -10,6 +10,8 @@ const Expense = require('./Expense');
 const Supplier = require('./Supplier');
 const PurchaseOrder = require('./PurchaseOrder');
 const PurchaseOrderDetail = require('./PurchaseOrderDetail');
+const Branch = require('./Branch')(sequelize);
+const StockMutation = require('./StockMutation')(sequelize);
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -50,6 +52,23 @@ PurchaseOrderDetail.belongsTo(Product, { foreignKey: 'product_id', as: 'product'
 
 User.hasMany(PurchaseOrder, { foreignKey: 'user_id', as: 'purchase_orders' });
 PurchaseOrder.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+Branch.hasMany(Product, { foreignKey: 'branch_id', as: 'products' });
+Product.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
+Branch.hasMany(Transaction, { foreignKey: 'branch_id', as: 'transactions' });
+Transaction.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
+Branch.hasMany(Expense, { foreignKey: 'branch_id', as: 'expenses' });
+Expense.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
+Product.hasMany(StockMutation, { foreignKey: 'product_id', as: 'stock_mutations' });
+StockMutation.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
+
+Branch.hasMany(StockMutation, { foreignKey: 'from_branch_id', as: 'outgoingMutations' });
+Branch.hasMany(StockMutation, { foreignKey: 'to_branch_id', as: 'incomingMutations' });
+StockMutation.belongsTo(Branch, { foreignKey: 'from_branch_id', as: 'fromBranch' });
+StockMutation.belongsTo(Branch, { foreignKey: 'to_branch_id', as: 'toBranch' });
 
 let dbReady = false;
 let initPromise = null;
@@ -95,6 +114,8 @@ module.exports = {
   Supplier,
   PurchaseOrder,
   PurchaseOrderDetail,
+  Branch,
+  StockMutation,
   initDb,
   isDbReady,
   ensureDbReady,

@@ -9,6 +9,7 @@ const Expense = sequelize.define(
     tanggal: { type: DataTypes.DATEONLY, allowNull: false },
     kategori: { type: DataTypes.STRING, allowNull: false },
     nominal: { type: DataTypes.DECIMAL(14, 2), allowNull: false, defaultValue: 0 },
+    branch_id: { type: DataTypes.INTEGER, allowNull: true },
     keterangan: { type: DataTypes.TEXT, allowNull: true },
     bukti_foto: { type: DataTypes.STRING, allowNull: true },
   },

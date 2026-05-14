@@ -10,7 +10,7 @@ const getTransactionColumns = async () => {
 };
 
 const checkout = async (req, res) => {
-  const { customer_id, payment_method, items } = req.body || {};
+  const { customer_id, payment_method, items, branch_id } = req.body || {};
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: 'Cart items are required' });
@@ -56,9 +56,12 @@ const checkout = async (req, res) => {
       }
 
       const productIds = [...new Set(requestedItems.map((i) => i.product_id))];
+      const selectedBranchId = Number(branch_id);
+      const branchFilter = Number.isInteger(selectedBranchId) && selectedBranchId > 0 ? { branch_id: selectedBranchId } : {};
+
       const [products, variants] = await Promise.all([
         Product.findAll({
-          where: { id: productIds, is_active: true },
+          where: { id: productIds, is_active: true, ...branchFilter },
           transaction: t,
           lock: t.LOCK.UPDATE,
         }),
@@ -114,6 +117,7 @@ const checkout = async (req, res) => {
       const columns = await getTransactionColumns();
       const txPayload = {
         customer_id: customer_id ? Number(customer_id) : null,
+        branch_id: Number.isInteger(selectedBranchId) && selectedBranchId > 0 ? selectedBranchId : null,
         total_price: totalAmount,
         status: 'paid',
       };

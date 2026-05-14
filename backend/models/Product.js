@@ -10,6 +10,7 @@ const Product = sequelize.define(
     description: { type: DataTypes.TEXT, allowNull: true },
     category_id: { type: DataTypes.INTEGER, allowNull: true },
     base_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+    branch_id: { type: DataTypes.INTEGER, allowNull: true },
     is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   },
   {

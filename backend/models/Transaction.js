@@ -6,6 +6,7 @@ const Transaction = sequelize.define(
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     customer_id: { type: DataTypes.INTEGER, allowNull: true },
+    branch_id: { type: DataTypes.INTEGER, allowNull: true },
     total_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
     status: { type: DataTypes.STRING, allowNull: true, defaultValue: 'paid' },
     user_id: { type: DataTypes.INTEGER, allowNull: true },

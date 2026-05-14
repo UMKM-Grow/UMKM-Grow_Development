@@ -17,7 +17,14 @@ const listExpenses = async (req, res) => {
   if (!ready) return res.status(503).json({ message: 'Database belum tersambung.' });
 
   try {
+    const branchId = Number(req.query.branch_id);
+    const where = {};
+    if (Number.isInteger(branchId) && branchId > 0) {
+      where.branch_id = branchId;
+    }
+
     const expenses = await Expense.findAll({
+      where,
       order: [
         ['tanggal', 'DESC'],
         ['id', 'DESC'],
@@ -51,12 +58,15 @@ const createExpense = async (req, res) => {
 
     const userId = Number(req.user?.id) || 1;
     const bukti_foto = req.file?.filename ? String(req.file.filename) : null;
+    const branchId = Number(req.body.branch_id);
+    const selectedBranchId = Number.isInteger(branchId) && branchId > 0 ? branchId : null;
 
     const created = await Expense.create({
       user_id: userId,
       tanggal,
       kategori,
       nominal: nominalRaw,
+      branch_id: selectedBranchId,
       keterangan,
       bukti_foto,
     });

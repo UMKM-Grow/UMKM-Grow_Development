@@ -11,6 +11,7 @@ const customerRoutes = require('./routes/customerRoutes');
 const posRoutes = require('./routes/posRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const branchRoutes = require('./routes/branchRoutes');
 const { verifyToken } = require('./middlewares/authMiddleware');
 const supplierRoutes = require('./routes/supplierRoutes');
 
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/customers', verifyToken, customerRoutes);
 app.use('/api/pos', verifyToken, posRoutes);
+app.use('/api/branches', branchRoutes);
 app.use('/api/expenses', verifyToken, expenseRoutes);
 app.use('/api/reports', verifyToken, reportRoutes);
 app.use('/api/suppliers', supplierRoutes);

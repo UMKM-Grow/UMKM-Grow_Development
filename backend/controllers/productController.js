@@ -6,8 +6,9 @@ const productController = {
   createProduct: async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      const { name, sku, description, category_id, base_price, variants } = req.body;
+      const { name, sku, description, category_id, base_price, variants, branch_id } = req.body;
       const normalizedSku = String(sku || '').trim();
+      const selectedBranchId = Number(branch_id) || null;
       if (!normalizedSku) {
         await t.rollback();
         return res.status(400).json({ message: 'SKU is required' });
@@ -20,7 +21,12 @@ const productController = {
       }
 
       const product = await Product.create({
-        name, sku: normalizedSku, description, category_id, base_price
+        name,
+        sku: normalizedSku,
+        description,
+        category_id,
+        base_price,
+        branch_id: selectedBranchId,
       }, { transaction: t });
 
       if (variants && variants.length > 0) {
@@ -50,8 +56,9 @@ const productController = {
   // READ All Products (Pagination & Search)
   getAllProducts: async (req, res) => {
     try {
-      const { page = 1, limit = 10, search = '' } = req.query;
+      const { page = 1, limit = 10, search = '', branch_id } = req.query;
       const offset = (page - 1) * limit;
+      const selectedBranchId = Number(branch_id);
 
       const where = {
         is_active: true,
@@ -60,6 +67,10 @@ const productController = {
           { sku: { [Op.like]: `%${search}%` } }
         ]
       };
+
+      if (Number.isInteger(selectedBranchId) && selectedBranchId > 0) {
+        where.branch_id = selectedBranchId;
+      }
 
       const { count, rows } = await Product.findAndCountAll({
         where,
@@ -100,7 +111,8 @@ const productController = {
   updateProduct: async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      const { name, sku, base_price, is_active, description, category_id, variants } = req.body;
+      const { name, sku, base_price, is_active, description, category_id, variants, branch_id } = req.body;
+      const selectedBranchId = Number(branch_id) || null;
       const product = await Product.findByPk(req.params.id);
       if (!product) {
         await t.rollback();
@@ -129,7 +141,15 @@ const productController = {
       }
 
       await product.update(
-        { name, sku: normalizedSku, base_price, is_active, description, category_id },
+        {
+          name,
+          sku: normalizedSku,
+          base_price,
+          is_active,
+          description,
+          category_id,
+          branch_id: selectedBranchId,
+        },
         { transaction: t }
       );
 

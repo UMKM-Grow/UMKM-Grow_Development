@@ -40,15 +40,20 @@ function buildDateRange(period) {
   return { start: null, end: null };
 }
 
-async function getFinancialReport(period = 'month') {
+async function getFinancialReport(period = 'month', branch_id = null) {
   const normalized = ['week', 'month', 'year', 'all'].includes(period) ? period : 'month';
   const { start, end } = buildDateRange(normalized);
+  let branchId = null;
+  if (branch_id !== null && branch_id !== undefined && String(branch_id).trim() !== '') {
+    branchId = Number(branch_id);
+  }
+  const branchFilter = Number.isInteger(branchId) && branchId > 0 ? { branch_id: branchId } : {};
 
-  const txWhere = start && end ? { createdAt: { [Op.between]: [start, end] } } : {};
+  const txWhere = start && end ? { createdAt: { [Op.between]: [start, end] }, ...branchFilter } : { ...branchFilter };
   const expenseWhere =
     start && end
-      ? { tanggal: { [Op.between]: [toDateOnlyString(start), toDateOnlyString(end)] } }
-      : {};
+      ? { tanggal: { [Op.between]: [toDateOnlyString(start), toDateOnlyString(end)] }, ...branchFilter }
+      : { ...branchFilter };
 
   const txs = await Transaction.findAll({ where: txWhere, attributes: ['createdAt', 'total_price'] });
   const exps = await Expense.findAll({ where: expenseWhere, attributes: ['tanggal', 'nominal'] });

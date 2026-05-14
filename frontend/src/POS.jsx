@@ -143,12 +143,6 @@ export default function POS() {
     };
   }, [selectedBranchId]);
 
-  useEffect(() => {
-    setAppliedPromo(false);
-    setPromoDiscount(0);
-    setPromoMessage('');
-  }, [subtotal, selectedBranchId]);
-
   const filteredProducts = useMemo(() => {
     const q = normalizeText(search);
 
@@ -162,6 +156,12 @@ export default function POS() {
   }, [products, search, activeCategory]);
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
+
+  useEffect(() => {
+    setAppliedPromo(false);
+    setPromoDiscount(0);
+    setPromoMessage('');
+  }, [subtotal, selectedBranchId]);
 
   const discount = useMemo(() => {
     const raw = Number(promoDiscount);

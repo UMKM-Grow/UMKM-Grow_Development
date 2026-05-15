@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useContext, useEffect } from 'react';
 import Login from './Login';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
@@ -15,6 +16,7 @@ import Branches from './Branches';
 import StockMutation from './StockMutation';
 import Navbar from './Navbar';
 import { BranchProvider } from './BranchContext';
+import BranchContext from './BranchContext';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -23,6 +25,12 @@ function RequireAuth({ children }) {
 }
 
 function AuthenticatedLayout({ children }) {
+  const { reloadBranches } = useContext(BranchContext);
+
+  useEffect(() => {
+    reloadBranches();
+  }, [reloadBranches]);
+
   return (
     <>
       <Navbar />

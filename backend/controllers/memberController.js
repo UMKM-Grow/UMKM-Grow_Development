@@ -34,8 +34,8 @@ const memberController = {
       const where = { is_active: true };
       if (search) {
         where[Op.or] = [
-          { name: { [Op.like]: `%${search}%` },
-          { phone: { [Op.like]: `%${search}%` },
+          { name: { [Op.like]: `%${search}%` } },
+          { phone: { [Op.like]: `%${search}%` } },
         ];
       }
 

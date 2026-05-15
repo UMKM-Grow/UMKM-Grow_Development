@@ -11,6 +11,11 @@ const customerRoutes = require('./routes/customerRoutes');
 const posRoutes = require('./routes/posRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const branchRoutes = require('./routes/branchRoutes');
+const mutationRoutes = require('./routes/mutationRoutes');
+const promoRoutes = require('./routes/promoRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const supplierRoutes = require('./routes/supplierRoutes');
 const { verifyToken } = require('./middlewares/authMiddleware');
 
 dotenv.config();
@@ -33,8 +38,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/customers', verifyToken, customerRoutes);
 app.use('/api/pos', verifyToken, posRoutes);
+app.use('/api/branches', branchRoutes);
+app.use('/api/mutations', verifyToken, mutationRoutes);
+app.use('/api/promos', promoRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/expenses', verifyToken, expenseRoutes);
 app.use('/api/reports', verifyToken, reportRoutes);
+app.use('/api/suppliers', supplierRoutes);
 
 app.get('/', (req, res) => {
   res.send('UMKM-Grow API is running...');

@@ -339,9 +339,10 @@ export default function POS() {
 
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
 
+      let pointsAdded = 0;
       if (selectedMember && selectedMember.id && total > 0) {
         try {
-          await axios.post(
+          const pointsRes = await axios.post(
             `${API_BASE}/members/add-points`,
             {
               member_id: selectedMember.id,
@@ -349,12 +350,19 @@ export default function POS() {
             },
             { headers }
           );
+          pointsAdded = pointsRes.data?.points_added || 0;
+          if (pointsRes.data?.data) {
+            setSelectedMember(pointsRes.data.data);
+          }
         } catch (pointError) {
           console.error('Error adding points:', pointError);
         }
       }
 
-      alert('Transaksi Berhasil!');
+      const successMsg = pointsAdded > 0 
+        ? `Transaksi Berhasil! +${pointsAdded} Poin ditambahkan.` 
+        : 'Transaksi Berhasil!';
+      alert(successMsg);
       
       // Broadcast event ke semua listeners (termasuk Inventory page)
       window.dispatchEvent(new Event(MUTATION_EVENT));

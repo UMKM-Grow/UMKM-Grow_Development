@@ -9,7 +9,7 @@ const memberController = {
       
       const member = await Member.create({
         nama,
-        nomor_telepon,
+        nomor_telepon: String(nomor_telepon || '').trim(),
         email,
       });
 
@@ -77,8 +77,14 @@ const memberController = {
         return res.status(400).json({ message: 'nomor_telepon is required' });
       }
 
+      const trimmedPhone = String(nomor_telepon || '').trim();
+
       const member = await Member.findOne({
-        where: { nomor_telepon },
+        where: {
+          nomor_telepon: {
+            [Op.like]: `%${trimmedPhone}%`,
+          },
+        },
       });
 
       res.status(200).json({ data: member });
@@ -98,7 +104,7 @@ const memberController = {
 
       await member.update({
         nama,
-        nomor_telepon,
+        nomor_telepon: nomor_telepon !== undefined ? String(nomor_telepon).trim() : member.nomor_telepon,
         email,
         total_poin,
         level,

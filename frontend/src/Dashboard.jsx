@@ -1,8 +1,7 @@
-import { createElement, useMemo, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Boxes, Building2, ClipboardList, CreditCard, LogOut, Settings, ShoppingCart, Users, Wallet, Truck } from 'lucide-react';
+import { createElement, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Boxes, Building2, ClipboardList, CreditCard, Settings, ShoppingCart, Users, Wallet, Truck } from 'lucide-react';
 import BestSellerCard from './BestSellerCard';
-import BranchContext from './BranchContext';
 
 function readUser() {
   try {
@@ -14,9 +13,7 @@ function readUser() {
 }
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const user = useMemo(() => readUser(), []);
-  const { selectedBranchId, setSelectedBranchId } = useContext(BranchContext);
 
   const menu = useMemo(
     () => [
@@ -73,12 +70,6 @@ export default function Dashboard() {
     []
   );
 
-  function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login', { replace: true });
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-6">
@@ -89,27 +80,7 @@ export default function Dashboard() {
               <div className="mt-1 text-sm text-gray-500">
                 {user?.name ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.` : 'Pilih modul untuk mulai bekerja.'}
               </div>
-              <div className="mt-3">
-                <label className="text-sm font-medium text-gray-700">Pilih Cabang:</label>
-                <select
-                  className="ml-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-                  value={selectedBranchId || ''}
-                  onChange={(e) => setSelectedBranchId(e.target.value ? Number(e.target.value) : null)}
-                >
-                  <option value="">-- Pilih Cabang --</option>
-                  <option value="1">Cabang Utama</option>
-                </select>
-              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={logout}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              <LogOut size={16} />
-              Logout
-            </button>
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.7fr_1fr]">

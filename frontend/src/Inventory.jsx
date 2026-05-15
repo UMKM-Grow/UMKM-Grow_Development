@@ -245,6 +245,14 @@ const Inventory = () => {
                 {product?.name || 'Nama Produk'}
               </h2>
               <p className="text-brand-ice font-semibold mt-1">{formatRupiah(product?.base_price)}</p>
+              <div className={[
+                "mt-2 text-sm font-semibold px-3 py-1 rounded-full inline-block",
+                (product.stok ?? 0) <= (product.stok_minimum ?? 10)
+                  ? "bg-red-500/80 text-white border border-red-300"
+                  : "bg-green-500/80 text-white border border-green-300"
+              ].join(' ')}>
+                Stok: {product.stok ?? 0} / Min: {product.stok_minimum ?? 10}
+              </div>
 
               <button
                 type="button"

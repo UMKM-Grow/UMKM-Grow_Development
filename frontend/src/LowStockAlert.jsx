@@ -26,6 +26,7 @@ export default function LowStockAlert() {
       try {
         const url = new URL(`${API_BASE}/products/low-stock`);
         url.searchParams.set('branch_id', selectedBranchId);
+        console.log('Calling URL:', url.toString());
 
         const response = await fetch(url.toString(), {
           headers: {

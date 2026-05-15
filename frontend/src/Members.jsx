@@ -8,22 +8,25 @@ function MemberFormModal({ isOpen, initialMember, onClose, onSubmit }) {
   const [nama, setNama] = useState('');
   const [nomorTelepon, setNomorTelepon] = useState('');
   const [email, setEmail] = useState('');
-  const [totalPoin, setTotalPoin] = useState('0');
+  const [address, setAddress] = useState('');
+  const [loyaltyPoints, setLoyaltyPoints] = useState('0');
   const [level, setLevel] = useState('Bronze');
   const isSavingRef = useRef(false);
 
   useEffect(() => {
     if (initialMember) {
-      setNama(initialMember.nama || '');
-      setNomorTelepon(initialMember.nomor_telepon || '');
+      setNama(initialMember.name || initialMember.nama || '');
+      setNomorTelepon(initialMember.phone || initialMember.nomor_telepon || '');
       setEmail(initialMember.email || '');
-      setTotalPoin(String(initialMember.total_poin || 0));
+      setAddress(initialMember.address || '');
+      setLoyaltyPoints(String(initialMember.loyalty_points || initialMember.total_poin || 0));
       setLevel(initialMember.level || 'Bronze');
     } else {
       setNama('');
       setNomorTelepon('');
       setEmail('');
-      setTotalPoin('0');
+      setAddress('');
+      setLoyaltyPoints('0');
       setLevel('Bronze');
     }
   }, [initialMember]);
@@ -34,7 +37,7 @@ function MemberFormModal({ isOpen, initialMember, onClose, onSubmit }) {
     try {
       isSavingRef.current = true;
       await onSubmit(
-        { nama, nomor_telepon: nomorTelepon, email, total_poin: parseInt(totalPoin) || 0, level },
+        { nama, nomor_telepon: nomorTelepon, email, address, loyalty_points: parseInt(loyaltyPoints) || 0, level },
         initialMember?.id
       );
       onClose();
@@ -81,13 +84,22 @@ function MemberFormModal({ isOpen, initialMember, onClose, onSubmit }) {
               className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Alamat</label>
+            <textarea
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Total Poin</label>
               <input
                 type="number"
-                value={totalPoin}
-                onChange={(e) => setTotalPoin(e.target.value)}
+                value={loyaltyPoints}
+                onChange={(e) => setLoyaltyPoints(e.target.value)}
                 className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -229,11 +241,11 @@ export default function Members() {
                   {members.map((member) => (
                     <tr key={member.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">{member.nama}</div>
+                        <div className="text-sm font-semibold text-gray-900">{member.name || member.nama}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.nomor_telepon}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.phone || member.nomor_telepon}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">{member.total_poin} pts</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">{member.loyalty_points || member.total_poin} pts</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={[

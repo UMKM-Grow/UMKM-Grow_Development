@@ -90,9 +90,9 @@ export default function POS() {
   const [appliedPromo, setAppliedPromo] = useState(false);
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [memberPhone, setMemberPhone] = useState('');
-  const [memberSearching, setMemberSearching] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerSearching, setCustomerSearching] = useState(false);
   const { selectedBranchId } = useContext(BranchContext);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
@@ -294,25 +294,25 @@ export default function POS() {
     });
   }
 
-  async function searchMember() {
-    if (!memberPhone.trim()) {
-      setSelectedMember(null);
+  async function searchCustomer() {
+    if (!customerPhone.trim()) {
+      setSelectedCustomer(null);
       return;
     }
-    setMemberSearching(true);
+    setCustomerSearching(true);
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
       const response = await axios.get(`${API_BASE}/members/search`, {
         headers,
-        params: { nomor_telepon: memberPhone.trim() },
+        params: { nomor_telepon: customerPhone.trim() },
       });
-      setSelectedMember(response.data.data || null);
+      setSelectedCustomer(response.data.data || null);
     } catch (error) {
-      console.error('Error searching member:', error);
-      setSelectedMember(null);
+      console.error('Error searching customer:', error);
+      setSelectedCustomer(null);
     } finally {
-      setMemberSearching(false);
+      setCustomerSearching(false);
     }
   }
 
@@ -323,7 +323,7 @@ export default function POS() {
     setProcessing(true);
     try {
       const payload = {
-        customer_id: customerId ? Number(customerId) : null,
+        customer_id: selectedCustomer?.id || (customerId ? Number(customerId) : null),
         branch_id: selectedBranchId || null,
         payment_method: paymentMethod,
         items: cart.map((i) => ({
@@ -339,18 +339,18 @@ export default function POS() {
 
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
 
-      console.log('[POS Checkout] selectedMember:', selectedMember);
+      console.log('[POS Checkout] selectedCustomer:', selectedCustomer);
       console.log('[POS Checkout] subtotal:', subtotal);
       console.log('[POS Checkout] discount:', discount);
       console.log('[POS Checkout] total:', total);
 
       let pointsAdded = 0;
-      if (selectedMember && selectedMember.id && subtotal > 0) {
+      if (selectedCustomer && selectedCustomer.id && subtotal > 0) {
         try {
           const pointsRes = await axios.post(
             `${API_BASE}/members/add-points`,
             {
-              member_id: selectedMember.id,
+              member_id: selectedCustomer.id,
               amount: subtotal,
             },
             { headers }
@@ -358,7 +358,7 @@ export default function POS() {
           console.log('[POS Checkout] pointsRes:', pointsRes.data);
           pointsAdded = pointsRes.data?.points_added || 0;
           if (pointsRes.data?.data) {
-            setSelectedMember(pointsRes.data.data);
+            setSelectedCustomer(pointsRes.data.data);
           }
         } catch (pointError) {
           console.error('Error adding points:', pointError.response?.data || pointError.message);
@@ -525,50 +525,50 @@ export default function POS() {
         </div>
 
         <div className="mt-5">
-          <label className="block text-sm font-semibold text-gray-800">Member</label>
+          <label className="block text-sm font-semibold text-gray-800">Customer / Member</label>
           <div className="mt-2 flex gap-2">
             <input
               type="text"
-              placeholder="Nomor telepon member"
-              value={memberPhone}
-              onChange={(e) => setMemberPhone(e.target.value)}
+              placeholder="Nomor telepon customer"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') searchMember();
+                if (e.key === 'Enter') searchCustomer();
               }}
               className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             />
             <button
               type="button"
-              onClick={searchMember}
-              disabled={memberSearching}
+              onClick={searchCustomer}
+              disabled={customerSearching}
               className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {memberSearching ? 'Cari...' : 'Cari'}
+              {customerSearching ? 'Cari...' : 'Cari'}
             </button>
           </div>
 
-          {selectedMember ? (
+          {selectedCustomer ? (
             <div className="mt-3 rounded-lg bg-blue-50 p-4">
-              <div className="text-sm font-semibold text-gray-900">{selectedMember.nama}</div>
-              <div className="mt-1 text-xs text-gray-600">{selectedMember.nomor_telepon}</div>
+              <div className="text-sm font-semibold text-gray-900">{selectedCustomer.name}</div>
+              <div className="mt-1 text-xs text-gray-600">{selectedCustomer.phone}</div>
               <div className="mt-2 flex items-center gap-2">
                 <span className="text-xs font-semibold text-gray-700">Poin:</span>
-                <span className="text-sm font-bold text-blue-600">{selectedMember.total_poin} pts</span>
-                <span className="text-xs text-gray-500">• {selectedMember.level}</span>
+                <span className="text-sm font-bold text-blue-600">{selectedCustomer.loyalty_points} pts</span>
+                <span className="text-xs text-gray-500">• {selectedCustomer.level}</span>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedMember(null);
-                  setMemberPhone('');
+                  setSelectedCustomer(null);
+                  setCustomerPhone('');
                 }}
                 className="mt-2 text-xs font-semibold text-red-500 hover:text-red-700"
               >
                 Hapus
               </button>
             </div>
-          ) : memberPhone && !memberSearching ? (
-            <div className="mt-3 text-xs text-gray-500">Member tidak ditemukan</div>
+          ) : customerPhone && !customerSearching ? (
+            <div className="mt-3 text-xs text-gray-500">Customer tidak ditemukan</div>
           ) : null}
         </div>
 

@@ -10,6 +10,11 @@ const Customer = sequelize.define(
     email: { type: DataTypes.STRING, allowNull: true },
     address: { type: DataTypes.TEXT, allowNull: true },
     loyalty_points: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    level: {
+      type: DataTypes.ENUM('Bronze', 'Silver', 'Gold'),
+      allowNull: false,
+      defaultValue: 'Bronze',
+    },
     is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   },
   {

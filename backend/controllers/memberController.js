@@ -1,19 +1,21 @@
-const { Member, sequelize } = require('../models');
+const { Customer, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
 const memberController = {
   // CREATE Member
   createMember: async (req, res) => {
     try {
-      const { nama, nomor_telepon, email } = req.body;
+      const { nama, nomor_telepon, email, address } = req.body;
       
-      const member = await Member.create({
-        nama,
-        nomor_telepon: String(nomor_telepon || '').trim(),
+      const customer = await Customer.create({
+        name: nama,
+        phone: String(nomor_telepon || '').trim(),
         email,
+        address: address || '',
+        is_active: true,
       });
 
-      res.status(201).json({ message: 'Member created successfully', data: member });
+      res.status(201).json({ message: 'Member created successfully', data: customer });
     } catch (error) {
       const isUniqueError = error?.name === 'SequelizeUniqueConstraintError';
       if (isUniqueError) {
@@ -29,15 +31,15 @@ const memberController = {
       const { page = 1, limit = 10, search = '' } = req.query;
       const offset = (page - 1) * limit;
 
-      const where = {};
+      const where = { is_active: true };
       if (search) {
         where[Op.or] = [
-          { nama: { [Op.like]: `%${search}%` } },
-          { nomor_telepon: { [Op.like]: `%${search}%` } },
+          { name: { [Op.like]: `%${search}%` },
+          { phone: { [Op.like]: `%${search}%` },
         ];
       }
 
-      const { count, rows } = await Member.findAndCountAll({
+      const { count, rows } = await Customer.findAndCountAll({
         where,
         limit: parseInt(limit),
         offset: parseInt(offset),
@@ -61,9 +63,9 @@ const memberController = {
   // READ One Member
   getMemberById: async (req, res) => {
     try {
-      const member = await Member.findByPk(req.params.id);
-      if (!member) return res.status(404).json({ message: 'Member not found' });
-      res.status(200).json({ data: member });
+      const customer = await Customer.findByPk(req.params.id);
+      if (!customer) return res.status(404).json({ message: 'Member not found' });
+      res.status(200).json({ data: customer });
     } catch (error) {
       res.status(500).json({ message: 'Error fetching member', error: error.message });
     }
@@ -79,15 +81,16 @@ const memberController = {
 
       const trimmedPhone = String(nomor_telepon || '').trim();
 
-      const member = await Member.findOne({
+      const customer = await Customer.findOne({
         where: {
-          nomor_telepon: {
+          phone: {
             [Op.like]: `%${trimmedPhone}%`,
           },
+          is_active: true,
         },
       });
 
-      res.status(200).json({ data: member });
+      res.status(200).json({ data: customer });
     } catch (error) {
       res.status(500).json({ message: 'Error fetching member', error: error.message });
     }
@@ -96,21 +99,22 @@ const memberController = {
   // UPDATE Member
   updateMember: async (req, res) => {
     try {
-      const { nama, nomor_telepon, email, total_poin, level } = req.body;
-      const member = await Member.findByPk(req.params.id);
-      if (!member) {
+      const { nama, nomor_telepon, email, loyalty_points, level, address } = req.body;
+      const customer = await Customer.findByPk(req.params.id);
+      if (!customer) {
         return res.status(404).json({ message: 'Member not found' });
       }
 
-      await member.update({
-        nama,
-        nomor_telepon: nomor_telepon !== undefined ? String(nomor_telepon).trim() : member.nomor_telepon,
+      await customer.update({
+        name: nama,
+        phone: nomor_telepon !== undefined ? String(nomor_telepon).trim() : customer.phone,
         email,
-        total_poin,
+        loyalty_points,
         level,
+        address,
       });
 
-      res.status(200).json({ message: 'Member updated successfully', data: member });
+      res.status(200).json({ message: 'Member updated successfully', data: customer });
     } catch (error) {
       const isUniqueError = error?.name === 'SequelizeUniqueConstraintError';
       if (isUniqueError) {
@@ -133,10 +137,10 @@ const memberController = {
         return res.status(400).json({ message: 'member_id and amount are required and amount must be positive' });
       }
 
-      const member = await Member.findByPk(member_id, { transaction: t });
-      console.log('[addPoints] Found member:', member);
+      const customer = await Customer.findByPk(member_id, { transaction: t });
+      console.log('[addPoints] Found customer:', customer);
       
-      if (!member) {
+      if (!customer) {
         await t.rollback();
         return res.status(404).json({ message: 'Member not found' });
       }
@@ -145,16 +149,16 @@ const memberController = {
       console.log('[addPoints] Calculated points to add:', pointsToAdd);
       
       if (pointsToAdd > 0) {
-        await member.update(
-          { total_poin: member.total_poin + pointsToAdd },
+        await customer.update(
+          { loyalty_points: customer.loyalty_points + pointsToAdd },
           { transaction: t }
         );
-        console.log('[addPoints] Updated member total_poin:', member.total_poin + pointsToAdd);
+        console.log('[addPoints] Updated customer loyalty_points:', customer.loyalty_points + pointsToAdd);
       }
 
       await t.commit();
       console.log('[addPoints] Transaction committed');
-      res.status(200).json({ message: 'Points added successfully', data: member, points_added: pointsToAdd });
+      res.status(200).json({ message: 'Points added successfully', data: customer, points_added: pointsToAdd });
     } catch (error) {
       await t.rollback();
       console.error('[addPoints] Error:', error);

@@ -90,6 +90,9 @@ export default function POS() {
   const [appliedPromo, setAppliedPromo] = useState(false);
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [memberPhone, setMemberPhone] = useState('');
+  const [memberSearching, setMemberSearching] = useState(false);
   const { selectedBranchId } = useContext(BranchContext);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
@@ -291,6 +294,28 @@ export default function POS() {
     });
   }
 
+  async function searchMember() {
+    if (!memberPhone.trim()) {
+      setSelectedMember(null);
+      return;
+    }
+    setMemberSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      const response = await axios.get(`${API_BASE}/members/search`, {
+        headers,
+        params: { nomor_telepon: memberPhone.trim() },
+      });
+      setSelectedMember(response.data.data || null);
+    } catch (error) {
+      console.error('Error searching member:', error);
+      setSelectedMember(null);
+    } finally {
+      setMemberSearching(false);
+    }
+  }
+
   async function onCheckout() {
     if (processing) return;
     if (cart.length === 0) return;
@@ -313,6 +338,21 @@ export default function POS() {
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
+
+      if (selectedMember && selectedMember.id && total > 0) {
+        try {
+          await axios.post(
+            `${API_BASE}/members/add-points`,
+            {
+              member_id: selectedMember.id,
+              amount: total,
+            },
+            { headers }
+          );
+        } catch (pointError) {
+          console.error('Error adding points:', pointError);
+        }
+      }
 
       alert('Transaksi Berhasil!');
       
@@ -468,6 +508,54 @@ export default function POS() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="mt-5">
+          <label className="block text-sm font-semibold text-gray-800">Member</label>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              placeholder="Nomor telepon member"
+              value={memberPhone}
+              onChange={(e) => setMemberPhone(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') searchMember();
+              }}
+              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+            <button
+              type="button"
+              onClick={searchMember}
+              disabled={memberSearching}
+              className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {memberSearching ? 'Cari...' : 'Cari'}
+            </button>
+          </div>
+
+          {selectedMember ? (
+            <div className="mt-3 rounded-lg bg-blue-50 p-4">
+              <div className="text-sm font-semibold text-gray-900">{selectedMember.nama}</div>
+              <div className="mt-1 text-xs text-gray-600">{selectedMember.nomor_telepon}</div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-700">Poin:</span>
+                <span className="text-sm font-bold text-blue-600">{selectedMember.total_poin} pts</span>
+                <span className="text-xs text-gray-500">• {selectedMember.level}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMember(null);
+                  setMemberPhone('');
+                }}
+                className="mt-2 text-xs font-semibold text-red-500 hover:text-red-700"
+              >
+                Hapus
+              </button>
+            </div>
+          ) : memberPhone && !memberSearching ? (
+            <div className="mt-3 text-xs text-gray-500">Member tidak ditemukan</div>
+          ) : null}
         </div>
 
         <div className="mt-5 max-h-[36vh] overflow-auto rounded-lg border border-gray-100">

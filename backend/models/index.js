@@ -13,6 +13,7 @@ const PurchaseOrderDetail = require('./PurchaseOrderDetail');
 const Branch = require('./Branch')(sequelize);
 const Promo = require('./Promo');
 const StockMutation = require('./StockMutation')(sequelize);
+const Member = require('./Member');
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -121,6 +122,7 @@ module.exports = {
   Branch,
   Promo,
   StockMutation,
+  Member,
   initDb,
   isDbReady,
   ensureDbReady,

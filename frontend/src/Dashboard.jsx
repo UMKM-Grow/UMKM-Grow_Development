@@ -1,40 +1,126 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Truck, Users, LayoutDashboard, DollarSign, Activity } from 'lucide-react';
+import { Package, Truck, Users, LayoutDashboard, DollarSign, Activity, Boxes, Building2, ClipboardList, CreditCard, Settings, ShoppingCart, Wallet } from 'lucide-react';
+import BestSellerCard from './BestSellerCard';
+import LowStockAlert from './LowStockAlert';
 
-const Dashboard = () => {
-  const modules = [
-    { name: 'Katalog Produk', path: '/inventory', icon: <Package size={24} />, color: 'bg-indigo-100 text-indigo-600' },
-    { name: 'Manajemen Pemasok', path: '/suppliers', icon: <Truck size={24} />, color: 'bg-emerald-100 text-emerald-600' },
-    { name: 'Keuangan', path: '/finance', icon: <DollarSign size={24} />, color: 'bg-blue-100 text-blue-600' },
-    { name: 'SDM / Pegawai', path: '/hrm', icon: <Users size={24} />, color: 'bg-orange-100 text-orange-600' },
-    { name: 'POS (Kasir)', path: '/pos', icon: <LayoutDashboard size={24} />, color: 'bg-purple-100 text-purple-600' },
-    { name: 'CRM (Pelanggan)', path: '/crm', icon: <Activity size={24} />, color: 'bg-rose-100 text-rose-600' },
-  ];
+function readUser() {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export default function Dashboard() {
+  const user = useMemo(() => readUser(), []);
+
+  const menu = useMemo(
+    () => [
+      {
+        to: '/pos',
+        title: 'Kasir (POS)',
+        desc: 'Transaksi penjualan & checkout',
+        Icon: ShoppingCart,
+      },
+      {
+        to: '/inventory',
+        title: 'Inventory',
+        desc: 'Produk & stok',
+        Icon: Boxes,
+      },
+      {
+        to: '/crm',
+        title: 'CRM',
+        desc: 'Pelanggan & relasi',
+        Icon: Users,
+      },
+      {
+        to: '/finance',
+        title: 'Keuangan',
+        desc: 'Modul manajemen keuangan',
+        Icon: Wallet,
+      },
+      {
+        to: '/finance/expenses',
+        title: 'Operational Expenses',
+        desc: 'Catat pengeluaran operasional',
+        Icon: CreditCard,
+        highlight: true,
+      },
+      {
+        to: '/absensi',
+        title: 'Absensi',
+        desc: 'Check-in/out & riwayat',
+        Icon: ClipboardList,
+      },
+      {
+        to: '/hrm',
+        title: 'HRM',
+        desc: 'Manajemen karyawan',
+        Icon: Building2,
+      },
+      {
+        to: '/settings',
+        title: 'Settings',
+        desc: 'Pengaturan aplikasi',
+        Icon: Settings,
+      },
+    ],
+    []
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-500 mb-8">Selamat datang di Sistem Manajemen UMKM-Grow!</p>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {modules.map((mod) => (
-            <Link 
-              key={mod.name} 
-              to={mod.path}
-              className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center gap-4 text-center group"
-            >
-              <div className={`p-4 rounded-full ${mod.color} group-hover:scale-110 transition-transform`}>
-                {mod.icon}
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="text-left">
+              <h1 className="text-2xl font-bold text-gray-900">Menu Fitur</h1>
+              <div className="mt-1 text-sm text-gray-500">
+                {user?.name ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.` : 'Pilih modul untuk mulai bekerja.'}
               </div>
-              <h2 className="font-semibold text-gray-800 text-lg">{mod.name}</h2>
-            </Link>
-          ))}
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4">
+            <LowStockAlert />
+            <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+              <BestSellerCard />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                {menu.map(({ to, title, desc, Icon, highlight }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    className={[
+                      'rounded-[24px] border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md',
+                      highlight
+                        ? 'border-brand-200 ring-1 ring-brand-100 bg-brand-50/70 hover:bg-brand-50'
+                        : 'border-slate-200 hover:bg-slate-50',
+                    ].join(' ')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={[
+                          'flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm',
+                          highlight ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700',
+                        ].join(' ')}
+                      >
+                        {React.createElement(Icon, { size: 18 })}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-slate-900">{title}</div>
+                        <div className="mt-1 text-sm text-slate-500">{desc}</div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

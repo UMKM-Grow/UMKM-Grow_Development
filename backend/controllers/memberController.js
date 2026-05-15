@@ -122,32 +122,42 @@ const memberController = {
 
   // Add Points to Member
   addPoints: async (req, res) => {
+    console.log('[addPoints] Request body:', req.body);
     const t = await sequelize.transaction();
     try {
       const { member_id, amount } = req.body;
+      console.log('[addPoints] member_id:', member_id, 'amount:', amount);
+      
       if (!member_id || !amount || amount <= 0) {
         await t.rollback();
         return res.status(400).json({ message: 'member_id and amount are required and amount must be positive' });
       }
 
       const member = await Member.findByPk(member_id, { transaction: t });
+      console.log('[addPoints] Found member:', member);
+      
       if (!member) {
         await t.rollback();
         return res.status(404).json({ message: 'Member not found' });
       }
 
       const pointsToAdd = Math.floor(amount / 10000); // 1 point per Rp10.000
+      console.log('[addPoints] Calculated points to add:', pointsToAdd);
+      
       if (pointsToAdd > 0) {
         await member.update(
           { total_poin: member.total_poin + pointsToAdd },
           { transaction: t }
         );
+        console.log('[addPoints] Updated member total_poin:', member.total_poin + pointsToAdd);
       }
 
       await t.commit();
+      console.log('[addPoints] Transaction committed');
       res.status(200).json({ message: 'Points added successfully', data: member, points_added: pointsToAdd });
     } catch (error) {
       await t.rollback();
+      console.error('[addPoints] Error:', error);
       res.status(500).json({ message: 'Error adding points', error: error.message });
     }
   },

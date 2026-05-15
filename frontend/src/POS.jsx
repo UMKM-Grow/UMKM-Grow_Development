@@ -339,23 +339,29 @@ export default function POS() {
 
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
 
+      console.log('[POS Checkout] selectedMember:', selectedMember);
+      console.log('[POS Checkout] subtotal:', subtotal);
+      console.log('[POS Checkout] discount:', discount);
+      console.log('[POS Checkout] total:', total);
+
       let pointsAdded = 0;
-      if (selectedMember && selectedMember.id && total > 0) {
+      if (selectedMember && selectedMember.id && subtotal > 0) {
         try {
           const pointsRes = await axios.post(
             `${API_BASE}/members/add-points`,
             {
               member_id: selectedMember.id,
-              amount: total,
+              amount: subtotal,
             },
             { headers }
           );
+          console.log('[POS Checkout] pointsRes:', pointsRes.data);
           pointsAdded = pointsRes.data?.points_added || 0;
           if (pointsRes.data?.data) {
             setSelectedMember(pointsRes.data.data);
           }
         } catch (pointError) {
-          console.error('Error adding points:', pointError);
+          console.error('Error adding points:', pointError.response?.data || pointError.message);
         }
       }
 

@@ -38,6 +38,9 @@ export default function Navbar() {
             <Link to="/admin/branches" className="hover:text-gray-900">
               Cabang
             </Link>
+            <Link to="/members" className="hover:text-gray-900">
+              Members
+            </Link>
             <Link to="/settings" className="hover:text-gray-900">
               Settings
             </Link>

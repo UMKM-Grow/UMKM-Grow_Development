@@ -463,7 +463,8 @@ export default function POS() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-6 md:pr-[32%]">
         <div className="text-left">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Point of Sale</h1>
@@ -896,7 +897,7 @@ export default function POS() {
         </div>
       </div>
     )}
-  );
+  </>);
 }
 
 // Shift management functions

@@ -93,7 +93,55 @@ export default function POS() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerSearching, setCustomerSearching] = useState(false);
+  const [shiftStatus, setShiftStatus] = useState('checking'); // 'checking', 'active', 'inactive'
+  const [shiftData, setShiftData] = useState(null);
+  const [loadingShift, setLoadingShift] = useState(false);
+  const [saldoAwal, setSaldoAwal] = useState('');
+  const [saldoAkhir, setSaldoAkhir] = useState('');
+  const [showCloseModal, setShowCloseModal] = useState(false);
   const { selectedBranchId } = useContext(BranchContext);
+
+  // Check shift status for current user and branch
+  const checkShiftStatus = async () => {
+    if (!selectedBranchId) {
+      setShiftStatus('checking');
+      return;
+    }
+    setLoadingShift(true);
+    try {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      const user = userData ? JSON.parse(userData) : null;
+      if (!user || !user.id) {
+        setShiftStatus('inactive');
+        return;
+      }
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      // Check for active shift for this user and branch
+      const response = await axios.get(`${API_BASE}/shifts/active`, {
+        headers,
+        params: {
+          user_id: user.id,
+          branch_id: selectedBranchId
+        }
+      });
+      if (response.data && response.data.data) {
+        setShiftStatus('active');
+        setShiftData(response.data.data);
+      } else {
+        setShiftStatus('inactive');
+      }
+    } catch (error) {
+      console.error('Error checking shift status:', error);
+      setShiftStatus('inactive');
+    } finally {
+      setLoadingShift(false);
+    }
+  };
+
+  useEffect(() => {
+    checkShiftStatus();
+  }, [selectedBranchId]);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
 
@@ -320,6 +368,12 @@ export default function POS() {
     if (processing) return;
     if (cart.length === 0) return;
 
+    // Check if shift is active
+    if (shiftStatus !== 'active') {
+      alert('Silakan buka shift terlebih dahulu sebelum melakukan transaksi');
+      return;
+    }
+
     setProcessing(true);
     try {
       const payload = {
@@ -365,14 +419,14 @@ export default function POS() {
         }
       }
 
-      const successMsg = pointsAdded > 0 
-        ? `Transaksi Berhasil! +${pointsAdded} Poin ditambahkan.` 
+      const successMsg = pointsAdded > 0
+        ? `Transaksi Berhasil! +${pointsAdded} Poin ditambahkan.`
         : 'Transaksi Berhasil!';
       alert(successMsg);
-      
+
       // Broadcast event ke semua listeners (termasuk Inventory page)
       window.dispatchEvent(new Event(MUTATION_EVENT));
-      
+
       setCart([]);
       setPromoCode('');
       setPromoDiscount(0);
@@ -686,6 +740,20 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Tutup Shift Button */}
+        {shiftStatus === 'active' && (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={handleCloseShift}
+              disabled={loadingShift}
+              className="w-full rounded-md bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        )}
+
         <div className="mt-5">
           <label className="block text-sm font-semibold text-gray-800">Cash Received</label>
           <input
@@ -710,7 +778,7 @@ export default function POS() {
         <button
           type="button"
           onClick={onCheckout}
-          disabled={processing || cart.length === 0}
+          disabled={processing || cart.length === 0 || shiftStatus !== 'active'}
           className="mt-6 w-full rounded-md bg-gray-800 py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {processing ? 'Processing…' : 'Pay'}
@@ -752,5 +820,157 @@ export default function POS() {
         ) : null}
       </div>
     </div>
+
+    {/* Shift Opening Modal */}
+    {shiftStatus === 'inactive' && (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Shift Belum Dibuka</h2>
+          <p className="text-gray-600 mb-6">Anda perlu membuka shift sebelum dapat melakukan transaksi.</p>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Saldo Awal</label>
+            <input
+              type="number"
+              value={saldoAwal}
+              onChange={(e) => setSaldoAwal(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan saldo awal"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShiftStatus('checking')}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenShift}
+              disabled={loadingShift || !saldoAwal}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Membuka...' : 'Buka Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Shift Closing Modal */}
+    {showCloseModal && (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Tutup Shift</h2>
+          <p className="text-gray-600 mb-6">Masukkan saldo akhir untuk menutup shift ini.</p>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Saldo Akhir</label>
+            <input
+              type="number"
+              value={saldoAkhir}
+              onChange={(e) => setSaldoAkhir(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan saldo akhir"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShowCloseModal(false)}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmCloseShift}
+              disabled={loadingShift || !saldoAkhir}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   );
+}
+
+// Shift management functions
+async function handleOpenShift() {
+  if (!saldoAwal || loadingShift) return;
+
+  setLoadingShift(true);
+  try {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    const user = userData ? JSON.parse(userData) : null;
+
+    if (!user || !user.id || !selectedBranchId) {
+      throw new Error('User atau branch tidak valid');
+    }
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const response = await axios.post(`${API_BASE}/shifts/start`, {
+      user_id: user.id,
+      branch_id: selectedBranchId,
+      saldo_awal: parseFloat(saldoAwal)
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      setShiftStatus('active');
+      setShiftData(response.data.data);
+      setSaldoAwal('');
+      alert('Shift berhasil dibuka!');
+    } else {
+      throw new Error('Gagal membuka shift');
+    }
+  } catch (error) {
+    console.error('Error opening shift:', error);
+    alert(error.response?.data?.message || error?.message || 'Gagal membuka shift');
+  } finally {
+    setLoadingShift(false);
+  }
+}
+
+async function handleCloseShift() {
+  if (!shiftData || loadingShift) return;
+
+  // Show close modal instead of immediately closing
+  setSaldoAkhir(shiftData.saldo_awal || 0); // Initialize with opening balance
+  setShowCloseModal(true);
+}
+
+// Function to actually close the shift from modal
+async function handleConfirmCloseShift() {
+  if (!shiftData || loadingShift || !saldoAkhir) return;
+
+  setLoadingShift(true);
+  try {
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const response = await axios.put(`${API_BASE}/shifts/end`, {
+      shift_id: shiftData.id,
+      saldo_akhir: parseFloat(saldoAkhir)
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      setShiftStatus('inactive');
+      setShiftData(null);
+      setShowCloseModal(false);
+      setSaldoAkhir('');
+      alert('Shift berhasil ditutup!');
+    } else {
+      throw new Error('Gagal menutup shift');
+    }
+  } catch (error) {
+    console.error('Error closing shift:', error);
+    alert(error.response?.data?.message || error?.message || 'Gagal menutup shift');
+  } finally {
+    setLoadingShift(false);
+  }
 }

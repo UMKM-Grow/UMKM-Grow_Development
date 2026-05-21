@@ -44,6 +44,7 @@ app.use('/api/mutations', verifyToken, mutationRoutes);
 app.use('/api/promos', promoRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/members', memberRoutes);
+app.use('/api/shifts', require('./routes/shiftRoutes'));
 app.use('/api/expenses', verifyToken, expenseRoutes);
 app.use('/api/reports', verifyToken, reportRoutes);
 app.use('/api/suppliers', supplierRoutes);

@@ -14,6 +14,14 @@ const Branch = require('./Branch')(sequelize);
 const Promo = require('./Promo');
 const StockMutation = require('./StockMutation')(sequelize);
 const Member = require('./Member');
+const Shift = require('./Shift');
+
+// Shift associations
+Shift.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Shift, { foreignKey: 'user_id', as: 'shifts' });
+
+Shift.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch', targetKey: 'id_cabang' });
+Branch.hasMany(Shift, { foreignKey: 'branch_id', as: 'shifts', sourceKey: 'id_cabang' });
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });

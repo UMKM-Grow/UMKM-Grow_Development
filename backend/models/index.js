@@ -12,6 +12,7 @@ const PurchaseOrder = require('./PurchaseOrder');
 const PurchaseOrderDetail = require('./PurchaseOrderDetail');
 const Branch = require('./Branch')(sequelize);
 const StockMutation = require('./StockMutation')(sequelize);
+const StoreSetting = require('./StoreSetting');
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -58,6 +59,10 @@ Product.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
 
 Branch.hasMany(Transaction, { foreignKey: 'branch_id', as: 'transactions' });
 Transaction.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
+// StoreSetting associations
+Branch.hasOne(StoreSetting, { foreignKey: 'branch_id', as: 'setting' });
+StoreSetting.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
 
 Branch.hasMany(Expense, { foreignKey: 'branch_id', as: 'expenses' });
 Expense.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
@@ -116,6 +121,7 @@ module.exports = {
   PurchaseOrderDetail,
   Branch,
   StockMutation,
+  StoreSetting,
   initDb,
   isDbReady,
   ensureDbReady,

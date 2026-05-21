@@ -85,6 +85,8 @@ export default function POS() {
   const [discountInput, setDiscountInput] = useState('');
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
+  const [serviceChargePercent, setServiceChargePercent] = useState(0);
+  const [taxPercent, setTaxPercent] = useState(0);
   const { selectedBranchId } = useContext(BranchContext);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
@@ -98,12 +100,13 @@ export default function POS() {
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-        const [productRes, customerRes] = await Promise.allSettled([
+        const [productRes, customerRes, settingRes] = await Promise.allSettled([
           axios.get(`${API_BASE}/products`, {
             headers,
             params: selectedBranchId ? { branch_id: selectedBranchId } : undefined,
           }),
           axios.get(`${API_BASE}/customers`, { headers }),
+          axios.get(`${API_BASE}/settings`, { headers })
         ]);
 
         if (!cancelled) {
@@ -120,11 +123,23 @@ export default function POS() {
           } else {
             setCustomers([]);
           }
+
+          if (settingRes.status === 'fulfilled') {
+            const settingData = settingRes.value.data;
+            setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
+            setTaxPercent(parseFloat(settingData.tax_percent) || 0);
+          } else {
+            // Default values if settings fetch fails
+            setServiceChargePercent(0);
+            setTaxPercent(0);
+          }
         }
       } catch {
         if (!cancelled) {
           setProducts([]);
           setCustomers([]);
+          setServiceChargePercent(0);
+          setTaxPercent(0);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -158,7 +173,13 @@ export default function POS() {
     return Math.min(Math.floor(raw), subtotal);
   }, [discountInput, subtotal]);
 
-  const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
+  const total = useMemo(() => {
+    const baseTotal = Math.max(0, subtotal - discount);
+    const serviceChargeAmount = baseTotal * (serviceChargePercent / 100);
+    const subtotalWithServiceCharge = baseTotal + serviceChargeAmount;
+    const taxAmount = subtotalWithServiceCharge * (taxPercent / 100);
+    return Math.max(0, subtotalWithServiceCharge + taxAmount);
+  }, [subtotal, discount, serviceChargePercent, taxPercent]);
 
   async function refreshData() {
     setLoading(true);
@@ -166,9 +187,10 @@ export default function POS() {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      const [productRes, customerRes] = await Promise.allSettled([
+      const [productRes, customerRes, settingRes] = await Promise.allSettled([
         axios.get(`${API_BASE}/products`, { headers }),
         axios.get(`${API_BASE}/customers`, { headers }),
+        axios.get(`${API_BASE}/settings`, { headers })
       ]);
 
       if (productRes.status === 'fulfilled') {
@@ -184,9 +206,21 @@ export default function POS() {
       } else {
         setCustomers([]);
       }
+
+      if (settingRes.status === 'fulfilled') {
+        const settingData = settingRes.value.data;
+        setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
+        setTaxPercent(parseFloat(settingData.tax_percent) || 0);
+      } else {
+        // Default values if settings fetch fails
+        setServiceChargePercent(0);
+        setTaxPercent(0);
+      }
     } catch {
       setProducts([]);
       setCustomers([]);
+      setServiceChargePercent(0);
+      setTaxPercent(0);
     } finally {
       setLoading(false);
     }

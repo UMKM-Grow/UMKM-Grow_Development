@@ -48,6 +48,7 @@ app.use('/api/shifts', require('./routes/shiftRoutes'));
 app.use('/api/expenses', verifyToken, expenseRoutes);
 app.use('/api/reports', verifyToken, reportRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/settings', verifyToken, require('./routes/settingRoutes'));
 
 app.get('/', (req, res) => {
   res.send('UMKM-Grow API is running...');

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:5000/api/shift/active)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5000)",
+      "Bash(curl -s http://localhost:5000/api/shifts/active)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git config *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(npm start *)",
+      "Bash(git pull *)"
+    ]
+  }
+}

@@ -101,6 +101,9 @@ export default function POS() {
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [serviceChargePercent, setServiceChargePercent] = useState(0);
   const [taxPercent, setTaxPercent] = useState(0);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const [setting, setSetting] = useState(null);
   const { selectedBranchId } = useContext(BranchContext);
 
   // Check shift status for current user and branch
@@ -182,6 +185,7 @@ export default function POS() {
 
           if (settingRes.status === 'fulfilled') {
             const settingData = settingRes.value.data;
+            setSetting(settingData);
             setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
             setTaxPercent(parseFloat(settingData.tax_percent) || 0);
           } else {
@@ -271,6 +275,7 @@ export default function POS() {
 
       if (settingRes.status === 'fulfilled') {
         const settingData = settingRes.value.data;
+        setSetting(settingData);
         setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
         setTaxPercent(parseFloat(settingData.tax_percent) || 0);
       } else {
@@ -453,10 +458,29 @@ export default function POS() {
         }
       }
 
-      const successMsg = pointsAdded > 0
-        ? `Transaksi Berhasil! +${pointsAdded} Poin ditambahkan.`
-        : 'Transaksi Berhasil!';
-      alert(successMsg);
+      // Prepare receipt data
+      const userData = localStorage.getItem('user');
+      const user = userData ? JSON.parse(userData) : null;
+      
+      const selectedCustomerData = customers.find(c => c.id === Number(customerId));
+      
+      const receipt = {
+        transactionId: Date.now(),
+        date: new Date().toLocaleDateString('id-ID'),
+        time: new Date().toLocaleTimeString('id-ID'),
+        cashierName: user?.name || 'Kasir',
+        customerName: selectedCustomerData?.name || selectedCustomer?.name || 'Umum',
+        items: [...cart],
+        subtotal: subtotal,
+        discount: discount,
+        paymentMethod: paymentMethod,
+        cashReceived: Number(cashReceivedInput) || 0,
+        change: Math.max(0, (Number(cashReceivedInput) || 0) - total),
+        total: total
+      };
+      
+      setReceiptData(receipt);
+      setShowReceipt(true);
 
       // Broadcast event ke semua listeners (termasuk Inventory page)
       window.dispatchEvent(new Event(MUTATION_EVENT));
@@ -926,6 +950,158 @@ export default function POS() {
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
             >
               {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Receipt Modal */}
+    <style>{`
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #receipt-content, #receipt-content * {
+          visibility: visible;
+        }
+        #receipt-content {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+    `}</style>
+
+    {showReceipt && receiptData && (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-sm max-h-[90vh] overflow-y-auto">
+          <div id="receipt-content" className="p-6 font-mono text-sm">
+            {/* Header Toko */}
+            <div className="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
+              <h2 className="text-lg font-bold">{setting?.nama_toko || 'UMKM Grow'}</h2>
+              {setting?.alamat && <p className="text-gray-600 mt-1">{setting.alamat}</p>}
+              {setting?.nomor_telepon && <p className="text-gray-600 mt-1">{setting.nomor_telepon}</p>}
+            </div>
+
+            {/* Detail Transaksi */}
+            <div className="border-b border-dashed border-gray-300 pb-4 mb-4">
+              <div className="flex justify-between">
+                <span>Tanggal:</span>
+                <span>{receiptData.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Waktu:</span>
+                <span>{receiptData.time}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Kasir:</span>
+                <span>{receiptData.cashierName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Pelanggan:</span>
+                <span>{receiptData.customerName}</span>
+              </div>
+            </div>
+
+            {/* Daftar Belanjaan */}
+            <div className="border-b border-dashed border-gray-300 pb-4 mb-4">
+              {receiptData.items.map((item, index) => (
+                <div key={index} className="mb-2">
+                  <div className="flex justify-between">
+                    <span>{item.name}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>{item.quantity} x {formatIdr(item.price)}</span>
+                    <span>{formatIdr(item.price * item.quantity)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rincian Biaya */}
+            <div className="border-b border-dashed border-gray-300 pb-4 mb-4">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>{formatIdr(receiptData.subtotal)}</span>
+              </div>
+              {receiptData.discount > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>Diskon:</span>
+                  <span>-{formatIdr(receiptData.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-lg mt-2">
+                <span>Total:</span>
+                <span>{formatIdr(receiptData.total)}</span>
+              </div>
+            </div>
+
+            {/* Pembayaran */}
+            <div className="text-center">
+              <div className="flex justify-between">
+                <span>Metode:</span>
+                <span>{receiptData.paymentMethod}</span>
+              </div>
+              {receiptData.paymentMethod === 'Cash' && (
+                <>
+                  <div className="flex justify-between">
+                    <span>Tunai:</span>
+                    <span>{formatIdr(receiptData.cashReceived)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Kembalian:</span>
+                    <span>{formatIdr(receiptData.change)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="text-center mt-6 pt-4 border-t border-dashed border-gray-300">
+              <p className="text-gray-600">Terima kasih telah berbelanja!</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-4 border-t border-gray-200 flex gap-3 no-print">
+            <button
+              type="button"
+              onClick={() => {
+                window.print();
+              }}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700"
+            >
+              🖨️ Cetak Struk
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const selectedCustomerData = customers.find(c => c.id === Number(customerId));
+                const phone = selectedCustomerData?.phone || selectedCustomer?.phone || '';
+                const message = `Terima kasih telah berbelanja di ${setting?.nama_toko || 'UMKM Grow'}. Total belanja Anda adalah ${formatIdr(receiptData.total)}.`;
+                const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                window.open(waUrl, '_blank');
+              }}
+              className="flex-1 bg-green-600 text-white py-2 rounded-md font-semibold hover:bg-green-700"
+            >
+              📱 Kirim WA
+            </button>
+          </div>
+          <div className="px-4 pb-4 no-print">
+            <button
+              type="button"
+              onClick={() => {
+                setShowReceipt(false);
+                setReceiptData(null);
+              }}
+              className="w-full bg-gray-200 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-300"
+            >
+              Tutup
             </button>
           </div>
         </div>

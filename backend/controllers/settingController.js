@@ -3,25 +3,47 @@ const { StoreSetting, Branch } = require('../models');
 // GET /api/settings
 exports.getSetting = async (req, res) => {
   try {
+    console.log('Auth user:', req.user);
     // Assuming req.user is set by authMiddleware and contains user info including branchId
-    const userBranchId = req.user.branch_id; // Adjust if the property name is different
+    let userBranchId = req.user.branch_id;
+    console.log('User branch ID:', userBranchId);
 
     if (!userBranchId) {
-      return res.status(400).json({ message: 'User branch not found' });
+      // If user has no branch, get or create default branch
+      let defaultBranch = await Branch.findOne();
+      if (!defaultBranch) {
+        defaultBranch = await Branch.create({
+          nama_cabang: 'Cabang Utama',
+          lokasi: 'Lokasi Utama'
+        });
+      }
+      userBranchId = defaultBranch.id_cabang;
+      console.log('Using default branch ID:', userBranchId);
     }
 
-    const setting = await StoreSetting.findOne({
-      where: { branch_id: userBranchId },
-      include: [{ model: Branch, attributes: ['id', 'nama_cabang'] }] // Adjust branch attributes as needed
+    let setting = await StoreSetting.findOne({
+      where: { branch_id: userBranchId }
     });
+    console.log('Setting found:', setting ? 'yes' : 'no');
 
     if (!setting) {
-      return res.status(404).json({ message: 'Store setting not found for this branch' });
+      // Create default setting if not exists
+      setting = await StoreSetting.create({
+        branch_id: userBranchId,
+        nama_toko: 'UMKM Grow',
+        alamat: null,
+        nomor_telepon: null,
+        service_charge_percent: 0.00,
+        tax_percent: 0.00
+      });
+      console.log('Created default setting');
     }
 
+    console.log('Sending setting:', JSON.stringify(setting));
     res.json(setting);
   } catch (error) {
     console.error('Error fetching store setting:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -29,14 +51,22 @@ exports.getSetting = async (req, res) => {
 // PUT /api/settings
 exports.updateSetting = async (req, res) => {
   try {
-    // Only Owner can update settings
-    if (req.user.role !== 'Owner') {
-      return res.status(403).json({ message: 'Forbidden: Only Owner can update store settings' });
+    // Only admin can update settings
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Only admin can update store settings' });
     }
 
-    const userBranchId = req.user.branch_id;
+    let userBranchId = req.user.branch_id;
     if (!userBranchId) {
-      return res.status(400).json({ message: 'User branch not found' });
+      // If user has no branch, get or create default branch
+      let defaultBranch = await Branch.findOne();
+      if (!defaultBranch) {
+        defaultBranch = await Branch.create({
+          nama_cabang: 'Cabang Utama',
+          lokasi: 'Lokasi Utama'
+        });
+      }
+      userBranchId = defaultBranch.id_cabang;
     }
 
     const {
@@ -53,23 +83,30 @@ exports.updateSetting = async (req, res) => {
     }
 
     // Update or create setting
-    const [updated] = await StoreSetting.update(
-      {
+    const [setting, created] = await StoreSetting.findOrCreate({
+      where: { branch_id: userBranchId },
+      defaults: {
         nama_toko: nama_toko.trim(),
         alamat: alamat ? alamat.trim() : null,
         nomor_telepon: nomor_telepon ? nomor_telepon.trim() : null,
-        service_charge_percent: parseFloat(service_charge_percent),
-        tax_percent: parseFloat(tax_percent)
-      },
-      { where: { branch_id: userBranchId } }
-    );
+        service_charge_percent: parseFloat(service_charge_percent) || 0.00,
+        tax_percent: parseFloat(tax_percent) || 0.00
+      }
+    });
 
-    if (updated) {
-      const updatedSetting = await StoreSetting.findOne({ where: { branch_id: userBranchId } });
-      res.json({ message: 'Store setting updated successfully', setting: updatedSetting });
-    } else {
-      res.status(400).json({ message: 'Unable to update store setting' });
+    if (!created) {
+      // Update existing setting
+      await setting.update({
+        nama_toko: nama_toko.trim(),
+        alamat: alamat ? alamat.trim() : null,
+        nomor_telepon: nomor_telepon ? nomor_telepon.trim() : null,
+        service_charge_percent: parseFloat(service_charge_percent) || 0.00,
+        tax_percent: parseFloat(tax_percent) || 0.00
+      });
     }
+
+    const updatedSetting = await StoreSetting.findOne({ where: { branch_id: userBranchId } });
+    res.json(updatedSetting);
   } catch (error) {
     console.error('Error updating store setting:', error);
     res.status(500).json({ message: 'Internal server error' });

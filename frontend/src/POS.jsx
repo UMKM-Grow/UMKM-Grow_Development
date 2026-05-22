@@ -485,12 +485,6 @@ export default function POS() {
       // Broadcast event ke semua listeners (termasuk Inventory page)
       window.dispatchEvent(new Event(MUTATION_EVENT));
 
-      setCart([]);
-      setPromoCode('');
-      setPromoDiscount(0);
-      setPromoMessage('');
-      setAppliedPromo(false);
-      setCashReceivedInput('');
       await refreshData();
     } catch (error) {
       const message =
@@ -1098,6 +1092,7 @@ export default function POS() {
               onClick={() => {
                 setShowReceipt(false);
                 setReceiptData(null);
+                clearCart();
               }}
               className="w-full bg-gray-200 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-300"
             >

@@ -14,6 +14,8 @@ const reportRoutes = require('./routes/reportRoutes');
 const branchRoutes = require('./routes/branchRoutes');
 const mutationRoutes = require('./routes/mutationRoutes');
 const promoRoutes = require('./routes/promoRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const memberRoutes = require('./routes/memberRoutes');
 const { verifyToken } = require('./middlewares/authMiddleware');
 const supplierRoutes = require('./routes/supplierRoutes');
 
@@ -40,9 +42,13 @@ app.use('/api/pos', verifyToken, posRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/mutations', verifyToken, mutationRoutes);
 app.use('/api/promos', promoRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/members', memberRoutes);
+app.use('/api/shifts', require('./routes/shiftRoutes'));
 app.use('/api/expenses', verifyToken, expenseRoutes);
 app.use('/api/reports', verifyToken, reportRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/settings', verifyToken, require('./routes/settingRoutes'));
 
 app.get('/', (req, res) => {
   res.send('UMKM-Grow API is running...');

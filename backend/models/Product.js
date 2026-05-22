@@ -6,11 +6,12 @@ const Product = sequelize.define(
   {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: { type: DataTypes.STRING, allowNull: false },
-    sku: { type: DataTypes.STRING, allowNull: true },
+    sku: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: true },
     category_id: { type: DataTypes.INTEGER, allowNull: true },
     base_price: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
     stok: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    stok_minimum: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 10 },
     branch_id: { type: DataTypes.INTEGER, allowNull: true },
     is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   },

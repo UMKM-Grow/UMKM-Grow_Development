@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useContext, useEffect } from 'react';
 import Login from './Login';
 import Dashboard from './Dashboard';
 import Inventory from './Inventory';
@@ -13,8 +14,10 @@ import Absensi from './Absensi';
 import SupplierManagement from './SupplierManagement';
 import Branches from './Branches';
 import StockMutation from './StockMutation';
+import Members from './Members';
 import Navbar from './Navbar';
 import { BranchProvider } from './BranchContext';
+import BranchContext from './BranchContext';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -23,6 +26,12 @@ function RequireAuth({ children }) {
 }
 
 function AuthenticatedLayout({ children }) {
+  const { reloadBranches } = useContext(BranchContext);
+
+  useEffect(() => {
+    reloadBranches();
+  }, [reloadBranches]);
+
   return (
     <>
       <Navbar />
@@ -51,6 +60,7 @@ function App() {
           <Route path="/settings" element={<RequireAuth><AuthenticatedLayout><Settings /></AuthenticatedLayout></RequireAuth>} />
           <Route path="/admin/branches" element={<RequireAuth><AuthenticatedLayout><Branches /></AuthenticatedLayout></RequireAuth>} />
           <Route path="/inventory/mutations" element={<RequireAuth><AuthenticatedLayout><StockMutation /></AuthenticatedLayout></RequireAuth>} />
+          <Route path="/members" element={<RequireAuth><AuthenticatedLayout><Members /></AuthenticatedLayout></RequireAuth>} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BranchProvider>

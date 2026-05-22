@@ -64,6 +64,7 @@ const authController = {
             name: user.name,
             email: user.email,
             role: user.role,
+            branch_id: user.branch_id,
             token: generateToken(user.id),
           },
         });

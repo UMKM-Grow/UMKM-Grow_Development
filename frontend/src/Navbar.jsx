@@ -1,9 +1,22 @@
-import { Link } from 'react-router-dom';
-import { useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useContext, useMemo } from 'react';
 import BranchContext from './BranchContext';
+import { LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { branches, selectedBranchId, setSelectedBranchId } = useContext(BranchContext);
+  const navigate = useNavigate();
+  
+  const user = useMemo(() => {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
     <header className="border-b border-gray-200 bg-white p-4 shadow-sm">
@@ -25,13 +38,16 @@ export default function Navbar() {
             <Link to="/admin/branches" className="hover:text-gray-900">
               Cabang
             </Link>
+            <Link to="/members" className="hover:text-gray-900">
+              Members
+            </Link>
             <Link to="/settings" className="hover:text-gray-900">
               Settings
             </Link>
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <label className="text-sm text-gray-500">Cabang aktif</label>
           <select
             value={selectedBranchId ?? ''}
@@ -45,6 +61,25 @@ export default function Navbar() {
               </option>
             ))}
           </select>
+
+          <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
+            {user && (
+              <>
+                <div className="text-right text-sm">
+                  <p className="font-medium text-gray-900">{user.name}</p>
+                  <p className="text-xs text-gray-500">{user.role}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 transition"
+                  title="Logout"
+                >
+                  <LogOut size={16} />
+                  <span className="hidden sm:inline">Keluar</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

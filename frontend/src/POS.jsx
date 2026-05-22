@@ -90,7 +90,60 @@ export default function POS() {
   const [appliedPromo, setAppliedPromo] = useState(false);
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerSearching, setCustomerSearching] = useState(false);
+  const [shiftStatus, setShiftStatus] = useState('checking'); // 'checking', 'active', 'inactive'
+  const [shiftData, setShiftData] = useState(null);
+  const [loadingShift, setLoadingShift] = useState(false);
+  const [saldoAwal, setSaldoAwal] = useState('');
+  const [saldoAkhir, setSaldoAkhir] = useState('');
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [serviceChargePercent, setServiceChargePercent] = useState(0);
+  const [taxPercent, setTaxPercent] = useState(0);
   const { selectedBranchId } = useContext(BranchContext);
+
+  // Check shift status for current user and branch
+  const checkShiftStatus = async () => {
+    if (!selectedBranchId) {
+      setShiftStatus('checking');
+      return;
+    }
+    setLoadingShift(true);
+    try {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      const user = userData ? JSON.parse(userData) : null;
+      if (!user || !user.id) {
+        setShiftStatus('inactive');
+        return;
+      }
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      // Check for active shift for this user and branch
+      const response = await axios.get(`${API_BASE}/shifts/active`, {
+        headers,
+        params: {
+          user_id: user.id,
+          branch_id: selectedBranchId
+        }
+      });
+      if (response.data && response.data.data) {
+        setShiftStatus('active');
+        setShiftData(response.data.data);
+      } else {
+        setShiftStatus('inactive');
+      }
+    } catch (error) {
+      console.error('Error checking shift status:', error);
+      setShiftStatus('inactive');
+    } finally {
+      setLoadingShift(false);
+    }
+  };
+
+  useEffect(() => {
+    checkShiftStatus();
+  }, [selectedBranchId]);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
 
@@ -103,12 +156,13 @@ export default function POS() {
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-        const [productRes, customerRes] = await Promise.allSettled([
+        const [productRes, customerRes, settingRes] = await Promise.allSettled([
           axios.get(`${API_BASE}/products`, {
             headers,
             params: selectedBranchId ? { branch_id: selectedBranchId } : undefined,
           }),
           axios.get(`${API_BASE}/customers`, { headers }),
+          axios.get(`${API_BASE}/settings`, { headers })
         ]);
 
         if (!cancelled) {
@@ -125,11 +179,23 @@ export default function POS() {
           } else {
             setCustomers([]);
           }
+
+          if (settingRes.status === 'fulfilled') {
+            const settingData = settingRes.value.data;
+            setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
+            setTaxPercent(parseFloat(settingData.tax_percent) || 0);
+          } else {
+            // Default values if settings fetch fails
+            setServiceChargePercent(0);
+            setTaxPercent(0);
+          }
         }
       } catch {
         if (!cancelled) {
           setProducts([]);
           setCustomers([]);
+          setServiceChargePercent(0);
+          setTaxPercent(0);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -169,7 +235,13 @@ export default function POS() {
     return Math.min(Math.floor(raw), subtotal);
   }, [promoDiscount, subtotal]);
 
-  const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
+  const total = useMemo(() => {
+    const baseTotal = Math.max(0, subtotal - discount);
+    const serviceChargeAmount = baseTotal * (serviceChargePercent / 100);
+    const subtotalWithServiceCharge = baseTotal + serviceChargeAmount;
+    const taxAmount = subtotalWithServiceCharge * (taxPercent / 100);
+    return Math.max(0, subtotalWithServiceCharge + taxAmount);
+  }, [subtotal, discount, serviceChargePercent, taxPercent]);
 
   async function refreshData() {
     setLoading(true);
@@ -177,9 +249,10 @@ export default function POS() {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      const [productRes, customerRes] = await Promise.allSettled([
+      const [productRes, customerRes, settingRes] = await Promise.allSettled([
         axios.get(`${API_BASE}/products`, { headers }),
         axios.get(`${API_BASE}/customers`, { headers }),
+        axios.get(`${API_BASE}/settings`, { headers })
       ]);
 
       if (productRes.status === 'fulfilled') {
@@ -195,9 +268,21 @@ export default function POS() {
       } else {
         setCustomers([]);
       }
+
+      if (settingRes.status === 'fulfilled') {
+        const settingData = settingRes.value.data;
+        setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
+        setTaxPercent(parseFloat(settingData.tax_percent) || 0);
+      } else {
+        // Default values if settings fetch fails
+        setServiceChargePercent(0);
+        setTaxPercent(0);
+      }
     } catch {
       setProducts([]);
       setCustomers([]);
+      setServiceChargePercent(0);
+      setTaxPercent(0);
     } finally {
       setLoading(false);
     }
@@ -291,14 +376,42 @@ export default function POS() {
     });
   }
 
+  async function searchCustomer() {
+    if (!customerPhone.trim()) {
+      setSelectedCustomer(null);
+      return;
+    }
+    setCustomerSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      const response = await axios.get(`${API_BASE}/members/search`, {
+        headers,
+        params: { nomor_telepon: customerPhone.trim() },
+      });
+      setSelectedCustomer(response.data.data || null);
+    } catch (error) {
+      console.error('Error searching customer:', error);
+      setSelectedCustomer(null);
+    } finally {
+      setCustomerSearching(false);
+    }
+  }
+
   async function onCheckout() {
     if (processing) return;
     if (cart.length === 0) return;
 
+    // Check if shift is active
+    if (shiftStatus !== 'active') {
+      alert('Silakan buka shift terlebih dahulu sebelum melakukan transaksi');
+      return;
+    }
+
     setProcessing(true);
     try {
       const payload = {
-        customer_id: customerId ? Number(customerId) : null,
+        customer_id: selectedCustomer?.id || (customerId ? Number(customerId) : null),
         branch_id: selectedBranchId || null,
         payment_method: paymentMethod,
         items: cart.map((i) => ({
@@ -314,11 +427,40 @@ export default function POS() {
 
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
 
-      alert('Transaksi Berhasil!');
-      
+      console.log('[POS Checkout] selectedCustomer:', selectedCustomer);
+      console.log('[POS Checkout] subtotal:', subtotal);
+      console.log('[POS Checkout] discount:', discount);
+      console.log('[POS Checkout] total:', total);
+
+      let pointsAdded = 0;
+      if (selectedCustomer && selectedCustomer.id && subtotal > 0) {
+        try {
+          const pointsRes = await axios.post(
+            `${API_BASE}/members/add-points`,
+            {
+              member_id: selectedCustomer.id,
+              amount: subtotal,
+            },
+            { headers }
+          );
+          console.log('[POS Checkout] pointsRes:', pointsRes.data);
+          pointsAdded = pointsRes.data?.points_added || 0;
+          if (pointsRes.data?.data) {
+            setSelectedCustomer(pointsRes.data.data);
+          }
+        } catch (pointError) {
+          console.error('Error adding points:', pointError.response?.data || pointError.message);
+        }
+      }
+
+      const successMsg = pointsAdded > 0
+        ? `Transaksi Berhasil! +${pointsAdded} Poin ditambahkan.`
+        : 'Transaksi Berhasil!';
+      alert(successMsg);
+
       // Broadcast event ke semua listeners (termasuk Inventory page)
       window.dispatchEvent(new Event(MUTATION_EVENT));
-      
+
       setCart([]);
       setPromoCode('');
       setPromoDiscount(0);
@@ -355,7 +497,8 @@ export default function POS() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-6 md:pr-[32%]">
         <div className="text-left">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Point of Sale</h1>
@@ -468,6 +611,54 @@ export default function POS() {
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="mt-5">
+          <label className="block text-sm font-semibold text-gray-800">Customer / Member</label>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              placeholder="Nomor telepon customer"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') searchCustomer();
+              }}
+              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+            <button
+              type="button"
+              onClick={searchCustomer}
+              disabled={customerSearching}
+              className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {customerSearching ? 'Cari...' : 'Cari'}
+            </button>
+          </div>
+
+          {selectedCustomer ? (
+            <div className="mt-3 rounded-lg bg-blue-50 p-4">
+              <div className="text-sm font-semibold text-gray-900">{selectedCustomer.name}</div>
+              <div className="mt-1 text-xs text-gray-600">{selectedCustomer.phone}</div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-700">Poin:</span>
+                <span className="text-sm font-bold text-blue-600">{selectedCustomer.loyalty_points} pts</span>
+                <span className="text-xs text-gray-500">• {selectedCustomer.level}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setCustomerPhone('');
+                }}
+                className="mt-2 text-xs font-semibold text-red-500 hover:text-red-700"
+              >
+                Hapus
+              </button>
+            </div>
+          ) : customerPhone && !customerSearching ? (
+            <div className="mt-3 text-xs text-gray-500">Customer tidak ditemukan</div>
+          ) : null}
         </div>
 
         <div className="mt-5 max-h-[36vh] overflow-auto rounded-lg border border-gray-100">
@@ -584,6 +775,20 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Tutup Shift Button */}
+        {shiftStatus === 'active' && (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={handleCloseShift}
+              disabled={loadingShift}
+              className="w-full rounded-md bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        )}
+
         <div className="mt-5">
           <label className="block text-sm font-semibold text-gray-800">Cash Received</label>
           <input
@@ -608,7 +813,7 @@ export default function POS() {
         <button
           type="button"
           onClick={onCheckout}
-          disabled={processing || cart.length === 0}
+          disabled={processing || cart.length === 0 || shiftStatus !== 'active'}
           className="mt-6 w-full rounded-md bg-gray-800 py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {processing ? 'Processing…' : 'Pay'}
@@ -650,5 +855,157 @@ export default function POS() {
         ) : null}
       </div>
     </div>
-  );
+
+    {/* Shift Opening Modal */}
+    {shiftStatus === 'inactive' && (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Shift Belum Dibuka</h2>
+          <p className="text-gray-600 mb-6">Anda perlu membuka shift sebelum dapat melakukan transaksi.</p>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Saldo Awal</label>
+            <input
+              type="number"
+              value={saldoAwal}
+              onChange={(e) => setSaldoAwal(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan saldo awal"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShiftStatus('checking')}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenShift}
+              disabled={loadingShift || !saldoAwal}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Membuka...' : 'Buka Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Shift Closing Modal */}
+    {showCloseModal && (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Tutup Shift</h2>
+          <p className="text-gray-600 mb-6">Masukkan saldo akhir untuk menutup shift ini.</p>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Saldo Akhir</label>
+            <input
+              type="number"
+              value={saldoAkhir}
+              onChange={(e) => setSaldoAkhir(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan saldo akhir"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShowCloseModal(false)}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmCloseShift}
+              disabled={loadingShift || !saldoAkhir}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
+}
+
+// Shift management functions
+async function handleOpenShift() {
+  if (!saldoAwal || loadingShift) return;
+
+  setLoadingShift(true);
+  try {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    const user = userData ? JSON.parse(userData) : null;
+
+    if (!user || !user.id || !selectedBranchId) {
+      throw new Error('User atau branch tidak valid');
+    }
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const response = await axios.post(`${API_BASE}/shifts/start`, {
+      user_id: user.id,
+      branch_id: selectedBranchId,
+      saldo_awal: parseFloat(saldoAwal)
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      setShiftStatus('active');
+      setShiftData(response.data.data);
+      setSaldoAwal('');
+      alert('Shift berhasil dibuka!');
+    } else {
+      throw new Error('Gagal membuka shift');
+    }
+  } catch (error) {
+    console.error('Error opening shift:', error);
+    alert(error.response?.data?.message || error?.message || 'Gagal membuka shift');
+  } finally {
+    setLoadingShift(false);
+  }
+}
+
+async function handleCloseShift() {
+  if (!shiftData || loadingShift) return;
+
+  // Show close modal instead of immediately closing
+  setSaldoAkhir(shiftData.saldo_awal || 0); // Initialize with opening balance
+  setShowCloseModal(true);
+}
+
+// Function to actually close the shift from modal
+async function handleConfirmCloseShift() {
+  if (!shiftData || loadingShift || !saldoAkhir) return;
+
+  setLoadingShift(true);
+  try {
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const response = await axios.put(`${API_BASE}/shifts/end`, {
+      shift_id: shiftData.id,
+      saldo_akhir: parseFloat(saldoAkhir)
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      setShiftStatus('inactive');
+      setShiftData(null);
+      setShowCloseModal(false);
+      setSaldoAkhir('');
+      alert('Shift berhasil ditutup!');
+    } else {
+      throw new Error('Gagal menutup shift');
+    }
+  } catch (error) {
+    console.error('Error closing shift:', error);
+    alert(error.response?.data?.message || error?.message || 'Gagal menutup shift');
+  } finally {
+    setLoadingShift(false);
+  }
 }

@@ -13,6 +13,16 @@ const PurchaseOrderDetail = require('./PurchaseOrderDetail');
 const Branch = require('./Branch')(sequelize);
 const Promo = require('./Promo');
 const StockMutation = require('./StockMutation')(sequelize);
+const Member = require('./Member');
+const Shift = require('./Shift');
+const StoreSetting = require('./StoreSetting');
+
+// Shift associations
+Shift.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+User.hasMany(Shift, { foreignKey: 'user_id', as: 'shifts' });
+
+Shift.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch', targetKey: 'id_cabang' });
+Branch.hasMany(Shift, { foreignKey: 'branch_id', as: 'shifts', sourceKey: 'id_cabang' });
 
 User.hasMany(Attendance, { foreignKey: 'user_id', as: 'attendances' });
 Attendance.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -74,6 +84,10 @@ Branch.hasMany(StockMutation, { foreignKey: 'to_branch_id', as: 'incomingMutatio
 StockMutation.belongsTo(Branch, { foreignKey: 'from_branch_id', as: 'fromBranch' });
 StockMutation.belongsTo(Branch, { foreignKey: 'to_branch_id', as: 'toBranch' });
 
+// StoreSetting associations
+Branch.hasOne(StoreSetting, { foreignKey: 'branch_id', as: 'setting' });
+StoreSetting.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
 let dbReady = false;
 let initPromise = null;
 
@@ -81,7 +95,7 @@ const initDb = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connection to database has been established successfully.');
-    
+
     // Sync models (In production, use migrations)
     await sequelize.sync({ alter: true });
     console.log('Database models synchronized.');
@@ -121,6 +135,9 @@ module.exports = {
   Branch,
   Promo,
   StockMutation,
+  Member,
+  Shift,
+  StoreSetting,
   initDb,
   isDbReady,
   ensureDbReady,

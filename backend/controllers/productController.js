@@ -201,7 +201,45 @@ const productController = {
     } catch (error) {
       res.status(500).json({ message: 'Error deleting product', error: error.message });
     }
-  }
+  },
+
+  // Get Low Stock Products (Alert)
+  getLowStockProducts: async (req, res) => {
+    try {
+      const branchId = Number(req.query.branch_id);
+      if (!Number.isInteger(branchId) || branchId <= 0) {
+        return res.status(400).json({ message: 'branch_id tidak valid atau tidak ditemukan.' });
+      }
+
+      const lowStockProducts = await Product.findAll({
+        where: {
+          is_active: true,
+          branch_id: branchId,
+          [Op.and]: [
+            sequelize.where(
+              sequelize.col('stok'),
+              '<=',
+              sequelize.col('stok_minimum')
+            ),
+          ],
+        },
+        order: [['stok', 'ASC']],
+      });
+
+      const data = lowStockProducts.map(item => ({
+        id: item.id,
+        name: item.name,
+        sku: item.sku,
+        stok: Number(item.stok),
+        stok_minimum: Number(item.stok_minimum),
+        branch_id: item.branch_id,
+      }));
+
+      res.status(200).json({ message: 'OK', data });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching low stock products', error: error.message });
+    }
+  },
 };
 
 module.exports = productController;

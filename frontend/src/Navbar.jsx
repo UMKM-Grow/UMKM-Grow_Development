@@ -44,6 +44,9 @@ export default function Navbar() {
             <Link to="/suppliers" className="hover:text-gray-900">
               Suppliers
             </Link>
+            <Link to="/debts" className="hover:text-gray-900">
+              Hutang & Piutang
+            </Link>
             <Link to="/settings" className="hover:text-gray-900">
               Settings
             </Link>

@@ -6,21 +6,34 @@ const productController = {
   createProduct: async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      const { name, sku, description, category_id, base_price, variants } = req.body;
+      const { name, sku, description, category_id, base_price, variants, branch_id } = req.body;
       const normalizedSku = String(sku || '').trim();
+      const selectedBranchId = Number(branch_id) || null;
       if (!normalizedSku) {
         await t.rollback();
         return res.status(400).json({ message: 'SKU is required' });
       }
 
-      const existing = await Product.findOne({ where: { sku: normalizedSku }, transaction: t });
+      const existing = await Product.findOne({ 
+        where: { 
+          sku: normalizedSku, 
+          branch_id: selectedBranchId 
+        }, 
+        transaction: t 
+      });
       if (existing) {
         await t.rollback();
-        return res.status(409).json({ message: 'SKU already exists' });
+        return res.status(409).json({ message: 'SKU already exists in this branch' });
       }
 
       const product = await Product.create({
-        name, sku: normalizedSku, description, category_id, base_price
+        name,
+        sku: normalizedSku,
+        description,
+        category_id,
+        base_price,
+        branch_id: selectedBranchId,
+        stok: 0, // Initialize stock to 0
       }, { transaction: t });
 
       if (variants && variants.length > 0) {
@@ -41,7 +54,7 @@ const productController = {
       await t.rollback();
       const isUniqueError = error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
       if (isUniqueError) {
-        return res.status(409).json({ message: 'SKU already exists' });
+        return res.status(409).json({ message: 'SKU already exists in this branch' });
       }
       res.status(500).json({ message: 'Error creating product', error: error.message });
     }
@@ -50,8 +63,9 @@ const productController = {
   // READ All Products (Pagination & Search)
   getAllProducts: async (req, res) => {
     try {
-      const { page = 1, limit = 10, search = '' } = req.query;
+      const { page = 1, limit = 10, search = '', branch_id } = req.query;
       const offset = (page - 1) * limit;
+      const selectedBranchId = Number(branch_id);
 
       const where = {
         is_active: true,
@@ -60,6 +74,10 @@ const productController = {
           { sku: { [Op.like]: `%${search}%` } }
         ]
       };
+
+      if (Number.isInteger(selectedBranchId) && selectedBranchId > 0) {
+        where.branch_id = selectedBranchId;
+      }
 
       const { count, rows } = await Product.findAndCountAll({
         where,
@@ -100,7 +118,8 @@ const productController = {
   updateProduct: async (req, res) => {
     const t = await sequelize.transaction();
     try {
-      const { name, sku, base_price, is_active, description, category_id, variants } = req.body;
+      const { name, sku, base_price, is_active, description, category_id, variants, branch_id } = req.body;
+      const selectedBranchId = Number(branch_id) || null;
       const product = await Product.findByPk(req.params.id);
       if (!product) {
         await t.rollback();
@@ -118,18 +137,27 @@ const productController = {
         const existing = await Product.findOne({
           where: {
             sku: normalizedSku,
+            branch_id: selectedBranchId,
             id: { [Op.ne]: product.id }
           },
           transaction: t
         });
         if (existing) {
           await t.rollback();
-          return res.status(409).json({ message: 'SKU already exists' });
+          return res.status(409).json({ message: 'SKU already exists in this branch' });
         }
       }
 
       await product.update(
-        { name, sku: normalizedSku, base_price, is_active, description, category_id },
+        {
+          name,
+          sku: normalizedSku,
+          base_price,
+          is_active,
+          description,
+          category_id,
+          branch_id: selectedBranchId,
+        },
         { transaction: t }
       );
 
@@ -156,7 +184,7 @@ const productController = {
       await t.rollback();
       const isUniqueError = error?.name === 'SequelizeUniqueConstraintError' || error?.name === 'SequelizeValidationError';
       if (isUniqueError) {
-        return res.status(409).json({ message: 'SKU already exists' });
+        return res.status(409).json({ message: 'SKU already exists in this branch' });
       }
       res.status(500).json({ message: 'Error updating product', error: error.message });
     }
@@ -173,7 +201,45 @@ const productController = {
     } catch (error) {
       res.status(500).json({ message: 'Error deleting product', error: error.message });
     }
-  }
+  },
+
+  // Get Low Stock Products (Alert)
+  getLowStockProducts: async (req, res) => {
+    try {
+      const branchId = Number(req.query.branch_id);
+      if (!Number.isInteger(branchId) || branchId <= 0) {
+        return res.status(400).json({ message: 'branch_id tidak valid atau tidak ditemukan.' });
+      }
+
+      const lowStockProducts = await Product.findAll({
+        where: {
+          is_active: true,
+          branch_id: branchId,
+          [Op.and]: [
+            sequelize.where(
+              sequelize.col('stok'),
+              '<=',
+              sequelize.col('stok_minimum')
+            ),
+          ],
+        },
+        order: [['stok', 'ASC']],
+      });
+
+      const data = lowStockProducts.map(item => ({
+        id: item.id,
+        name: item.name,
+        sku: item.sku,
+        stok: Number(item.stok),
+        stok_minimum: Number(item.stok_minimum),
+        branch_id: item.branch_id,
+      }));
+
+      res.status(200).json({ message: 'OK', data });
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching low stock products', error: error.message });
+    }
+  },
 };
 
 module.exports = productController;

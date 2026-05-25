@@ -8,7 +8,8 @@ const reportController = {
 
     try {
       const period = String(req.query.period || 'month');
-      const data = await getFinancialReport(period);
+      const branchId = req.query.branch_id || null;
+      const data = await getFinancialReport(period, branchId);
       return res.status(200).json({ message: 'OK', data });
     } catch (error) {
       return res.status(500).json({ message: 'Gagal mengambil laporan keuangan.' });

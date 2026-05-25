@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import BranchContext from './BranchContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const MUTATION_EVENT = 'stock-mutation-updated';
 
 function formatIdr(value) {
   const num = Number(value) || 0;
@@ -81,9 +83,70 @@ export default function POS() {
   const [processing, setProcessing] = useState(false);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [discountInput, setDiscountInput] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoMessage, setPromoMessage] = useState('');
+  const [promoApplying, setPromoApplying] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState(false);
   const [cashReceivedInput, setCashReceivedInput] = useState('');
   const [heldCart, setHeldCart] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerSearching, setCustomerSearching] = useState(false);
+  const [shiftStatus, setShiftStatus] = useState('checking'); // 'checking', 'active', 'inactive'
+  const [shiftData, setShiftData] = useState(null);
+  const [loadingShift, setLoadingShift] = useState(false);
+  const [saldoAwal, setSaldoAwal] = useState('');
+  const [saldoAkhir, setSaldoAkhir] = useState('');
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [serviceChargePercent, setServiceChargePercent] = useState(0);
+  const [taxPercent, setTaxPercent] = useState(0);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const [setting, setSetting] = useState(null);
+  const { selectedBranchId } = useContext(BranchContext);
+
+  // Check shift status for current user and branch
+  const checkShiftStatus = async () => {
+    if (!selectedBranchId) {
+      setShiftStatus('checking');
+      return;
+    }
+    setLoadingShift(true);
+    try {
+      const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user');
+      const user = userData ? JSON.parse(userData) : null;
+      if (!user || !user.id) {
+        setShiftStatus('inactive');
+        return;
+      }
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      // Check for active shift for this user and branch
+      const response = await axios.get(`${API_BASE}/shifts/active`, {
+        headers,
+        params: {
+          user_id: user.id,
+          branch_id: selectedBranchId
+        }
+      });
+      if (response.data && response.data.data) {
+        setShiftStatus('active');
+        setShiftData(response.data.data);
+      } else {
+        setShiftStatus('inactive');
+      }
+    } catch (error) {
+      console.error('Error checking shift status:', error);
+      setShiftStatus('inactive');
+    } finally {
+      setLoadingShift(false);
+    }
+  };
+
+  useEffect(() => {
+    checkShiftStatus();
+  }, [selectedBranchId]);
 
   const categories = useMemo(() => ['All', 'Beverage', 'Food', 'Bakery', 'Dessert'], []);
 
@@ -96,9 +159,13 @@ export default function POS() {
         const token = localStorage.getItem('token');
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-        const [productRes, customerRes] = await Promise.allSettled([
-          axios.get(`${API_BASE}/products`, { headers }),
+        const [productRes, customerRes, settingRes] = await Promise.allSettled([
+          axios.get(`${API_BASE}/products`, {
+            headers,
+            params: selectedBranchId ? { branch_id: selectedBranchId } : undefined,
+          }),
           axios.get(`${API_BASE}/customers`, { headers }),
+          axios.get(`${API_BASE}/settings`, { headers })
         ]);
 
         if (!cancelled) {
@@ -115,11 +182,24 @@ export default function POS() {
           } else {
             setCustomers([]);
           }
+
+          if (settingRes.status === 'fulfilled') {
+            const settingData = settingRes.value.data;
+            setSetting(settingData);
+            setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
+            setTaxPercent(parseFloat(settingData.tax_percent) || 0);
+          } else {
+            // Default values if settings fetch fails
+            setServiceChargePercent(0);
+            setTaxPercent(0);
+          }
         }
       } catch {
         if (!cancelled) {
           setProducts([]);
           setCustomers([]);
+          setServiceChargePercent(0);
+          setTaxPercent(0);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -131,7 +211,7 @@ export default function POS() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [selectedBranchId]);
 
   const filteredProducts = useMemo(() => {
     const q = normalizeText(search);
@@ -147,13 +227,25 @@ export default function POS() {
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
+  useEffect(() => {
+    setAppliedPromo(false);
+    setPromoDiscount(0);
+    setPromoMessage('');
+  }, [subtotal, selectedBranchId]);
+
   const discount = useMemo(() => {
-    const raw = Number(discountInput);
+    const raw = Number(promoDiscount);
     if (!Number.isFinite(raw) || raw <= 0) return 0;
     return Math.min(Math.floor(raw), subtotal);
-  }, [discountInput, subtotal]);
+  }, [promoDiscount, subtotal]);
 
-  const total = useMemo(() => Math.max(0, subtotal - discount), [subtotal, discount]);
+  const total = useMemo(() => {
+    const baseTotal = Math.max(0, subtotal - discount);
+    const serviceChargeAmount = baseTotal * (serviceChargePercent / 100);
+    const subtotalWithServiceCharge = baseTotal + serviceChargeAmount;
+    const taxAmount = subtotalWithServiceCharge * (taxPercent / 100);
+    return Math.max(0, subtotalWithServiceCharge + taxAmount);
+  }, [subtotal, discount, serviceChargePercent, taxPercent]);
 
   async function refreshData() {
     setLoading(true);
@@ -161,9 +253,10 @@ export default function POS() {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      const [productRes, customerRes] = await Promise.allSettled([
+      const [productRes, customerRes, settingRes] = await Promise.allSettled([
         axios.get(`${API_BASE}/products`, { headers }),
         axios.get(`${API_BASE}/customers`, { headers }),
+        axios.get(`${API_BASE}/settings`, { headers })
       ]);
 
       if (productRes.status === 'fulfilled') {
@@ -179,11 +272,63 @@ export default function POS() {
       } else {
         setCustomers([]);
       }
+
+      if (settingRes.status === 'fulfilled') {
+        const settingData = settingRes.value.data;
+        setSetting(settingData);
+        setServiceChargePercent(parseFloat(settingData.service_charge_percent) || 0);
+        setTaxPercent(parseFloat(settingData.tax_percent) || 0);
+      } else {
+        // Default values if settings fetch fails
+        setServiceChargePercent(0);
+        setTaxPercent(0);
+      }
     } catch {
       setProducts([]);
       setCustomers([]);
+      setServiceChargePercent(0);
+      setTaxPercent(0);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleApplyPromo() {
+    if (promoApplying) return;
+    if (!promoCode.trim()) {
+      setPromoMessage('Masukkan kode promo terlebih dahulu');
+      return;
+    }
+    if (subtotal <= 0) {
+      setPromoMessage('Keranjang kosong');
+      return;
+    }
+
+    setPromoApplying(true);
+    setPromoMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      const response = await axios.post(
+        `${API_BASE}/promos/verify`,
+        {
+          kode_promo: promoCode.trim(),
+          total_belanja: subtotal,
+          branch_id: selectedBranchId || null,
+        },
+        { headers }
+      );
+
+      const discountAmount = Number(response.data?.total_diskon) || 0;
+      setPromoDiscount(discountAmount);
+      setAppliedPromo(true);
+      setPromoMessage(`Promo berhasil diterapkan: -${formatIdr(discountAmount)}`);
+    } catch (error) {
+      setAppliedPromo(false);
+      setPromoDiscount(0);
+      setPromoMessage(error?.response?.data?.message || error?.message || 'Kode promo tidak valid');
+    } finally {
+      setPromoApplying(false);
     }
   }
 
@@ -236,19 +381,50 @@ export default function POS() {
     });
   }
 
+  async function searchCustomer() {
+    if (!customerPhone.trim()) {
+      setSelectedCustomer(null);
+      return;
+    }
+    setCustomerSearching(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      const response = await axios.get(`${API_BASE}/members/search`, {
+        headers,
+        params: { nomor_telepon: customerPhone.trim() },
+      });
+      setSelectedCustomer(response.data.data || null);
+    } catch (error) {
+      console.error('Error searching customer:', error);
+      setSelectedCustomer(null);
+    } finally {
+      setCustomerSearching(false);
+    }
+  }
+
   async function onCheckout() {
     if (processing) return;
     if (cart.length === 0) return;
 
+    // Check if shift is active
+    if (shiftStatus !== 'active') {
+      alert('Silakan buka shift terlebih dahulu sebelum melakukan transaksi');
+      return;
+    }
+
     setProcessing(true);
     try {
       const payload = {
-        customer_id: customerId ? Number(customerId) : null,
+        customer_id: selectedCustomer?.id || (customerId ? Number(customerId) : null),
+        branch_id: selectedBranchId || null,
         payment_method: paymentMethod,
         items: cart.map((i) => ({
           product_id: i.product_id,
           quantity: i.quantity,
         })),
+        promo_code: appliedPromo && promoCode.trim() ? promoCode.trim().toUpperCase() : null,
+        discount_amount: appliedPromo ? discount : 0,
       };
 
       const token = localStorage.getItem('token');
@@ -256,10 +432,59 @@ export default function POS() {
 
       await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
 
-      alert('Transaksi Berhasil!');
-      setCart([]);
-      setDiscountInput('');
-      setCashReceivedInput('');
+      console.log('[POS Checkout] selectedCustomer:', selectedCustomer);
+      console.log('[POS Checkout] subtotal:', subtotal);
+      console.log('[POS Checkout] discount:', discount);
+      console.log('[POS Checkout] total:', total);
+
+      let pointsAdded = 0;
+      if (selectedCustomer && selectedCustomer.id && subtotal > 0) {
+        try {
+          const pointsRes = await axios.post(
+            `${API_BASE}/members/add-points`,
+            {
+              member_id: selectedCustomer.id,
+              amount: subtotal,
+            },
+            { headers }
+          );
+          console.log('[POS Checkout] pointsRes:', pointsRes.data);
+          pointsAdded = pointsRes.data?.points_added || 0;
+          if (pointsRes.data?.data) {
+            setSelectedCustomer(pointsRes.data.data);
+          }
+        } catch (pointError) {
+          console.error('Error adding points:', pointError.response?.data || pointError.message);
+        }
+      }
+
+      // Prepare receipt data
+      const userData = localStorage.getItem('user');
+      const user = userData ? JSON.parse(userData) : null;
+      
+      const selectedCustomerData = customers.find(c => c.id === Number(customerId));
+      
+      const receipt = {
+        transactionId: Date.now(),
+        date: new Date().toLocaleDateString('id-ID'),
+        time: new Date().toLocaleTimeString('id-ID'),
+        cashierName: user?.name || 'Kasir',
+        customerName: selectedCustomerData?.name || selectedCustomer?.name || 'Umum',
+        items: [...cart],
+        subtotal: subtotal,
+        discount: discount,
+        paymentMethod: paymentMethod,
+        cashReceived: Number(cashReceivedInput) || 0,
+        change: Math.max(0, (Number(cashReceivedInput) || 0) - total),
+        total: total
+      };
+      
+      setReceiptData(receipt);
+      setShowReceipt(true);
+
+      // Broadcast event ke semua listeners (termasuk Inventory page)
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+
       await refreshData();
     } catch (error) {
       const message =
@@ -275,7 +500,10 @@ export default function POS() {
   function clearCart() {
     if (processing) return;
     setCart([]);
-    setDiscountInput('');
+    setPromoCode('');
+    setPromoDiscount(0);
+    setPromoMessage('');
+    setAppliedPromo(false);
     setCashReceivedInput('');
   }
 
@@ -287,7 +515,8 @@ export default function POS() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-6 md:pr-[32%]">
         <div className="text-left">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Point of Sale</h1>
@@ -402,6 +631,54 @@ export default function POS() {
           </select>
         </div>
 
+        <div className="mt-5">
+          <label className="block text-sm font-semibold text-gray-800">Customer / Member</label>
+          <div className="mt-2 flex gap-2">
+            <input
+              type="text"
+              placeholder="Nomor telepon customer"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') searchCustomer();
+              }}
+              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+            <button
+              type="button"
+              onClick={searchCustomer}
+              disabled={customerSearching}
+              className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {customerSearching ? 'Cari...' : 'Cari'}
+            </button>
+          </div>
+
+          {selectedCustomer ? (
+            <div className="mt-3 rounded-lg bg-blue-50 p-4">
+              <div className="text-sm font-semibold text-gray-900">{selectedCustomer.name}</div>
+              <div className="mt-1 text-xs text-gray-600">{selectedCustomer.phone}</div>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-700">Poin:</span>
+                <span className="text-sm font-bold text-blue-600">{selectedCustomer.loyalty_points} pts</span>
+                <span className="text-xs text-gray-500">• {selectedCustomer.level}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCustomer(null);
+                  setCustomerPhone('');
+                }}
+                className="mt-2 text-xs font-semibold text-red-500 hover:text-red-700"
+              >
+                Hapus
+              </button>
+            </div>
+          ) : customerPhone && !customerSearching ? (
+            <div className="mt-3 text-xs text-gray-500">Customer tidak ditemukan</div>
+          ) : null}
+        </div>
+
         <div className="mt-5 max-h-[36vh] overflow-auto rounded-lg border border-gray-100">
           {cart.length === 0 ? (
             <div className="p-4 text-sm text-gray-500">Cart is empty.</div>
@@ -447,16 +724,34 @@ export default function POS() {
         </div>
 
         <div className="mt-5">
-          <label className="block text-sm font-semibold text-gray-800">Discount (Rp)</label>
-          <input
-            value={discountInput}
-            onChange={(e) => setDiscountInput(e.target.value)}
-            type="number"
-            inputMode="numeric"
-            min="0"
-            className="mt-2 w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            placeholder="0"
-          />
+          <label className="block text-sm font-semibold text-gray-800">Input Kode Promo</label>
+          <div className="mt-2 flex gap-2">
+            <input
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value);
+                if (appliedPromo) {
+                  setAppliedPromo(false);
+                  setPromoDiscount(0);
+                  setPromoMessage('');
+                }
+              }}
+              type="text"
+              className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              placeholder="e.g. KEMERDEKAAN"
+            />
+            <button
+              type="button"
+              onClick={handleApplyPromo}
+              disabled={promoApplying || !promoCode.trim() || subtotal <= 0}
+              className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {promoApplying ? 'Applying…' : 'Terapkan'}
+            </button>
+          </div>
+          {promoMessage ? (
+            <div className="mt-2 text-sm text-gray-600">{promoMessage}</div>
+          ) : null}
         </div>
 
         <div className="mt-5 rounded-lg bg-gray-50 p-4">
@@ -465,11 +760,11 @@ export default function POS() {
             <div className="font-semibold text-gray-900">{formatIdr(subtotal)}</div>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-gray-700">
-            <div>Discount</div>
+            <div>Diskon</div>
             <div className="font-semibold text-red-600">-{formatIdr(discount)}</div>
           </div>
           <div className="mt-4 flex items-end justify-between">
-            <div className="text-sm font-semibold text-gray-800">Total</div>
+            <div className="text-sm font-semibold text-gray-800">Total Bayar</div>
             <div className="text-2xl font-bold text-gray-900">{formatIdr(total)}</div>
           </div>
         </div>
@@ -498,6 +793,20 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Tutup Shift Button */}
+        {shiftStatus === 'active' && (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={handleCloseShift}
+              disabled={loadingShift}
+              className="w-full rounded-md bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        )}
+
         <div className="mt-5">
           <label className="block text-sm font-semibold text-gray-800">Cash Received</label>
           <input
@@ -522,7 +831,7 @@ export default function POS() {
         <button
           type="button"
           onClick={onCheckout}
-          disabled={processing || cart.length === 0}
+          disabled={processing || cart.length === 0 || shiftStatus !== 'active'}
           className="mt-6 w-full rounded-md bg-gray-800 py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {processing ? 'Processing…' : 'Pay'}
@@ -564,5 +873,310 @@ export default function POS() {
         ) : null}
       </div>
     </div>
-  );
+
+    {/* Shift Opening Modal */}
+    {shiftStatus === 'inactive' && (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Shift Belum Dibuka</h2>
+          <p className="text-gray-600 mb-6">Anda perlu membuka shift sebelum dapat melakukan transaksi.</p>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Saldo Awal</label>
+            <input
+              type="number"
+              value={saldoAwal}
+              onChange={(e) => setSaldoAwal(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan saldo awal"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShiftStatus('checking')}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenShift}
+              disabled={loadingShift || !saldoAwal}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Membuka...' : 'Buka Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Shift Closing Modal */}
+    {showCloseModal && (
+      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Tutup Shift</h2>
+          <p className="text-gray-600 mb-6">Masukkan saldo akhir untuk menutup shift ini.</p>
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-700">Saldo Akhir</label>
+            <input
+              type="number"
+              value={saldoAkhir}
+              onChange={(e) => setSaldoAkhir(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan saldo akhir"
+              min="0"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={() => setShowCloseModal(false)}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmCloseShift}
+              disabled={loadingShift || !saldoAkhir}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+            >
+              {loadingShift ? 'Menutup...' : 'Tutup Shift'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Receipt Modal */}
+    <style>{`
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #receipt-content, #receipt-content * {
+          visibility: visible;
+        }
+        #receipt-content {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+        .no-print {
+          display: none !important;
+        }
+      }
+    `}</style>
+
+    {showReceipt && receiptData && (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-sm max-h-[90vh] overflow-y-auto">
+          <div id="receipt-content" className="p-6 font-mono text-sm">
+            {/* Header Toko */}
+            <div className="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
+              <h2 className="text-lg font-bold">{setting?.nama_toko || 'UMKM Grow'}</h2>
+              {setting?.alamat && <p className="text-gray-600 mt-1">{setting.alamat}</p>}
+              {setting?.nomor_telepon && <p className="text-gray-600 mt-1">{setting.nomor_telepon}</p>}
+            </div>
+
+            {/* Detail Transaksi */}
+            <div className="border-b border-dashed border-gray-300 pb-4 mb-4">
+              <div className="flex justify-between">
+                <span>Tanggal:</span>
+                <span>{receiptData.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Waktu:</span>
+                <span>{receiptData.time}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Kasir:</span>
+                <span>{receiptData.cashierName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Pelanggan:</span>
+                <span>{receiptData.customerName}</span>
+              </div>
+            </div>
+
+            {/* Daftar Belanjaan */}
+            <div className="border-b border-dashed border-gray-300 pb-4 mb-4">
+              {receiptData.items.map((item, index) => (
+                <div key={index} className="mb-2">
+                  <div className="flex justify-between">
+                    <span>{item.name}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>{item.quantity} x {formatIdr(item.price)}</span>
+                    <span>{formatIdr(item.price * item.quantity)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Rincian Biaya */}
+            <div className="border-b border-dashed border-gray-300 pb-4 mb-4">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>{formatIdr(receiptData.subtotal)}</span>
+              </div>
+              {receiptData.discount > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>Diskon:</span>
+                  <span>-{formatIdr(receiptData.discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-lg mt-2">
+                <span>Total:</span>
+                <span>{formatIdr(receiptData.total)}</span>
+              </div>
+            </div>
+
+            {/* Pembayaran */}
+            <div className="text-center">
+              <div className="flex justify-between">
+                <span>Metode:</span>
+                <span>{receiptData.paymentMethod}</span>
+              </div>
+              {receiptData.paymentMethod === 'Cash' && (
+                <>
+                  <div className="flex justify-between">
+                    <span>Tunai:</span>
+                    <span>{formatIdr(receiptData.cashReceived)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Kembalian:</span>
+                    <span>{formatIdr(receiptData.change)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="text-center mt-6 pt-4 border-t border-dashed border-gray-300">
+              <p className="text-gray-600">Terima kasih telah berbelanja!</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-4 border-t border-gray-200 flex gap-3 no-print">
+            <button
+              type="button"
+              onClick={() => {
+                window.print();
+              }}
+              className="flex-1 bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700"
+            >
+              🖨️ Cetak Struk
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const selectedCustomerData = customers.find(c => c.id === Number(customerId));
+                const phone = selectedCustomerData?.phone || selectedCustomer?.phone || '';
+                const message = `Terima kasih telah berbelanja di ${setting?.nama_toko || 'UMKM Grow'}. Total belanja Anda adalah ${formatIdr(receiptData.total)}.`;
+                const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                window.open(waUrl, '_blank');
+              }}
+              className="flex-1 bg-green-600 text-white py-2 rounded-md font-semibold hover:bg-green-700"
+            >
+              📱 Kirim WA
+            </button>
+          </div>
+          <div className="px-4 pb-4 no-print">
+            <button
+              type="button"
+              onClick={() => {
+                setShowReceipt(false);
+                setReceiptData(null);
+                clearCart();
+              }}
+              className="w-full bg-gray-200 text-gray-800 py-2 rounded-md font-semibold hover:bg-gray-300"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
+}
+
+// Shift management functions
+async function handleOpenShift() {
+  if (!saldoAwal || loadingShift) return;
+
+  setLoadingShift(true);
+  try {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    const user = userData ? JSON.parse(userData) : null;
+
+    if (!user || !user.id || !selectedBranchId) {
+      throw new Error('User atau branch tidak valid');
+    }
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const response = await axios.post(`${API_BASE}/shifts/start`, {
+      user_id: user.id,
+      branch_id: selectedBranchId,
+      saldo_awal: parseFloat(saldoAwal)
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      setShiftStatus('active');
+      setShiftData(response.data.data);
+      setSaldoAwal('');
+      alert('Shift berhasil dibuka!');
+    } else {
+      throw new Error('Gagal membuka shift');
+    }
+  } catch (error) {
+    console.error('Error opening shift:', error);
+    alert(error.response?.data?.message || error?.message || 'Gagal membuka shift');
+  } finally {
+    setLoadingShift(false);
+  }
+}
+
+async function handleCloseShift() {
+  if (!shiftData || loadingShift) return;
+
+  // Show close modal instead of immediately closing
+  setSaldoAkhir(shiftData.saldo_awal || 0); // Initialize with opening balance
+  setShowCloseModal(true);
+}
+
+// Function to actually close the shift from modal
+async function handleConfirmCloseShift() {
+  if (!shiftData || loadingShift || !saldoAkhir) return;
+
+  setLoadingShift(true);
+  try {
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    const response = await axios.put(`${API_BASE}/shifts/end`, {
+      shift_id: shiftData.id,
+      saldo_akhir: parseFloat(saldoAkhir)
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      setShiftStatus('inactive');
+      setShiftData(null);
+      setShowCloseModal(false);
+      setSaldoAkhir('');
+      alert('Shift berhasil ditutup!');
+    } else {
+      throw new Error('Gagal menutup shift');
+    }
+  } catch (error) {
+    console.error('Error closing shift:', error);
+    alert(error.response?.data?.message || error?.message || 'Gagal menutup shift');
+  } finally {
+    setLoadingShift(false);
+  }
 }

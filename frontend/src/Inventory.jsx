@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Edit2, Trash2 } from 'lucide-react';
 import ProductFormModal from './ProductFormModal';
+import BranchContext from './BranchContext';
 
 const API_URL = 'http://localhost:5000/api/products';
+const MUTATION_EVENT = 'stock-mutation-updated';
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
@@ -12,12 +14,22 @@ const Inventory = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const isSavingRef = useRef(false);
+  const pollingIntervalRef = useRef(null);
+
+  const { selectedBranchId } = useContext(BranchContext);
 
   const refreshProducts = async () => {
     try {
       setLoading(true);
       setErrorMessage('');
-      const response = await axios.get(API_URL, { params: { page: 1, limit: 1000, search: '' } });
+      const response = await axios.get(API_URL, {
+        params: {
+          page: 1,
+          limit: 1000,
+          search: '',
+          branch_id: selectedBranchId || undefined,
+        },
+      });
       const data = response?.data?.data ?? response?.data ?? [];
       setProducts(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -33,7 +45,14 @@ const Inventory = () => {
       try {
         setLoading(true);
         setErrorMessage('');
-        const response = await axios.get(API_URL, { params: { page: 1, limit: 1000, search: '' } });
+        const response = await axios.get(API_URL, {
+          params: {
+            page: 1,
+            limit: 1000,
+            search: '',
+            branch_id: selectedBranchId || undefined,
+          },
+        });
         const data = response?.data?.data ?? response?.data ?? [];
         setProducts(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -45,6 +64,38 @@ const Inventory = () => {
     };
 
     run();
+  }, [selectedBranchId]);
+
+  // Setup event listener untuk real-time update saat ada mutasi stok
+  useEffect(() => {
+    const handleMutationUpdate = () => {
+      refreshProducts();
+    };
+
+    window.addEventListener(MUTATION_EVENT, handleMutationUpdate);
+
+    return () => {
+      window.removeEventListener(MUTATION_EVENT, handleMutationUpdate);
+    };
+  }, []);
+
+  // Setup polling untuk auto-refresh setiap 10 detik
+  useEffect(() => {
+    const startPolling = () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      
+      pollingIntervalRef.current = setInterval(() => {
+        refreshProducts();
+      }, 10000); // Refresh setiap 10 detik
+    };
+
+    startPolling();
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   const formatRupiah = (value) => {
@@ -95,11 +146,20 @@ const Inventory = () => {
     try {
       isSavingRef.current = true;
       setErrorMessage('');
+      const payloadWithBranch = {
+        ...payload,
+        branch_id: selectedBranchId || null,
+      };
+
       if (productId) {
-        await axios.put(`${API_URL}/${productId}`, payload);
+        await axios.put(`${API_URL}/${productId}`, payloadWithBranch);
       } else {
-        await axios.post(API_URL, payload);
+        await axios.post(API_URL, payloadWithBranch);
       }
+      
+      // Trigger event untuk update inventory page
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+      
       await refreshProducts();
     } catch (error) {
       const status = error?.response?.status;
@@ -121,6 +181,10 @@ const Inventory = () => {
     try {
       setErrorMessage('');
       await axios.delete(`${API_URL}/${product.id}`);
+      
+      // Trigger event untuk update inventory page
+      window.dispatchEvent(new Event(MUTATION_EVENT));
+      
       await refreshProducts();
     } catch (error) {
       setErrorMessage(error?.response?.data?.message || 'Gagal menghapus produk.');
@@ -181,6 +245,14 @@ const Inventory = () => {
                 {product?.name || 'Nama Produk'}
               </h2>
               <p className="text-brand-ice font-semibold mt-1">{formatRupiah(product?.base_price)}</p>
+              <div className={[
+                "mt-2 text-sm font-semibold px-3 py-1 rounded-full inline-block",
+                (product.stok ?? 0) <= (product.stok_minimum ?? 10)
+                  ? "bg-red-500/80 text-white border border-red-300"
+                  : "bg-green-500/80 text-white border border-green-300"
+              ].join(' ')}>
+                Stok: {product.stok ?? 0} / Min: {product.stok_minimum ?? 10}
+              </div>
 
               <button
                 type="button"

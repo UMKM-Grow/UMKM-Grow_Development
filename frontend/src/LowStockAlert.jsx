@@ -1,14 +1,14 @@
-import { useContext, useEffect, useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import BranchContext from './BranchContext';
+import { useContext, useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import BranchContext from "./BranchContext";
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function LowStockAlert() {
   const { selectedBranchId } = useContext(BranchContext);
   const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!selectedBranchId) {
@@ -17,24 +17,28 @@ export default function LowStockAlert() {
     }
 
     const controller = new AbortController();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     const fetchLowStock = async () => {
       setLoading(true);
-      setError('');
+      setError("");
 
       try {
         const url = new URL(`${API_BASE}/products/low-stock`);
-        url.searchParams.set('branch_id', selectedBranchId);
-        console.log('Calling URL:', url.toString());
+        url.searchParams.set("branch_id", selectedBranchId);
 
         const response = await fetch(url.toString(), {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           signal: controller.signal,
         });
+
+        if (response.status === 404) {
+          setLowStockProducts([]);
+          return;
+        }
 
         if (!response.ok) {
           throw new Error(`Server returned ${response.status}`);
@@ -43,9 +47,9 @@ export default function LowStockAlert() {
         const payload = await response.json();
         setLowStockProducts(Array.isArray(payload.data) ? payload.data : []);
       } catch (err) {
-        if (err.name !== 'AbortError') {
+        if (err.name !== "AbortError") {
           console.error(err);
-          setError('Gagal memuat data stok rendah.');
+          setError("Gagal memuat data stok rendah.");
         }
       } finally {
         setLoading(false);
@@ -61,7 +65,9 @@ export default function LowStockAlert() {
     <div className="rounded-[28px] border border-red-200 bg-red-50 shadow-soft p-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-red-900">⚠️ Peringatan Stok Menipis</h2>
+          <h2 className="text-xl font-semibold text-red-900">
+            ⚠️ Peringatan Stok Menipis
+          </h2>
           <p className="mt-1 text-sm text-red-600">
             Daftar produk yang stoknya di bawah batas minimum.
           </p>
@@ -93,17 +99,25 @@ export default function LowStockAlert() {
             <table className="min-w-full divide-y divide-red-200 text-sm">
               <thead className="bg-red-50 text-red-700">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium">Nama Produk</th>
+                  <th className="px-4 py-3 text-left font-medium">
+                    Nama Produk
+                  </th>
                   <th className="px-4 py-3 text-left font-medium">Sisa Stok</th>
-                  <th className="px-4 py-3 text-right font-medium">Batas Minimum</th>
+                  <th className="px-4 py-3 text-right font-medium">
+                    Batas Minimum
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-red-100">
                 {lowStockProducts.map((item) => (
                   <tr key={item.id} className="bg-red-50/30">
                     <td className="px-4 py-3 text-red-900">{item.name}</td>
-                    <td className="px-4 py-3 text-red-800 font-semibold">{item.stok}</td>
-                    <td className="px-4 py-3 text-right text-red-700">{item.stok_minimum}</td>
+                    <td className="px-4 py-3 text-red-800 font-semibold">
+                      {item.stok}
+                    </td>
+                    <td className="px-4 py-3 text-right text-red-700">
+                      {item.stok_minimum}
+                    </td>
                   </tr>
                 ))}
               </tbody>

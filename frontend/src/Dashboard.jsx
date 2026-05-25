@@ -1,12 +1,21 @@
-import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { Boxes, Building2, ClipboardList, CreditCard, Settings, ShoppingCart, Users, Wallet } from 'lucide-react';
-import BestSellerCard from './BestSellerCard';
-import LowStockAlert from './LowStockAlert';
+import { createElement, useMemo } from "react";
+import { Link } from "react-router-dom";
+import {
+  Boxes,
+  Building2,
+  ClipboardList,
+  CreditCard,
+  Settings,
+  ShoppingCart,
+  Users,
+  Wallet,
+} from "lucide-react";
+import BestSellerCard from "./BestSellerCard";
+import LowStockAlert from "./LowStockAlert";
 
 function readUser() {
   try {
-    const raw = localStorage.getItem('user');
+    const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -19,56 +28,56 @@ export default function Dashboard() {
   const menu = useMemo(
     () => [
       {
-        to: '/pos',
-        title: 'Kasir (POS)',
-        desc: 'Transaksi penjualan & checkout',
+        to: "/pos",
+        title: "Kasir (POS)",
+        desc: "Transaksi penjualan & checkout",
         Icon: ShoppingCart,
       },
       {
-        to: '/inventory',
-        title: 'Inventory',
-        desc: 'Produk & stok',
+        to: "/inventory",
+        title: "Inventory",
+        desc: "Produk & stok",
         Icon: Boxes,
       },
       {
-        to: '/crm',
-        title: 'CRM',
-        desc: 'Pelanggan & relasi',
+        to: "/crm",
+        title: "CRM",
+        desc: "Pelanggan & relasi",
         Icon: Users,
       },
       {
-        to: '/finance',
-        title: 'Keuangan',
-        desc: 'Modul manajemen keuangan',
+        to: "/finance",
+        title: "Keuangan",
+        desc: "Modul manajemen keuangan",
         Icon: Wallet,
       },
       {
-        to: '/finance/expenses',
-        title: 'Operational Expenses',
-        desc: 'Catat pengeluaran operasional',
+        to: "/finance/expenses",
+        title: "Operational Expenses",
+        desc: "Catat pengeluaran operasional",
         Icon: CreditCard,
         highlight: true,
       },
       {
-        to: '/absensi',
-        title: 'Absensi',
-        desc: 'Check-in/out & riwayat',
+        to: "/absensi",
+        title: "Absensi",
+        desc: "Check-in/out & riwayat",
         Icon: ClipboardList,
       },
       {
-        to: '/hrm',
-        title: 'HRM',
-        desc: 'Manajemen karyawan',
+        to: "/hrm",
+        title: "HRM",
+        desc: "Manajemen karyawan",
         Icon: Building2,
       },
       {
-        to: '/settings',
-        title: 'Settings',
-        desc: 'Pengaturan aplikasi',
+        to: "/settings",
+        title: "Settings",
+        desc: "Pengaturan aplikasi",
         Icon: Settings,
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -79,7 +88,9 @@ export default function Dashboard() {
             <div className="text-left">
               <h1 className="text-2xl font-bold text-gray-900">Menu Fitur</h1>
               <div className="mt-1 text-sm text-gray-500">
-                {user?.name ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.` : 'Pilih modul untuk mulai bekerja.'}
+                {user?.name
+                  ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.`
+                  : "Pilih modul untuk mulai bekerja."}
               </div>
             </div>
           </div>
@@ -88,30 +99,37 @@ export default function Dashboard() {
             <LowStockAlert />
             <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr]">
               <BestSellerCard />
+
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
                 {menu.map(({ to, title, desc, Icon, highlight }) => (
                   <Link
                     key={to}
                     to={to}
                     className={[
-                      'rounded-[24px] border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md',
+                      "rounded-[24px] border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
                       highlight
-                        ? 'border-brand-200 ring-1 ring-brand-100 bg-brand-50/70 hover:bg-brand-50'
-                        : 'border-slate-200 hover:bg-slate-50',
-                    ].join(' ')}
+                        ? "border-brand-200 ring-1 ring-brand-100 bg-brand-50/70 hover:bg-brand-50"
+                        : "border-slate-200 hover:bg-slate-50",
+                    ].join(" ")}
                   >
                     <div className="flex items-start gap-3">
                       <div
                         className={[
-                          'flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm',
-                          highlight ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-700',
-                        ].join(' ')}
+                          "flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm",
+                          highlight
+                            ? "bg-brand-600 text-white"
+                            : "bg-slate-100 text-slate-700",
+                        ].join(" ")}
                       >
-                        {React.createElement(Icon, { size: 18 })}
+                        {createElement(Icon, { size: 18 })}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-semibold text-slate-900">{title}</div>
-                        <div className="mt-1 text-sm text-slate-500">{desc}</div>
+                        <div className="text-sm font-semibold text-slate-900">
+                          {title}
+                        </div>
+                        <div className="mt-1 text-sm text-slate-500">
+                          {desc}
+                        </div>
                       </div>
                     </div>
                   </Link>

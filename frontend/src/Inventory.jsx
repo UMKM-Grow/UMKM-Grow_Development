@@ -1,16 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import axios from 'axios';
-import { Edit2, Trash2 } from 'lucide-react';
-import ProductFormModal from './ProductFormModal';
-import BranchContext from './BranchContext';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { Edit2, Trash2 } from "lucide-react";
+import ProductFormModal from "./ProductFormModal";
+import BranchContext from "./BranchContext";
 
-const API_URL = 'http://localhost:5000/api/products';
-const MUTATION_EVENT = 'stock-mutation-updated';
+const API_URL = "http://localhost:5000/api/products";
+const MUTATION_EVENT = "stock-mutation-updated";
 
 const Inventory = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const isSavingRef = useRef(false);
@@ -18,22 +18,40 @@ const Inventory = () => {
 
   const { selectedBranchId } = useContext(BranchContext);
 
+  const normalizeProductStock = (product) => {
+    const variants = Array.isArray(product?.variants) ? product.variants : [];
+    const variantStockTotal = variants.reduce(
+      (sum, variant) => sum + (Number(variant?.stock) || 0),
+      0,
+    );
+    const baseStock = Number(product?.stok) || 0;
+    const minimumStock = Number(product?.stok_minimum) || 10;
+    const displayStock = Math.max(baseStock, variantStockTotal);
+
+    return {
+      ...product,
+      stok: displayStock,
+      stok_total: baseStock + variantStockTotal,
+      stok_minimum: minimumStock,
+    };
+  };
+
   const refreshProducts = async () => {
     try {
       setLoading(true);
-      setErrorMessage('');
+      setErrorMessage("");
       const response = await axios.get(API_URL, {
         params: {
           page: 1,
           limit: 1000,
-          search: '',
+          search: "",
           branch_id: selectedBranchId || undefined,
         },
       });
       const data = response?.data?.data ?? response?.data ?? [];
-      setProducts(Array.isArray(data) ? data : []);
+      setProducts(Array.isArray(data) ? data.map(normalizeProductStock) : []);
     } catch (error) {
-      setErrorMessage(error?.response?.data?.message || 'Gagal memuat produk.');
+      setErrorMessage(error?.response?.data?.message || "Gagal memuat produk.");
       setProducts([]);
     } finally {
       setLoading(false);
@@ -44,19 +62,21 @@ const Inventory = () => {
     const run = async () => {
       try {
         setLoading(true);
-        setErrorMessage('');
+        setErrorMessage("");
         const response = await axios.get(API_URL, {
           params: {
             page: 1,
             limit: 1000,
-            search: '',
+            search: "",
             branch_id: selectedBranchId || undefined,
           },
         });
         const data = response?.data?.data ?? response?.data ?? [];
-        setProducts(Array.isArray(data) ? data : []);
+        setProducts(Array.isArray(data) ? data.map(normalizeProductStock) : []);
       } catch (error) {
-        setErrorMessage(error?.response?.data?.message || 'Gagal memuat produk.');
+        setErrorMessage(
+          error?.response?.data?.message || "Gagal memuat produk.",
+        );
         setProducts([]);
       } finally {
         setLoading(false);
@@ -83,7 +103,7 @@ const Inventory = () => {
   useEffect(() => {
     const startPolling = () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-      
+
       pollingIntervalRef.current = setInterval(() => {
         refreshProducts();
       }, 10000); // Refresh setiap 10 detik
@@ -99,30 +119,62 @@ const Inventory = () => {
   }, []);
 
   const formatRupiah = (value) => {
-    const numericValue = typeof value === 'number' ? value : Number(value);
-    if (!Number.isFinite(numericValue)) return 'Rp 0';
-    return `Rp ${numericValue.toLocaleString('id-ID')}`;
+    const numericValue = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(numericValue)) return "Rp 0";
+    return `Rp ${numericValue.toLocaleString("id-ID")}`;
   };
 
   const getProductImageSources = (product) => {
     const productId = product?.id ?? 0;
-    const seed = encodeURIComponent(String(product?.id ?? product?.sku ?? productId));
-    const raw = `${product?.name ?? ''} ${product?.sku ?? ''}`.trim().toLowerCase();
+    const seed = encodeURIComponent(
+      String(product?.id ?? product?.sku ?? productId),
+    );
+    const raw = `${product?.name ?? ""} ${product?.sku ?? ""}`
+      .trim()
+      .toLowerCase();
 
-    let tags = 'product,apparel';
-    if (raw.includes('kemeja') || raw.includes('shirt') || raw.includes('workshirt')) tags = 'shirt,workwear,office';
-    else if (raw.includes('kaos') || raw.includes('tshirt') || raw.includes('t-shirt')) tags = 'tshirt,streetwear,apparel';
-    else if (raw.includes('jaket') || raw.includes('jacket') || raw.includes('hoodie')) tags = 'jacket,streetwear,apparel';
-    else if (raw.includes('celana') || raw.includes('pants') || raw.includes('trousers')) tags = 'pants,apparel,fashion';
-    else if (raw.includes('rok') || raw.includes('skirt')) tags = 'skirt,apparel,fashion';
-    else if (raw.includes('sepatu') || raw.includes('shoes') || raw.includes('sneakers')) tags = 'sneakers,shoes,streetwear';
-    else if (raw.includes('tas') || raw.includes('bag')) tags = 'bag,leather,accessories';
-    else if (raw.includes('batik')) tags = 'batik,shirt,fashion';
-    else if (raw.includes('hijab') || raw.includes('kerudung')) tags = 'hijab,fashion,apparel';
+    let tags = "product,apparel";
+    if (
+      raw.includes("kemeja") ||
+      raw.includes("shirt") ||
+      raw.includes("workshirt")
+    )
+      tags = "shirt,workwear,office";
+    else if (
+      raw.includes("kaos") ||
+      raw.includes("tshirt") ||
+      raw.includes("t-shirt")
+    )
+      tags = "tshirt,streetwear,apparel";
+    else if (
+      raw.includes("jaket") ||
+      raw.includes("jacket") ||
+      raw.includes("hoodie")
+    )
+      tags = "jacket,streetwear,apparel";
+    else if (
+      raw.includes("celana") ||
+      raw.includes("pants") ||
+      raw.includes("trousers")
+    )
+      tags = "pants,apparel,fashion";
+    else if (raw.includes("rok") || raw.includes("skirt"))
+      tags = "skirt,apparel,fashion";
+    else if (
+      raw.includes("sepatu") ||
+      raw.includes("shoes") ||
+      raw.includes("sneakers")
+    )
+      tags = "sneakers,shoes,streetwear";
+    else if (raw.includes("tas") || raw.includes("bag"))
+      tags = "bag,leather,accessories";
+    else if (raw.includes("batik")) tags = "batik,shirt,fashion";
+    else if (raw.includes("hijab") || raw.includes("kerudung"))
+      tags = "hijab,fashion,apparel";
 
     return {
       primary: `https://loremflickr.com/400/600/${tags}?lock=${productId}`,
-      fallback: `https://picsum.photos/seed/${seed}/400/600?grayscale`
+      fallback: `https://picsum.photos/seed/${seed}/400/600?grayscale`,
     };
   };
 
@@ -145,7 +197,7 @@ const Inventory = () => {
     if (isSavingRef.current) return;
     try {
       isSavingRef.current = true;
-      setErrorMessage('');
+      setErrorMessage("");
       const payloadWithBranch = {
         ...payload,
         branch_id: selectedBranchId || null,
@@ -156,17 +208,17 @@ const Inventory = () => {
       } else {
         await axios.post(API_URL, payloadWithBranch);
       }
-      
+
       // Trigger event untuk update inventory page
       window.dispatchEvent(new Event(MUTATION_EVENT));
-      
+
       await refreshProducts();
     } catch (error) {
       const status = error?.response?.status;
       const msg =
         status === 409
-          ? 'SKU sudah terpakai. Gunakan SKU yang berbeda.'
-          : (error?.response?.data?.message || 'Gagal menyimpan produk.');
+          ? "SKU sudah terpakai. Gunakan SKU yang berbeda."
+          : error?.response?.data?.message || "Gagal menyimpan produk.";
       setErrorMessage(msg);
       throw error;
     } finally {
@@ -175,19 +227,21 @@ const Inventory = () => {
   };
 
   const handleDeleteProduct = async (product) => {
-    const ok = window.confirm(`Hapus produk "${product?.name || ''}"?`);
+    const ok = window.confirm(`Hapus produk "${product?.name || ""}"?`);
     if (!ok) return;
 
     try {
-      setErrorMessage('');
+      setErrorMessage("");
       await axios.delete(`${API_URL}/${product.id}`);
-      
+
       // Trigger event untuk update inventory page
       window.dispatchEvent(new Event(MUTATION_EVENT));
-      
+
       await refreshProducts();
     } catch (error) {
-      setErrorMessage(error?.response?.data?.message || 'Gagal menghapus produk.');
+      setErrorMessage(
+        error?.response?.data?.message || "Gagal menghapus produk.",
+      );
     }
   };
 
@@ -215,7 +269,11 @@ const Inventory = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {products.map((product, index) => (
             <div
-              key={product?.id ?? product?.sku ?? `${product?.name ?? 'product'}-${index}`}
+              key={
+                product?.id ??
+                product?.sku ??
+                `${product?.name ?? "product"}-${index}`
+              }
               className="relative bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(163,193,214,0.2)]"
             >
               <div className="w-full aspect-[3/4] bg-brand-frost rounded-xl mb-5 overflow-hidden relative border border-white/5">
@@ -229,10 +287,10 @@ const Inventory = () => {
                         const img = e.currentTarget;
                         const next = img.dataset.fallback;
                         if (!next) return;
-                        img.dataset.fallback = '';
+                        img.dataset.fallback = "";
                         img.src = next;
                       }}
-                      alt={product?.name || 'Produk'}
+                      alt={product?.name || "Produk"}
                       className="absolute inset-0 w-full h-full object-cover"
                       loading="lazy"
                       referrerPolicy="no-referrer"
@@ -242,16 +300,22 @@ const Inventory = () => {
               </div>
 
               <h2 className="text-xl font-bold text-white tracking-wide uppercase">
-                {product?.name || 'Nama Produk'}
+                {product?.name || "Nama Produk"}
               </h2>
-              <p className="text-brand-ice font-semibold mt-1">{formatRupiah(product?.base_price)}</p>
-              <div className={[
-                "mt-2 text-sm font-semibold px-3 py-1 rounded-full inline-block",
-                (product.stok ?? 0) <= (product.stok_minimum ?? 10)
-                  ? "bg-red-500/80 text-white border border-red-300"
-                  : "bg-green-500/80 text-white border border-green-300"
-              ].join(' ')}>
-                Stok: {product.stok ?? 0} / Min: {product.stok_minimum ?? 10}
+              <p className="text-brand-ice font-semibold mt-1">
+                {formatRupiah(product?.base_price)}
+              </p>
+              <div
+                className={[
+                  "mt-2 text-sm font-semibold px-3 py-1 rounded-full inline-block",
+                  (Number(product.stok) || 0) <=
+                  (Number(product.stok_minimum) || 10)
+                    ? "bg-red-500/80 text-white border border-red-300"
+                    : "bg-green-500/80 text-white border border-green-300",
+                ].join(" ")}
+              >
+                Stok: {Number(product.stok) || 0} / Min:{" "}
+                {Number(product.stok_minimum) || 10}
               </div>
 
               <button

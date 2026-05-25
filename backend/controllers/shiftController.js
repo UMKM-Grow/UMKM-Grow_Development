@@ -1,83 +1,131 @@
-const Shift = require('../models/Shift');
-const User = require('../models/User');
-const Branch = require('../models/Branch');
+const { Shift, User, Branch } = require("../models");
 
-// Buka Shift (POST /api/shift/start)
+const shiftInclude = [
+  { model: User, as: "user", attributes: ["id", "name", "email"] },
+  { model: Branch, as: "branch", attributes: ["id_cabang", "nama_cabang"] },
+];
+
+// Buka Shift (POST /api/shifts/start)
 exports.startShift = async (req, res) => {
   try {
     const { user_id, branch_id, saldo_awal } = req.body;
 
-    // Validasi input
     if (!user_id || !branch_id || saldo_awal === undefined) {
-      return res.status(400).json({ message: 'user_id, branch_id, dan saldo_awal wajib diisi' });
+      return res
+        .status(400)
+        .json({ message: "user_id, branch_id, dan saldo_awal wajib diisi" });
     }
 
-    // Cek apakah user sudah punya shift aktif
+    const saldoAwalNumber = Number(saldo_awal);
+    if (Number.isNaN(saldoAwalNumber) || saldoAwalNumber < 0) {
+      return res.status(400).json({
+        message: "saldo_awal harus berupa angka yang valid dan tidak negatif",
+      });
+    }
+
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({ message: "User tidak ditemukan" });
+    }
+
+    const branch = await Branch.findByPk(branch_id);
+    if (!branch) {
+      return res.status(404).json({ message: "Cabang tidak ditemukan" });
+    }
+
+    if (user.branch_id && Number(user.branch_id) !== Number(branch_id)) {
+      return res
+        .status(400)
+        .json({ message: "User tidak terdaftar pada cabang yang dipilih" });
+    }
+
     const activeShift = await Shift.findOne({
       where: {
         user_id,
-        status: 'Aktif',
+        branch_id,
+        status: "Aktif",
       },
     });
 
     if (activeShift) {
-      return res.status(400).json({ message: 'User sudah memiliki shift aktif. Tutup shift aktif terlebih dahulu.' });
+      return res.status(400).json({
+        message:
+          "User sudah memiliki shift aktif di cabang ini. Tutup shift aktif terlebih dahulu.",
+      });
     }
 
-    // Buat shift baru
     const shift = await Shift.create({
       user_id,
       branch_id,
-      saldo_awal,
-      status: 'Aktif',
+      saldo_awal: saldoAwalNumber,
+      status: "Aktif",
     });
 
-    res.status(201).json({
-      message: 'Shift berhasil dibuka',
-      shift,
+    const createdShift = await Shift.findByPk(shift.id, {
+      include: shiftInclude,
+    });
+
+    return res.status(201).json({
+      message: "Shift berhasil dibuka",
+      data: createdShift,
     });
   } catch (error) {
-    console.error('Error starting shift:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error starting shift:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// Tutup Shift (PUT /api/shift/end)
+// Tutup Shift (PUT /api/shifts/end)
 exports.endShift = async (req, res) => {
   try {
     const { shift_id, saldo_akhir } = req.body;
 
-    // Validasi input
     if (!shift_id || saldo_akhir === undefined) {
-      return res.status(400).json({ message: 'shift_id dan saldo_akhir wajib diisi' });
+      return res
+        .status(400)
+        .json({ message: "shift_id dan saldo_akhir wajib diisi" });
     }
 
-    // Cari shift berdasarkan ID
+    const saldoAkhirNumber = Number(saldo_akhir);
+    if (Number.isNaN(saldoAkhirNumber) || saldoAkhirNumber < 0) {
+      return res.status(400).json({
+        message: "saldo_akhir harus berupa angka yang valid dan tidak negatif",
+      });
+    }
+
     const shift = await Shift.findByPk(shift_id);
 
     if (!shift) {
-      return res.status(404).json({ message: 'Shift tidak ditemukan' });
+      return res.status(404).json({ message: "Shift tidak ditemukan" });
     }
 
-    // Cek apakah shift sudah selesai
-    if (shift.status === 'Selesai') {
-      return res.status(400).json({ message: 'Shift sudah selesai' });
+    if (shift.status === "Selesai") {
+      return res.status(400).json({ message: "Shift sudah selesai" });
     }
 
-    // Update shift
+    if (saldoAkhirNumber < Number(shift.saldo_awal)) {
+      return res.status(400).json({
+        message: "saldo_akhir tidak boleh lebih kecil dari saldo_awal",
+      });
+    }
+
     shift.waktu_selesai = new Date();
-    shift.saldo_akhir = saldo_akhir;
-    shift.status = 'Selesai';
+    shift.saldo_akhir = saldoAkhirNumber;
+    shift.status = "Selesai";
 
     await shift.save();
 
-    res.json({
-      message: 'Shift berhasil ditutup',
-      shift,
+    const closedShift = await Shift.findByPk(shift.id, {
+      include: shiftInclude,
+    });
+
+    return res.json({
+      message: "Shift berhasil ditutup",
+      data: closedShift,
     });
   } catch (error) {
-    console.error('Error ending shift:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error ending shift:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -88,17 +136,14 @@ exports.getUserShifts = async (req, res) => {
 
     const shifts = await Shift.findAll({
       where: { user_id },
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
-        { model: Branch, as: 'branch', attributes: ['id', 'name'] },
-      ],
-      order: [['waktu_mulai', 'DESC']],
+      include: shiftInclude,
+      order: [["waktu_mulai", "DESC"]],
     });
 
-    res.json(shifts);
+    return res.json({ data: shifts });
   } catch (error) {
-    console.error('Error fetching user shifts:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching user shifts:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -106,17 +151,14 @@ exports.getUserShifts = async (req, res) => {
 exports.getAllShifts = async (req, res) => {
   try {
     const shifts = await Shift.findAll({
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
-        { model: Branch, as: 'branch', attributes: ['id', 'name'] },
-      ],
-      order: [['waktu_mulai', 'DESC']],
+      include: shiftInclude,
+      order: [["waktu_mulai", "DESC"]],
     });
 
-    res.json(shifts);
+    return res.json({ data: shifts });
   } catch (error) {
-    console.error('Error fetching all shifts:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching all shifts:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -125,33 +167,27 @@ exports.getActiveShift = async (req, res) => {
   try {
     const { user_id, branch_id } = req.query;
 
-    // Validasi input
     if (!user_id || !branch_id) {
-      return res.status(400).json({ message: 'user_id dan branch_id wajib diisi' });
+      return res
+        .status(400)
+        .json({ message: "user_id dan branch_id wajib diisi" });
     }
 
-    // Cari shift aktif untuk user dan branch tertentu
     const activeShift = await Shift.findOne({
       where: {
         user_id,
         branch_id,
-        status: 'Aktif',
+        status: "Aktif",
       },
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
-        { model: Branch, as: 'branch', attributes: ['id', 'name'] },
-      ],
+      include: shiftInclude,
+      order: [["waktu_mulai", "DESC"]],
     });
 
-    if (!activeShift) {
-      return res.status(404).json({ message: 'Shift aktif tidak ditemukan' });
-    }
-
-    res.json({
-      data: activeShift,
+    return res.json({
+      data: activeShift || null,
     });
   } catch (error) {
-    console.error('Error fetching active shift:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching active shift:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

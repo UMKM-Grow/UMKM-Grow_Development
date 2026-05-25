@@ -1,31 +1,48 @@
-const { Op } = require('sequelize');
-const sequelize = require('../config/database');
-const { Product, ProductVariant, Transaction, TransactionDetail, Promo } = require('../models');
+const { Op } = require("sequelize");
+const sequelize = require("../config/database");
+const {
+  Product,
+  ProductVariant,
+  Transaction,
+  TransactionDetail,
+  Promo,
+  StoreSetting,
+} = require("../models");
 
 let transactionColumnsPromise;
 const getTransactionColumns = async () => {
   if (!transactionColumnsPromise) {
-    transactionColumnsPromise = sequelize.getQueryInterface().describeTable('transactions').catch(() => null);
+    transactionColumnsPromise = sequelize
+      .getQueryInterface()
+      .describeTable("transactions")
+      .catch(() => null);
   }
   return transactionColumnsPromise;
 };
 
 const checkout = async (req, res) => {
-  const { customer_id, payment_method, items, branch_id, promo_code } = req.body || {};
+  const { customer_id, payment_method, items, branch_id, promo_code } =
+    req.body || {};
 
   if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: 'Cart items are required' });
+    return res.status(400).json({ message: "Cart items are required" });
   }
 
-  const normalizedPayment = String(payment_method || '').trim();
+  const normalizedPayment = String(payment_method || "").trim();
   const normalizedUpper = normalizedPayment.toUpperCase();
-  const allowedMethods = new Set(['CASH', 'TRANSFER', 'QRIS']);
+  const allowedMethods = new Set(["CASH", "TRANSFER", "QRIS"]);
   if (!allowedMethods.has(normalizedUpper)) {
-    return res.status(400).json({ message: 'Invalid payment method (Cash/Transfer/QRIS)' });
+    return res
+      .status(400)
+      .json({ message: "Invalid payment method (Cash/Transfer/QRIS)" });
   }
 
   const paymentMethodNormalized =
-    normalizedUpper === 'CASH' ? 'Cash' : normalizedUpper === 'TRANSFER' ? 'Transfer' : 'QRIS';
+    normalizedUpper === "CASH"
+      ? "Cash"
+      : normalizedUpper === "TRANSFER"
+        ? "Transfer"
+        : "QRIS";
 
   const userId =
     Number(req.user?.id) ||
@@ -40,17 +57,22 @@ const checkout = async (req, res) => {
           product_id: Number(i.product_id),
           quantity: Number(i.quantity),
         }))
-        .filter((i) => Number.isInteger(i.product_id) && i.product_id > 0 && Number.isFinite(i.quantity));
+        .filter(
+          (i) =>
+            Number.isInteger(i.product_id) &&
+            i.product_id > 0 &&
+            Number.isFinite(i.quantity),
+        );
 
       if (requestedItems.length === 0) {
-        const error = new Error('Invalid cart items');
+        const error = new Error("Invalid cart items");
         error.statusCode = 400;
         throw error;
       }
 
       for (const item of requestedItems) {
         if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
-          const error = new Error('Quantity must be a positive integer');
+          const error = new Error("Quantity must be a positive integer");
           error.statusCode = 400;
           throw error;
         }
@@ -58,7 +80,10 @@ const checkout = async (req, res) => {
 
       const productIds = [...new Set(requestedItems.map((i) => i.product_id))];
       const selectedBranchId = Number(branch_id);
-      const branchFilter = Number.isInteger(selectedBranchId) && selectedBranchId > 0 ? { branch_id: selectedBranchId } : {};
+      const branchFilter =
+        Number.isInteger(selectedBranchId) && selectedBranchId > 0
+          ? { branch_id: selectedBranchId }
+          : {};
 
       const [products, variants] = await Promise.all([
         Product.findAll({
@@ -70,7 +95,7 @@ const checkout = async (req, res) => {
           where: { product_id: productIds },
           transaction: t,
           lock: t.LOCK.UPDATE,
-          order: [['id', 'ASC']],
+          order: [["id", "ASC"]],
         }),
       ]);
 
@@ -93,7 +118,10 @@ const checkout = async (req, res) => {
       for (const item of requestedItems) {
         const p = productById.get(item.product_id);
         const v = variantsByProductId.get(item.product_id) || [];
-        const available = v.reduce((sum, row) => sum + (Number(row.stock) || 0), 0);
+        const available = v.reduce(
+          (sum, row) => sum + (Number(row.stock) || 0),
+          0,
+        );
         if (available < item.quantity) {
           const error = new Error(`Stock not enough for ${p.name}`);
           error.statusCode = 400;
@@ -113,7 +141,10 @@ const checkout = async (req, res) => {
         };
       });
 
-      const totalAmount = detailsPayload.reduce((sum, d) => sum + d.subtotal, 0);
+      const totalAmount = detailsPayload.reduce(
+        (sum, d) => sum + d.subtotal,
+        0,
+      );
 
       let discountAmount = 0;
       let normalizedPromoCode = null;
@@ -127,59 +158,96 @@ const checkout = async (req, res) => {
             tanggal_berakhir: { [Op.gte]: new Date() },
           };
           if (Number.isInteger(selectedBranchId) && selectedBranchId > 0) {
-            promoWhere[Op.or] = [{ branch_id: selectedBranchId }, { branch_id: null }];
+            promoWhere[Op.or] = [
+              { branch_id: selectedBranchId },
+              { branch_id: null },
+            ];
           } else {
             promoWhere.branch_id = null;
           }
 
-          const promo = await Promo.findOne({ where: promoWhere, transaction: t });
+          const promo = await Promo.findOne({
+            where: promoWhere,
+            transaction: t,
+          });
           if (!promo) {
-            const error = new Error('Kode promo tidak ditemukan atau tidak aktif');
+            const error = new Error(
+              "Kode promo tidak ditemukan atau tidak aktif",
+            );
             error.statusCode = 400;
             throw error;
           }
 
           const minimal = Number(promo.minimal_belanja) || 0;
           if (totalAmount < minimal) {
-            const error = new Error('Total belanja belum memenuhi syarat promo');
+            const error = new Error(
+              "Total belanja belum memenuhi syarat promo",
+            );
             error.statusCode = 400;
             throw error;
           }
 
-          if (promo.tipe_diskon === 'Nominal') {
+          if (promo.tipe_diskon === "Nominal") {
             discountAmount = Number(promo.nilai_diskon) || 0;
           } else {
-            discountAmount = ((Number(promo.nilai_diskon) || 0) / 100) * totalAmount;
+            discountAmount =
+              ((Number(promo.nilai_diskon) || 0) / 100) * totalAmount;
           }
 
-          discountAmount = Number.isFinite(discountAmount) ? Math.min(discountAmount, totalAmount) : 0;
+          discountAmount = Number.isFinite(discountAmount)
+            ? Math.min(discountAmount, totalAmount)
+            : 0;
           discountAmount = Math.round(discountAmount);
         }
       }
 
-      const finalTotalPrice = Math.max(0, Math.round(totalAmount - discountAmount));
+      const baseTotalAfterDiscount = Math.max(0, totalAmount - discountAmount);
+      const setting =
+        Number.isInteger(selectedBranchId) && selectedBranchId > 0
+          ? await StoreSetting.findOne({
+              where: { branch_id: selectedBranchId },
+              transaction: t,
+            })
+          : null;
+      const serviceChargePercent = Number(setting?.service_charge_percent) || 0;
+      const taxPercent = Number(setting?.tax_percent) || 0;
+      const serviceChargeAmount = Math.round(
+        baseTotalAfterDiscount * (serviceChargePercent / 100),
+      );
+      const taxAmount = Math.round(
+        (baseTotalAfterDiscount + serviceChargeAmount) * (taxPercent / 100),
+      );
+      const finalTotalPrice = Math.max(
+        0,
+        Math.round(baseTotalAfterDiscount + serviceChargeAmount + taxAmount),
+      );
 
       const columns = await getTransactionColumns();
       const txPayload = {
         customer_id: customer_id ? Number(customer_id) : null,
-        branch_id: Number.isInteger(selectedBranchId) && selectedBranchId > 0 ? selectedBranchId : null,
+        branch_id:
+          Number.isInteger(selectedBranchId) && selectedBranchId > 0
+            ? selectedBranchId
+            : null,
         total_price: finalTotalPrice,
         discount_amount: discountAmount,
         promo_code: normalizedPromoCode || null,
-        status: 'paid',
+        status: "paid",
       };
 
       if (columns?.user_id) txPayload.user_id = userId;
       if (columns?.total_amount) txPayload.total_amount = totalAmount;
-      if (columns?.payment_method) txPayload.payment_method = paymentMethodNormalized;
+      if (columns?.payment_method)
+        txPayload.payment_method = paymentMethodNormalized;
       if (columns?.discount_amount) txPayload.discount_amount = discountAmount;
-      if (columns?.promo_code) txPayload.promo_code = normalizedPromoCode || null;
+      if (columns?.promo_code)
+        txPayload.promo_code = normalizedPromoCode || null;
 
       const tx = await Transaction.create(txPayload, { transaction: t });
 
       await TransactionDetail.bulkCreate(
         detailsPayload.map((d) => ({ ...d, transaction_id: tx.id })),
-        { transaction: t }
+        { transaction: t },
       );
 
       for (const item of requestedItems) {
@@ -203,18 +271,33 @@ const checkout = async (req, res) => {
         }
       }
 
-      return { transaction: tx, totalAmount, detailsPayload };
+      return {
+        transaction: tx,
+        subtotal: totalAmount,
+        discountAmount,
+        serviceChargeAmount,
+        taxAmount,
+        finalTotalPrice,
+        detailsPayload,
+      };
     });
 
     res.json({
-      message: 'Checkout success',
+      message: "Checkout success",
       transaction_id: result.transaction.id,
-      total_amount: result.totalAmount,
-      items: result.detailsPayload,
+      data: {
+        transaction_id: result.transaction.id,
+        subtotal: result.subtotal,
+        discount_amount: result.discountAmount,
+        service_charge_amount: result.serviceChargeAmount,
+        tax_amount: result.taxAmount,
+        total_amount: result.finalTotalPrice,
+        items: result.detailsPayload,
+      },
     });
   } catch (error) {
     const status = Number(error.statusCode) || 500;
-    res.status(status).json({ message: error.message || 'Checkout failed' });
+    res.status(status).json({ message: error.message || "Checkout failed" });
   }
 };
 

@@ -32,11 +32,9 @@ const reportController = {
   financial: async (req, res) => {
     const ready = await ensureDbReady();
     if (!ready)
-      return res
-        .status(503)
-        .json({
-          message: "Database belum tersambung. Pastikan MySQL berjalan.",
-        });
+      return res.status(503).json({
+        message: "Database belum tersambung. Pastikan MySQL berjalan.",
+      });
 
     try {
       const period = String(req.query.period || "month");
@@ -53,11 +51,9 @@ const reportController = {
   getTaxReport: async (req, res) => {
     const ready = await ensureDbReady();
     if (!ready) {
-      return res
-        .status(503)
-        .json({
-          message: "Database belum tersambung. Pastikan MySQL berjalan.",
-        });
+      return res.status(503).json({
+        message: "Database belum tersambung. Pastikan MySQL berjalan.",
+      });
     }
 
     try {
@@ -72,12 +68,10 @@ const reportController = {
       }
 
       if (!startDate || !endDate) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "startDate dan endDate wajib diisi dengan format tanggal yang valid.",
-          });
+        return res.status(400).json({
+          message:
+            "startDate dan endDate wajib diisi dengan format tanggal yang valid.",
+        });
       }
 
       if (startDate > endDate) {
@@ -90,6 +84,7 @@ const reportController = {
         where: { branch_id: branchId },
       });
       const taxPercent = Number(setting?.tax_percent) || 0;
+      const serviceChargePercent = Number(setting?.service_charge_percent) || 0;
 
       const transactions = await Transaction.findAll({
         where: {
@@ -106,24 +101,27 @@ const reportController = {
       });
 
       const data = transactions.map((transaction) => {
-        const subtotal =
-          Number(transaction.total_amount) ||
-          Number(transaction.total_price) ||
-          0;
-        const nominalPajak = Math.round(subtotal * (taxPercent / 100));
+        const subtotal = Number(transaction.total_amount) || 0;
+        const discountAmount = Number(transaction.discount_amount) || 0;
+        const subtotalAfterDiscount = Math.max(0, subtotal - discountAmount);
+        const serviceChargeAmount = Math.round(
+          subtotalAfterDiscount * (serviceChargePercent / 100),
+        );
+        const nominalPajak = Math.round(
+          (subtotalAfterDiscount + serviceChargeAmount) * (taxPercent / 100),
+        );
         const total =
           Number(transaction.total_price) ||
           Math.max(
             0,
-            subtotal +
-              nominalPajak -
-              (Number(transaction.discount_amount) || 0),
+            subtotalAfterDiscount + serviceChargeAmount + nominalPajak,
           );
 
         return {
           tanggal: formatReportDate(transaction.createdAt),
           no_transaksi: transaction.id,
-          subtotal,
+          subtotal: subtotalAfterDiscount,
+          service_charge_amount: serviceChargeAmount,
           nominal_pajak: nominalPajak,
           total,
         };
@@ -137,6 +135,7 @@ const reportController = {
           startDate: req.query.startDate,
           endDate: req.query.endDate,
           tax_percent: taxPercent,
+          service_charge_percent: serviceChargePercent,
         },
       });
     } catch (error) {

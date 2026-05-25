@@ -322,13 +322,23 @@ export default function POS() {
     return Math.min(Math.floor(raw), subtotal);
   }, [promoDiscount, subtotal]);
 
+  const subtotalAfterDiscount = useMemo(() => {
+    return Math.max(0, subtotal - discount);
+  }, [subtotal, discount]);
+
+  const serviceChargeAmount = useMemo(() => {
+    return Math.round(subtotalAfterDiscount * (serviceChargePercent / 100));
+  }, [subtotalAfterDiscount, serviceChargePercent]);
+
+  const taxAmount = useMemo(() => {
+    return Math.round(
+      (subtotalAfterDiscount + serviceChargeAmount) * (taxPercent / 100),
+    );
+  }, [subtotalAfterDiscount, serviceChargeAmount, taxPercent]);
+
   const total = useMemo(() => {
-    const baseTotal = Math.max(0, subtotal - discount);
-    const serviceChargeAmount = baseTotal * (serviceChargePercent / 100);
-    const subtotalWithServiceCharge = baseTotal + serviceChargeAmount;
-    const taxAmount = subtotalWithServiceCharge * (taxPercent / 100);
-    return Math.max(0, subtotalWithServiceCharge + taxAmount);
-  }, [subtotal, discount, serviceChargePercent, taxPercent]);
+    return Math.max(0, subtotalAfterDiscount + serviceChargeAmount + taxAmount);
+  }, [subtotalAfterDiscount, serviceChargeAmount, taxAmount]);
 
   async function refreshData() {
     setLoading(true);
@@ -588,7 +598,11 @@ export default function POS() {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-      await axios.post(`${API_BASE}/pos/checkout`, payload, { headers });
+      const checkoutResponse = await axios.post(
+        `${API_BASE}/pos/checkout`,
+        payload,
+        { headers },
+      );
 
       console.log("[POS Checkout] selectedCustomer:", selectedCustomer);
       console.log("[POS Checkout] subtotal:", subtotal);
@@ -627,20 +641,30 @@ export default function POS() {
         (c) => c.id === Number(customerId),
       );
 
+      const checkoutData = checkoutResponse?.data?.data || {};
       const receipt = {
-        transactionId: Date.now(),
+        transactionId: checkoutData.transaction_id || Date.now(),
         date: new Date().toLocaleDateString("id-ID"),
         time: new Date().toLocaleTimeString("id-ID"),
         cashierName: user?.name || "Kasir",
         customerName:
           selectedCustomerData?.name || selectedCustomer?.name || "Umum",
         items: [...cart],
-        subtotal: subtotal,
-        discount: discount,
+        subtotal: Number(checkoutData.subtotal) || subtotalAfterDiscount,
+        discount: Number(checkoutData.discount_amount) || discount,
+        serviceChargeAmount:
+          Number(checkoutData.service_charge_amount) || serviceChargeAmount,
+        serviceChargePercent,
+        taxAmount: Number(checkoutData.tax_amount) || taxAmount,
+        taxPercent,
         paymentMethod: paymentMethod,
         cashReceived: Number(cashReceivedInput) || 0,
-        change: Math.max(0, (Number(cashReceivedInput) || 0) - total),
-        total: total,
+        change: Math.max(
+          0,
+          (Number(cashReceivedInput) || 0) -
+            (Number(checkoutData.total_amount) || total),
+        ),
+        total: Number(checkoutData.total_amount) || total,
       };
 
       setReceiptData(receipt);
@@ -1412,6 +1436,17 @@ export default function POS() {
                     <span>-{formatIdr(receiptData.discount)}</span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span>
+                    Service Charge (
+                    {Number(receiptData.serviceChargePercent) || 0}%):
+                  </span>
+                  <span>{formatIdr(receiptData.serviceChargeAmount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Pajak ({Number(receiptData.taxPercent) || 0}%):</span>
+                  <span>{formatIdr(receiptData.taxAmount)}</span>
+                </div>
                 <div className="flex justify-between font-bold text-lg mt-2">
                   <span>Total:</span>
                   <span>{formatIdr(receiptData.total)}</span>

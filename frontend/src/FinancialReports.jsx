@@ -176,6 +176,7 @@ export default function FinancialReports() {
       "Tanggal",
       "No Transaksi",
       "Subtotal",
+      "Service Charge",
       "Nominal Pajak",
       "Total",
     ];
@@ -186,6 +187,7 @@ export default function FinancialReports() {
           `"${item.tanggal || ""}"`,
           `"${item.no_transaksi || ""}"`,
           Number(item.subtotal) || 0,
+          Number(item.service_charge_amount) || 0,
           Number(item.nominal_pajak) || 0,
           Number(item.total) || 0,
         ].join(","),
@@ -467,6 +469,9 @@ export default function FinancialReports() {
                       Subtotal
                     </th>
                     <th className="px-4 py-3 text-right font-semibold">
+                      Service Charge
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold">
                       Nominal Pajak
                     </th>
                     <th className="px-4 py-3 text-right font-semibold">
@@ -478,7 +483,7 @@ export default function FinancialReports() {
                   {taxLoading ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-10 text-center text-sm text-gray-500"
                       >
                         Memuat laporan pajak...
@@ -487,7 +492,7 @@ export default function FinancialReports() {
                   ) : taxReport.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-10 text-center text-sm text-gray-500"
                       >
                         Belum ada data laporan pajak.
@@ -504,6 +509,9 @@ export default function FinancialReports() {
                         </td>
                         <td className="px-4 py-3 text-right text-gray-700">
                           {formatIdr(item.subtotal)}
+                        </td>
+                        <td className="px-4 py-3 text-right text-gray-700">
+                          {formatIdr(item.service_charge_amount)}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-700">
                           {formatIdr(item.nominal_pajak)}

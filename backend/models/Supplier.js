@@ -1,33 +1,39 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/database");
 
-const Supplier = sequelize.define('Supplier', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
+const Supplier = sequelize.define(
+  "Supplier",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    contact_person: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    address: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    branch_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
-  nama_supplier: {
-    type: DataTypes.STRING,
-    allowNull: false,
+  {
+    tableName: "suppliers",
+    timestamps: true,
   },
-  kontak_person: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  nomor_wa: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  alamat: {
-    type: DataTypes.TEXT,
-  },
-  kategori_pasokan: {
-    type: DataTypes.STRING,
-  },
-}, {
-  tableName: 'suppliers',
-  timestamps: true,
-});
+);
 
 module.exports = Supplier;

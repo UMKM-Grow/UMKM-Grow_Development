@@ -41,6 +41,9 @@ export default function Navbar() {
             <Link to="/members" className="hover:text-gray-900">
               Members
             </Link>
+            <Link to="/suppliers" className="hover:text-gray-900">
+              Suppliers
+            </Link>
             <Link to="/settings" className="hover:text-gray-900">
               Settings
             </Link>

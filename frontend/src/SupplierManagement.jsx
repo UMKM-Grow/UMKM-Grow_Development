@@ -1,34 +1,45 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Edit2, Trash2, Plus, MessageCircle, X, History } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Edit2, Trash2, Plus, X } from "lucide-react";
 
-const API_URL = 'http://localhost:5000/api/suppliers';
+const API_URL = "http://localhost:5000/api/suppliers";
 
 const SupplierManagement = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
-    nama_supplier: '',
-    kontak_person: '',
-    nomor_wa: '',
-    alamat: '',
-    alamat: '',
-    kategori_pasokan: ''
+    name: "",
+    contact_person: "",
+    phone: "",
+    address: "",
   });
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [supplierHistory, setSupplierHistory] = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [selectedSupplierForHistory, setSelectedSupplierForHistory] = useState(null);
+
+  const getHeaders = () => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const fetchSuppliers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API_URL);
+      setErrorMessage("");
+      const res = await axios.get(API_URL, {
+        headers: getHeaders(),
+      });
       setSuppliers(res.data.data || []);
     } catch (error) {
-      console.error('Error fetching suppliers', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+      setErrorMessage(
+        error?.response?.data?.message || "Gagal memuat data supplier.",
+      );
     } finally {
       setLoading(false);
     }
@@ -42,20 +53,18 @@ const SupplierManagement = () => {
     if (supplier) {
       setEditingSupplier(supplier);
       setFormData({
-        nama_supplier: supplier.nama_supplier,
-        kontak_person: supplier.kontak_person,
-        nomor_wa: supplier.nomor_wa,
-        alamat: supplier.alamat || '',
-        kategori_pasokan: supplier.kategori_pasokan || ''
+        name: supplier.name,
+        contact_person: supplier.contact_person,
+        phone: supplier.phone,
+        address: supplier.address || "",
       });
     } else {
       setEditingSupplier(null);
       setFormData({
-        nama_supplier: '',
-        kontak_person: '',
-        nomor_wa: '',
-        alamat: '',
-        kategori_pasokan: ''
+        name: "",
+        contact_person: "",
+        phone: "",
+        address: "",
       });
     }
     setIsModalOpen(true);
@@ -64,74 +73,63 @@ const SupplierManagement = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingSupplier(null);
-  };
-
-  const openHistoryModal = async (supplier) => {
-    setSelectedSupplierForHistory(supplier);
-    setHistoryModalOpen(true);
-    setHistoryLoading(true);
-    try {
-      const res = await axios.get(`${API_URL}/${supplier.id}/history`);
-      setSupplierHistory(res.data.data || []);
-    } catch (error) {
-      console.error('Error fetching history', error);
-      setSupplierHistory([]);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  const closeHistoryModal = () => {
-    setHistoryModalOpen(false);
-    setSelectedSupplierForHistory(null);
-    setSupplierHistory([]);
+    setFormData({
+      name: "",
+      contact_person: "",
+      phone: "",
+      address: "",
+    });
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setErrorMessage("");
       if (editingSupplier) {
-        await axios.put(`${API_URL}/${editingSupplier.id}`, formData);
+        await axios.put(`${API_URL}/${editingSupplier.id}`, formData, {
+          headers: getHeaders(),
+        });
       } else {
-        await axios.post(API_URL, formData);
+        await axios.post(API_URL, formData, {
+          headers: getHeaders(),
+        });
       }
       closeModal();
       fetchSuppliers();
     } catch (error) {
-      console.error('Error saving supplier', error);
-      alert('Gagal menyimpan data supplier.');
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+      alert(error?.response?.data?.message || "Gagal menyimpan data supplier.");
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Hapus supplier ini?')) {
-      try {
-        await axios.delete(`${API_URL}/${id}`);
-        fetchSuppliers();
-      } catch (error) {
-        console.error('Error deleting supplier', error);
+    if (!window.confirm("Apakah Anda yakin ingin menghapus supplier ini?"))
+      return;
+
+    try {
+      await axios.delete(`${API_URL}/${id}`, {
+        headers: getHeaders(),
+      });
+      fetchSuppliers();
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
       }
+      alert(error?.response?.data?.message || "Gagal menghapus supplier.");
     }
-  };
-
-  const handleWhatsApp = (nomorWa) => {
-    // Regex/Replace awalan 0 menjadi 62
-    let formattedNumber = nomorWa.trim();
-    if (formattedNumber.startsWith('0')) {
-      formattedNumber = '62' + formattedNumber.substring(1);
-    } else if (formattedNumber.startsWith('+62')) {
-      formattedNumber = '62' + formattedNumber.substring(3);
-    }
-    
-    // Remove any non-numeric characters
-    formattedNumber = formattedNumber.replace(/\D/g, '');
-
-    window.open(`https://wa.me/${formattedNumber}`, '_blank');
   };
 
   return (
@@ -139,8 +137,12 @@ const SupplierManagement = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Manajemen Pemasok</h1>
-            <p className="text-gray-500 mt-1">Kelola data mitra dan pemasok bahan baku Anda.</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Manajemen Supplier
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Kelola supplier aktif berdasarkan cabang Anda.
+            </p>
           </div>
           <button
             onClick={() => openModal()}
@@ -151,14 +153,20 @@ const SupplierManagement = () => {
           </button>
         </div>
 
+        {errorMessage ? (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
+            {errorMessage}
+          </div>
+        ) : null}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm uppercase tracking-wider">
                   <th className="p-4 font-semibold">Nama Supplier</th>
-                  <th className="p-4 font-semibold">Kontak Person</th>
-                  <th className="p-4 font-semibold">Kategori</th>
+                  <th className="p-4 font-semibold">PIC</th>
+                  <th className="p-4 font-semibold">No. WhatsApp</th>
                   <th className="p-4 font-semibold">Alamat</th>
                   <th className="p-4 font-semibold text-center">Aksi</th>
                 </tr>
@@ -166,42 +174,30 @@ const SupplierManagement = () => {
               <tbody className="divide-y divide-gray-100 text-gray-700">
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500">Memuat data...</td>
+                    <td colSpan="5" className="p-8 text-center text-gray-500">
+                      Memuat data...
+                    </td>
                   </tr>
                 ) : suppliers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500">Belum ada data supplier.</td>
+                    <td colSpan="5" className="p-8 text-center text-gray-500">
+                      Belum ada data supplier.
+                    </td>
                   </tr>
                 ) : (
                   suppliers.map((supplier) => (
-                    <tr key={supplier.id} className="hover:bg-gray-50 transition">
-                      <td className="p-4 font-medium text-gray-900">{supplier.nama_supplier}</td>
-                      <td className="p-4">
-                        <div className="font-medium text-gray-800">{supplier.kontak_person}</div>
-                        <div className="text-sm text-gray-500 mt-0.5">{supplier.nomor_wa}</div>
+                    <tr
+                      key={supplier.id}
+                      className="hover:bg-gray-50 transition"
+                    >
+                      <td className="p-4 font-medium text-gray-900">
+                        {supplier.name}
                       </td>
-                      <td className="p-4">
-                        <span className="inline-block px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          {supplier.kategori_pasokan || '-'}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm">{supplier.alamat || '-'}</td>
+                      <td className="p-4">{supplier.contact_person}</td>
+                      <td className="p-4">{supplier.phone}</td>
+                      <td className="p-4 text-sm">{supplier.address || "-"}</td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-3">
-                          <button
-                            onClick={() => handleWhatsApp(supplier.nomor_wa)}
-                            className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition"
-                            title="Hubungi via WhatsApp"
-                          >
-                            <MessageCircle size={18} />
-                          </button>
-                          <button
-                            onClick={() => openHistoryModal(supplier)}
-                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
-                            title="Riwayat Pembelian"
-                          >
-                            <History size={18} />
-                          </button>
                           <button
                             onClick={() => openModal(supplier)}
                             className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
@@ -227,83 +223,80 @@ const SupplierManagement = () => {
         </div>
       </div>
 
-      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
               <h2 className="text-xl font-bold text-gray-900">
-                {editingSupplier ? 'Edit Supplier' : 'Tambah Supplier Baru'}
+                {editingSupplier ? "Edit Supplier" : "Tambah Supplier Baru"}
               </h2>
-              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 transition">
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
                 <X size={24} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nama Supplier / Perusahaan <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Supplier / PT <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="nama_supplier"
+                    name="name"
                     required
-                    value={formData.nama_supplier}
+                    value={formData.name}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                     placeholder="Contoh: PT. Sumber Tirta"
                   />
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kontak Person <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      name="kontak_person"
-                      required
-                      value={formData.kontak_person}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      placeholder="Nama PIC"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      name="nomor_wa"
-                      required
-                      value={formData.nomor_wa}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                      placeholder="08123456789"
-                    />
-                  </div>
-                </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Pasokan</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama PIC <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    name="kategori_pasokan"
-                    value={formData.kategori_pasokan}
+                    name="contact_person"
+                    required
+                    value={formData.contact_person}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    placeholder="Contoh: Bahan Baku, Kemasan"
+                    placeholder="Nama PIC"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    No. WhatsApp <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    required
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    placeholder="08123456789"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Alamat
+                  </label>
                   <textarea
-                    name="alamat"
+                    name="address"
                     rows="3"
-                    value={formData.alamat}
+                    value={formData.address}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
                     placeholder="Alamat supplier..."
-                  ></textarea>
+                  />
                 </div>
               </div>
 
@@ -323,65 +316,6 @@ const SupplierManagement = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* History Modal */}
-      {historyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">
-                Riwayat Pembelian - {selectedSupplierForHistory?.nama_supplier}
-              </h2>
-              <button onClick={closeHistoryModal} className="text-gray-400 hover:text-gray-600 transition">
-                <X size={24} />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              {historyLoading ? (
-                <div className="text-center py-8 text-gray-500">Memuat riwayat...</div>
-              ) : supplierHistory.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">Belum ada riwayat pembelian dari supplier ini.</div>
-              ) : (
-                <div className="space-y-4">
-                  {supplierHistory.map((po) => (
-                    <div key={po.id_po} className="border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <div className="flex justify-between items-center mb-3">
-                        <div>
-                          <span className="font-semibold text-gray-800">Tanggal:</span> {new Date(po.tanggal_pesanan).toLocaleDateString('id-ID')}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${po.status === 'Received' ? 'bg-green-100 text-green-700' : po.status === 'Ordered' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
-                            {po.status}
-                          </span>
-                          <span className="font-bold text-gray-900">Rp {Number(po.total_nilai).toLocaleString('id-ID')}</span>
-                        </div>
-                      </div>
-                      <table className="w-full text-sm text-left border-t border-gray-100 mt-2 pt-2">
-                        <thead>
-                          <tr className="text-gray-500">
-                            <th className="py-1">Produk</th>
-                            <th className="py-1 text-center">Qty</th>
-                            <th className="py-1 text-right">Harga Satuan</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-50">
-                          {po.details?.map((detail) => (
-                            <tr key={detail.id_detail_po}>
-                              <td className="py-1 font-medium text-gray-800">{detail.product?.name || 'Produk Tidak Ditemukan'}</td>
-                              <td className="py-1 text-center">{detail.kuantitas_pesanan}</td>
-                              <td className="py-1 text-right">Rp {Number(detail.harga_beli).toLocaleString('id-ID')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}

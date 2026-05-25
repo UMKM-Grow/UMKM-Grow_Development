@@ -1,21 +1,21 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useContext, useMemo } from 'react';
-import BranchContext from './BranchContext';
-import { LogOut } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { useContext, useMemo } from "react";
+import BranchContext from "./BranchContext";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
-  const { branches, selectedBranchId, setSelectedBranchId } = useContext(BranchContext);
+  const { selectedBranch } = useContext(BranchContext);
   const navigate = useNavigate();
-  
+
   const user = useMemo(() => {
-    const userStr = localStorage.getItem('user');
+    const userStr = localStorage.getItem("user");
     return userStr ? JSON.parse(userStr) : null;
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   return (
@@ -48,19 +48,12 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <label className="text-sm text-gray-500">Cabang aktif</label>
-          <select
-            value={selectedBranchId ?? ''}
-            onChange={(event) => setSelectedBranchId(Number(event.target.value) || null)}
-            className="rounded border border-gray-300 bg-white px-3 py-2 text-sm"
-          >
-            <option value="">Pilih Cabang</option>
-            {branches.map((branch) => (
-              <option key={branch.id_cabang} value={branch.id_cabang}>
-                {branch.nama_cabang}
-              </option>
-            ))}
-          </select>
+          <div className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700">
+            <span className="text-gray-500">Cabang aktif:</span>{" "}
+            <span className="font-semibold text-gray-900">
+              {selectedBranch?.nama_cabang || "-"}
+            </span>
+          </div>
 
           <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
             {user && (

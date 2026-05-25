@@ -44,6 +44,12 @@ export default function BestSellerCard() {
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error(err);
+          if (err.message === 'Server returned 401') {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+            return;
+          }
           setError('Gagal memuat data best seller.');
         }
       } finally {

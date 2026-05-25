@@ -12,7 +12,12 @@
       "Bash(git checkout *)",
       "Bash(git merge *)",
       "Bash(npm start *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(npm install *)",
+      "Bash(timeout 10)",
+      "Bash(git reset *)",
+      "Bash(npm run *)",
+      "Bash(dir *)"
     ]
   }
 }

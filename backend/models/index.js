@@ -16,7 +16,8 @@ const StockMutation = require("./StockMutation")(sequelize);
 const Member = require("./Member");
 const Shift = require("./Shift");
 const StoreSetting = require("./StoreSetting");
-const Debt = require("./Debt");
+const Debt = require('./Debt');
+const Payroll = require('./Payroll');
 
 // Shift associations
 Shift.belongsTo(User, { foreignKey: "user_id", as: "user" });
@@ -142,6 +143,12 @@ Debt.belongsTo(Branch, { foreignKey: "branch_id", as: "branch" });
 Supplier.hasMany(Debt, { foreignKey: "supplier_id", as: "debts" });
 Debt.belongsTo(Supplier, { foreignKey: "supplier_id", as: "supplier" });
 
+// Payroll associations
+User.hasMany(Payroll, { foreignKey: "user_id", as: "payrolls" });
+Payroll.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Branch.hasMany(Payroll, { foreignKey: "branch_id", as: "payrolls", sourceKey: "id_cabang" });
+Payroll.belongsTo(Branch, { foreignKey: "branch_id", as: "branch", targetKey: "id_cabang" });
+
 let dbReady = false;
 let initPromise = null;
 
@@ -193,6 +200,7 @@ module.exports = {
   Shift,
   StoreSetting,
   Debt,
+  Payroll,
   initDb,
   isDbReady,
   ensureDbReady,

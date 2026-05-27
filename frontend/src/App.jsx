@@ -16,6 +16,7 @@ import Branches from "./Branches";
 import StockMutation from "./StockMutation";
 import Members from "./Members";
 import DebtManagement from "./DebtManagement";
+import Payroll from "./Payroll";
 import Navbar from "./Navbar";
 import { BranchProvider } from "./BranchContext";
 import BranchContext from "./BranchContext";
@@ -203,6 +204,16 @@ function App() {
               <RequireAuth>
                 <AuthenticatedLayout>
                   <DebtManagement />
+                </AuthenticatedLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/payroll"
+            element={
+              <RequireAuth>
+                <AuthenticatedLayout>
+                  <Payroll />
                 </AuthenticatedLayout>
               </RequireAuth>
             }

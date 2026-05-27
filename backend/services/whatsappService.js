@@ -11,9 +11,10 @@
  * STATUS values: 'disconnected' | 'qr' | 'connecting' | 'ready' | 'error'
  */
 
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const path = require('path');
+const fs = require('fs');
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let client = null;
@@ -34,13 +35,33 @@ function normalizePhone(phone) {
 }
 
 /**
- * Initialize (or reuse) the WhatsApp client.
- * Safe to call multiple times — only creates the client once.
+ * Hapus file lock Chromium yang tersisa agar tidak error "browser already running".
+ * Dipanggil otomatis sebelum inisialisasi client.
+ */
+function cleanupLockFile() {
+  try {
+    const sessionDir = path.join(__dirname, '..', '.wwebjs_auth', 'session');
+    const lockFile = path.join(sessionDir, 'SingletonLock');
+    if (fs.existsSync(lockFile)) {
+      fs.unlinkSync(lockFile);
+      console.log('[WA] File lock lama dihapus, siap memulai ulang.');
+    }
+  } catch (e) {
+    // abaikan jika file tidak ada atau tidak bisa dihapus
+  }
+}
+
+/**
+ * Initialize (atau reuse) WhatsApp client.
+ * Aman dipanggil berkali-kali — hanya membuat client satu kali.
  */
 function initWhatsApp() {
   if (initCalled) return;
   initCalled = true;
   status = 'connecting';
+
+  // Bersihkan lock file Chromium sebelum mulai
+  cleanupLockFile();
 
   client = new Client({
     authStrategy: new LocalAuth({
@@ -99,6 +120,11 @@ function initWhatsApp() {
     initCalled = false;
     client = null;
     console.error('[WA] initialize() error:', err.message);
+    // Jika error karena browser lock, coba ulang setelah 3 detik
+    if (err.message && err.message.includes('already running')) {
+      console.log('[WA] Mencoba ulang inisialisasi dalam 3 detik...');
+      setTimeout(() => { initWhatsApp(); }, 3000);
+    }
   });
 }
 

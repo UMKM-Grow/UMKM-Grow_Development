@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Dashboard,
-  Inventory,
+  LayoutDashboard as Dashboard,
+  LayoutList as Inventory,
   GitBranch,
   Users,
   Truck,

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import BranchContext from "./BranchContext";
+import BranchContext from "../BranchContext";
 import { LogOut } from "lucide-react";
 
 export default function Header() {

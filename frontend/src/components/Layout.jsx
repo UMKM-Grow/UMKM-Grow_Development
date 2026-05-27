@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import BranchContext from "./BranchContext";
+import BranchContext from "../BranchContext";
 
 export default function Layout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

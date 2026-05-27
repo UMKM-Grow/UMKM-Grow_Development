@@ -34,9 +34,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   const [hoveredItem, setHoveredItem] = useState(null);
 
   return (
-    <aside className={`flex flex-col h-full transition-all duration-300 w-64 bg-white border-r border-gray-200 ${
-      !isOpen ? "w-20" : ""
-    }`}>
+    <aside className={!isOpen ? "flex flex-col h-full transition-all duration-300 w-20 bg-white border-r border-gray-200" : "flex flex-col h-full transition-all duration-300 w-64 bg-white border-r border-gray-200"}>
       {/* Tombol Panah Floating */}
       <button
         onClick={toggleSidebar}
@@ -58,26 +56,18 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex w-items-center pr-4 ${
-                isActive
-                  ? "bg-blue-50 text-blue-600"
-                  : "hover:bg-gray-50 text-gray-700"
-              } rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 group`}
+              className={isActive
+                ? "flex w-items-center pr-4 bg-blue-50 text-blue-600 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 group"
+                : "flex w-items-center pr-4 hover:bg-gray-50 text-gray-700 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 group"}
               onMouseEnter={() => setHoveredItem(item.path)}
               onMouseLeave={() => setHoveredItem(null)}
             >
               <div className="flex items-center gap-3">
                 {item.icon && (
-                  <item.icon className={`h-5 w-5 ${
-                    isActive ? "text-blue-600" : "text-gray-400"
-                  } flex-shrink-0`} />
+                  <item.icon className={isActive ? "h-5 w-5 text-blue-600 flex-shrink-0" : "h-5 w-5 text-gray-400 flex-shrink-0"} />
                 )}
                 {/* Menu Text */}
-                <div className={`whitespace-nowrap transition-all duration-200 ${
-                  !isOpen && !isHovered
-                    ? "opacity-0 pointer-events-none absolute"
-                    : ""
-                }`}>
+                <div className={!isOpen && !isHovered ? "whitespace-nowrap transition-all duration-200 opacity-0 pointer-events-none absolute" : "whitespace-nowrap transition-all duration-200"}>
                   {item.name}
                 </div>
                 {/* Tooltip */}
@@ -104,18 +94,14 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
             localStorage.removeItem("user");
             window.location.href = "/login";
           }}
-          className={`flex w-items-center pr-4 hover:bg-gray-50 text-gray-700 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 group`}
+          className="flex w-items-center pr-4 hover:bg-gray-50 text-gray-700 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 group"
           onMouseEnter={() => setHoveredItem("logout")}
           onMouseLeave={() => setHoveredItem(null)}
         >
           <div className="flex items-center gap-3">
             <LogOut className="h-5 w-5 text-gray-500 flex-shrink-0" />
             {/* Menu Text */}
-            <div className={`whitespace-nowrap transition-all duration-200 ${
-              !isOpen && !hoveredItem === "logout"
-                ? "opacity-0 pointer-events-none absolute"
-                : ""
-            }`}>
+            <div className={!isOpen && hoveredItem !== "logout" ? "whitespace-nowrap transition-all duration-200 opacity-0 pointer-events-none absolute" : "whitespace-nowrap transition-all duration-200"}>
               Keluar
             </div>
             {/* Tooltip */}

@@ -1,154 +1,138 @@
 /**
- * WhatsApp Broadcast Service
+ * WhatsApp Broadcast Service — powered by whatsapp-web.js (open-source, free)
  *
- * Supports two gateway modes, configured via .env:
- *   WA_GATEWAY=fonnte   → uses Fonnte API (https://fonnte.com) – most common for Indonesian projects
- *   WA_GATEWAY=wablas   → uses Wablas API (https://wablas.com)
- *   WA_GATEWAY=mock     → (default) simulated/logged only, no real message sent
+ * HOW IT WORKS:
+ *   1. On first run, call initWhatsApp() — the backend generates a QR code.
+ *   2. Open the frontend /broadcast page → it shows the QR image.
+ *   3. Scan the QR with your phone (WhatsApp → Linked Devices → Link a Device).
+ *   4. Session is saved to ./.wwebjs_auth/ — you only need to scan ONCE.
+ *   5. After that the client stays connected and messages are sent for free.
  *
- * Required .env variables:
- *   WA_GATEWAY=fonnte
- *   WA_TOKEN=<your_api_token>
+ * STATUS values: 'disconnected' | 'qr' | 'connecting' | 'ready' | 'error'
  */
 
-const https = require('https');
-const http = require('http');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const qrcode = require('qrcode');
+const path = require('path');
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let client = null;
+let status = 'disconnected'; // 'disconnected' | 'qr' | 'connecting' | 'ready' | 'error'
+let qrDataUrl = null;         // base64 PNG data URL of the current QR code
+let initCalled = false;
 
 /**
- * Normalize phone number to international format without leading '+'
- * e.g. "08123456789" → "628123456789"
+ * Normalize Indonesian phone number to international WA format.
+ * "08123456789" → "6281234567890@c.us"
  */
 function normalizePhone(phone) {
   if (!phone) return null;
   let p = String(phone).trim().replace(/\D/g, '');
   if (p.startsWith('0')) p = '62' + p.slice(1);
   if (!p.startsWith('62')) p = '62' + p;
-  return p;
+  return p + '@c.us';
 }
 
 /**
- * Send a WhatsApp message to a single phone number via Fonnte.
- * Returns { success, phone, message }
+ * Initialize (or reuse) the WhatsApp client.
+ * Safe to call multiple times — only creates the client once.
  */
-async function sendViaFonnte(phone, message) {
-  const token = process.env.WA_TOKEN || '';
-  const normalizedPhone = normalizePhone(phone);
-  if (!normalizedPhone) return { success: false, phone, error: 'Invalid phone number' };
+function initWhatsApp() {
+  if (initCalled) return;
+  initCalled = true;
+  status = 'connecting';
 
-  return new Promise((resolve) => {
-    const postData = new URLSearchParams({
-      target: normalizedPhone,
-      message,
-      delay: '2',
-      countryCode: '62',
-    }).toString();
+  client = new Client({
+    authStrategy: new LocalAuth({
+      dataPath: path.join(__dirname, '..', '.wwebjs_auth'),
+    }),
+    puppeteer: {
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+      ],
+    },
+  });
 
-    const options = {
-      hostname: 'api.fonnte.com',
-      port: 443,
-      path: '/send',
-      method: 'POST',
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
+  client.on('qr', async (qr) => {
+    status = 'qr';
+    try {
+      qrDataUrl = await qrcode.toDataURL(qr);
+      console.log('[WA] QR code generated — open /broadcast page to scan.');
+    } catch (err) {
+      console.error('[WA] Failed to generate QR data URL:', err.message);
+    }
+  });
 
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk) => { body += chunk; });
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(body);
-          resolve({ success: json.status === true, phone: normalizedPhone, response: json });
-        } catch {
-          resolve({ success: false, phone: normalizedPhone, response: body });
-        }
-      });
-    });
+  client.on('authenticated', () => {
+    status = 'connecting';
+    qrDataUrl = null;
+    console.log('[WA] Authenticated successfully.');
+  });
 
-    req.on('error', (err) => {
-      resolve({ success: false, phone: normalizedPhone, error: err.message });
-    });
+  client.on('ready', () => {
+    status = 'ready';
+    qrDataUrl = null;
+    console.log('[WA] Client is ready! Broadcasts can now be sent.');
+  });
 
-    req.write(postData);
-    req.end();
+  client.on('disconnected', (reason) => {
+    status = 'disconnected';
+    qrDataUrl = null;
+    initCalled = false;
+    client = null;
+    console.warn('[WA] Disconnected:', reason);
+  });
+
+  client.on('auth_failure', (msg) => {
+    status = 'error';
+    initCalled = false;
+    client = null;
+    console.error('[WA] Auth failure:', msg);
+  });
+
+  client.initialize().catch((err) => {
+    status = 'error';
+    initCalled = false;
+    client = null;
+    console.error('[WA] initialize() error:', err.message);
   });
 }
 
-/**
- * Send a WhatsApp message to a single phone number via Wablas.
- * Returns { success, phone, message }
- */
-async function sendViaWablas(phone, message) {
-  const token = process.env.WA_TOKEN || '';
-  const normalizedPhone = normalizePhone(phone);
-  if (!normalizedPhone) return { success: false, phone, error: 'Invalid phone number' };
-
-  return new Promise((resolve) => {
-    const postData = JSON.stringify({ phone: normalizedPhone, message });
-
-    const options = {
-      hostname: 'solo.wablas.com',
-      port: 443,
-      path: '/api/send-message',
-      method: 'POST',
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
-
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk) => { body += chunk; });
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(body);
-          resolve({ success: json.status === true, phone: normalizedPhone, response: json });
-        } catch {
-          resolve({ success: false, phone: normalizedPhone, response: body });
-        }
-      });
-    });
-
-    req.on('error', (err) => {
-      resolve({ success: false, phone: normalizedPhone, error: err.message });
-    });
-
-    req.write(postData);
-    req.end();
-  });
+/** Returns current WA status and QR data URL (if in qr state). */
+function getStatus() {
+  return { status, qrDataUrl };
 }
 
 /**
- * Mock sender — logs the message to console, simulates success.
- * Used when WA_GATEWAY=mock or WA_TOKEN is not set.
- */
-async function sendViaMock(phone, message) {
-  const normalizedPhone = normalizePhone(phone) || phone;
-  console.log(`[WA-MOCK] → ${normalizedPhone}: ${message.slice(0, 60)}...`);
-  return { success: true, phone: normalizedPhone, mock: true };
-}
-
-/**
- * Main export: send one WA message.
- * Automatically picks the correct gateway from WA_GATEWAY env.
+ * Send a single WhatsApp message.
+ * Returns { success, phone, error? }
  */
 async function sendWhatsApp(phone, message) {
-  const gateway = (process.env.WA_GATEWAY || 'mock').toLowerCase();
-  if (gateway === 'fonnte') return sendViaFonnte(phone, message);
-  if (gateway === 'wablas') return sendViaWablas(phone, message);
-  return sendViaMock(phone, message);
+  const chatId = normalizePhone(phone);
+  if (!chatId) return { success: false, phone, error: 'Nomor HP tidak valid.' };
+
+  if (status !== 'ready' || !client) {
+    return { success: false, phone: chatId, error: `WA client belum siap (status: ${status})` };
+  }
+
+  try {
+    await client.sendMessage(chatId, message);
+    return { success: true, phone: chatId };
+  } catch (err) {
+    console.error(`[WA] Failed to send to ${chatId}:`, err.message);
+    return { success: false, phone: chatId, error: err.message };
+  }
 }
 
 /**
- * Broadcast a message to multiple phone numbers with a small delay between each.
- * Returns summary: { total, sent, failed, results[] }
+ * Broadcast a message to multiple phone numbers with a delay between each.
+ * Returns { total, sent, failed, results[] }
  */
-async function broadcastWhatsApp(phones, message, delayMs = 1500) {
+async function broadcastWhatsApp(phones, message, delayMs = 2000) {
   const results = [];
   let sent = 0;
   let failed = 0;
@@ -159,7 +143,6 @@ async function broadcastWhatsApp(phones, message, delayMs = 1500) {
     if (result.success) sent++;
     else failed++;
 
-    // Small delay to avoid rate limiting
     if (delayMs > 0) {
       await new Promise((r) => setTimeout(r, delayMs));
     }
@@ -168,4 +151,4 @@ async function broadcastWhatsApp(phones, message, delayMs = 1500) {
   return { total: phones.length, sent, failed, results };
 }
 
-module.exports = { sendWhatsApp, broadcastWhatsApp, normalizePhone };
+module.exports = { initWhatsApp, getStatus, sendWhatsApp, broadcastWhatsApp, normalizePhone };

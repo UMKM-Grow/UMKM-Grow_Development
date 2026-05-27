@@ -1,6 +1,18 @@
 const { Customer, ensureDbReady } = require('../models');
 const { Op } = require('sequelize');
-const { broadcastWhatsApp } = require('../services/whatsappService');
+const { broadcastWhatsApp, getStatus, initWhatsApp } = require('../services/whatsappService');
+
+// Auto-initialize WA client when this module is loaded
+initWhatsApp();
+
+/**
+ * GET /api/broadcast/status
+ * Returns current WA connection status and QR data URL (if in qr state).
+ */
+const getWaStatus = (req, res) => {
+  const { status, qrDataUrl } = getStatus();
+  res.json({ status, qrDataUrl });
+};
 
 /**
  * GET /api/broadcast/targets
@@ -96,4 +108,4 @@ const sendPromoBroadcast = async (req, res) => {
   }
 };
 
-module.exports = { sendPromoBroadcast, getBroadcastTargets };
+module.exports = { sendPromoBroadcast, getBroadcastTargets, getWaStatus };

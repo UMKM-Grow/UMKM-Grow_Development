@@ -18,7 +18,7 @@ import Members from "./Members";
 import DebtManagement from "./DebtManagement";
 import Payroll from "./Payroll";
 import Broadcast from "./Broadcast";
-import Navbar from "./Navbar";
+import Layout from "./components/Layout";
 import { BranchProvider } from "./BranchContext";
 import BranchContext from "./BranchContext";
 
@@ -26,21 +26,6 @@ function RequireAuth({ children }) {
   const token = localStorage.getItem("token");
   if (!token) return <Navigate to="/login" replace />;
   return children;
-}
-
-function AuthenticatedLayout({ children }) {
-  const { reloadBranches } = useContext(BranchContext);
-
-  useEffect(() => {
-    reloadBranches();
-  }, [reloadBranches]);
-
-  return (
-    <>
-      <Navbar />
-      {children}
-    </>
-  );
 }
 
 function App() {
@@ -53,9 +38,9 @@ function App() {
             path="/"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Dashboard />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -63,9 +48,9 @@ function App() {
             path="/dashboard"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Dashboard />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -73,9 +58,9 @@ function App() {
             path="/pos"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <POS />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -83,9 +68,9 @@ function App() {
             path="/inventory"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Inventory />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -93,9 +78,9 @@ function App() {
             path="/suppliers"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <SupplierManagement />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -103,9 +88,9 @@ function App() {
             path="/absensi"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Absensi />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -113,9 +98,9 @@ function App() {
             path="/crm"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <CRM />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -123,9 +108,9 @@ function App() {
             path="/finance"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Finance />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -133,9 +118,9 @@ function App() {
             path="/finance/expenses"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Expenses />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -143,9 +128,9 @@ function App() {
             path="/finance/reports"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <FinancialReports />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -153,9 +138,9 @@ function App() {
             path="/hrm"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <HRM />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -163,9 +148,9 @@ function App() {
             path="/settings"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Settings />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -173,9 +158,9 @@ function App() {
             path="/admin/branches"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Branches />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -183,9 +168,9 @@ function App() {
             path="/inventory/mutations"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <StockMutation />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -193,9 +178,9 @@ function App() {
             path="/members"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Members />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -203,9 +188,9 @@ function App() {
             path="/debts"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <DebtManagement />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -213,9 +198,9 @@ function App() {
             path="/payroll"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Payroll />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />
@@ -223,9 +208,9 @@ function App() {
             path="/broadcast"
             element={
               <RequireAuth>
-                <AuthenticatedLayout>
+                <Layout>
                   <Broadcast />
-                </AuthenticatedLayout>
+                </Layout>
               </RequireAuth>
             }
           />

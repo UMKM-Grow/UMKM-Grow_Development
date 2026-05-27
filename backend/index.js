@@ -19,6 +19,7 @@ const memberRoutes = require("./routes/memberRoutes");
 const { verifyToken } = require("./middlewares/authMiddleware");
 const supplierRoutes = require("./routes/supplierRoutes");
 const debtRoutes = require("./routes/debtRoutes");
+const payrollRoutes = require("./routes/payrollRoutes");
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use("/api/expenses", verifyToken, expenseRoutes);
 app.use("/api/reports", verifyToken, reportRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/debts", debtRoutes);
+app.use("/api/payroll", payrollRoutes);
 app.use("/api/settings", verifyToken, require("./routes/settingRoutes"));
 
 app.get("/", (req, res) => {

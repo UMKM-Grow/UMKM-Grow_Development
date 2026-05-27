@@ -17,6 +17,7 @@ import StockMutation from "./StockMutation";
 import Members from "./Members";
 import DebtManagement from "./DebtManagement";
 import Payroll from "./Payroll";
+import Broadcast from "./Broadcast";
 import Navbar from "./Navbar";
 import { BranchProvider } from "./BranchContext";
 import BranchContext from "./BranchContext";
@@ -214,6 +215,16 @@ function App() {
               <RequireAuth>
                 <AuthenticatedLayout>
                   <Payroll />
+                </AuthenticatedLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/broadcast"
+            element={
+              <RequireAuth>
+                <AuthenticatedLayout>
+                  <Broadcast />
                 </AuthenticatedLayout>
               </RequireAuth>
             }

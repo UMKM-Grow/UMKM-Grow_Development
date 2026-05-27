@@ -2,14 +2,14 @@ const { Customer, ensureDbReady } = require('../models');
 const { Op } = require('sequelize');
 const { broadcastWhatsApp, getStatus, initWhatsApp } = require('../services/whatsappService');
 
-// Auto-initialize WA client when this module is loaded
-initWhatsApp();
-
 /**
  * GET /api/broadcast/status
- * Returns current WA connection status and QR data URL (if in qr state).
+ * Mengembalikan status koneksi WA dan QR data URL (jika dalam mode qr).
+ * Inisialisasi WA client dilakukan di sini secara lazy (pertama kali endpoint dipanggil).
  */
 const getWaStatus = (req, res) => {
+  // Inisialisasi lazy: hanya mulai WA saat halaman broadcast dibuka
+  initWhatsApp();
   const { status, qrDataUrl } = getStatus();
   res.json({ status, qrDataUrl });
 };

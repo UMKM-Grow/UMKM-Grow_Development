@@ -50,6 +50,9 @@ export default function Navbar() {
             <Link to="/payroll" className="hover:text-gray-900">
               Gaji Karyawan
             </Link>
+            <Link to="/broadcast" className="hover:text-gray-900">
+              Broadcast Promo
+            </Link>
             <Link to="/settings" className="hover:text-gray-900">
               Settings
             </Link>

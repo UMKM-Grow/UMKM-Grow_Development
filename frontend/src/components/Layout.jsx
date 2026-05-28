@@ -14,11 +14,16 @@ export default function Layout({ children }) {
   return (
     <div className="flex h-screen w-full bg-gray-50 overflow-hidden font-sans text-gray-800">
       {/* Sidebar Kiri */}
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       {/* Area Konten Kanan */}
-      <div className="flex flex-col flex-1 h-full overflow-hidden">
+      <div className="flex flex-col flex-1 h-full overflow-hidden min-w-0">
+        {/* Header: cabang aktif & profil kasir */}
         <Header />
+        {/* Konten halaman */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           {children}
         </main>

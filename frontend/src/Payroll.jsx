@@ -185,11 +185,10 @@ function PayrollModal({ open, onClose, onSubmit, employees, branchId }) {
             />
           </div>
 
-          {/* Total Bersih (otomatis) */}
-          <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
+          <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-gray-700">Total Gaji Bersih:</span>
-              <span className={`text-lg font-bold ${totalBersih >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+              <span className={`text-lg font-bold ${totalBersih >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                 {formatIdr(totalBersih)}
               </span>
             </div>
@@ -200,14 +199,14 @@ function PayrollModal({ open, onClose, onSubmit, employees, branchId }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:opacity-60"
             >
               {loading ? 'Menyimpan...' : 'Simpan Gaji'}
             </button>
@@ -315,119 +314,110 @@ export default function Payroll() {
   }, [payrolls]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Penggajian Karyawan</h1>
-            <p className="mt-1 text-sm text-gray-500">Kelola data gaji, bonus, dan potongan karyawan</p>
+            <h1 className="text-2xl font-bold text-gray-800">Penggajian Karyawan</h1>
+            <p className="text-sm text-gray-500">Kelola data gaji, bonus, dan potongan karyawan</p>
           </div>
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
           >
             + Input Gaji Baru
           </button>
         </div>
 
         {/* Summary Cards */}
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase text-gray-500 tracking-wide">Total Penggajian</p>
-            <p className="mt-2 text-2xl font-bold text-blue-600">{filteredPayrolls.length}</p>
-            <p className="text-xs text-gray-400">data tersaring</p>
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider">Total Penggajian</p>
+            <p className="mt-2 text-2xl font-bold text-gray-800">{filteredPayrolls.length}</p>
+            <p className="text-xs text-gray-500">data tersaring</p>
           </div>
-          <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase text-gray-500 tracking-wide">Total Gaji Dibayar</p>
-            <p className="mt-2 text-2xl font-bold text-green-600">{formatIdr(totalGaji)}</p>
-            <p className="text-xs text-gray-400">dari data tersaring</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider">Total Gaji Dibayar</p>
+            <p className="mt-2 text-2xl font-bold text-emerald-500">{formatIdr(totalGaji)}</p>
+            <p className="text-xs text-gray-500">dari data tersaring</p>
           </div>
-          <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
-            <p className="text-xs font-semibold uppercase text-gray-500 tracking-wide">Jumlah Karyawan</p>
-            <p className="mt-2 text-2xl font-bold text-purple-600">{employees.length}</p>
-            <p className="text-xs text-gray-400">di cabang ini</p>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <p className="text-xs font-semibold uppercase text-gray-500 tracking-wider">Jumlah Karyawan</p>
+            <p className="mt-2 text-2xl font-bold text-gray-800">{employees.length}</p>
+            <p className="text-xs text-gray-500">di cabang ini</p>
           </div>
         </div>
 
         {/* Table */}
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="mt-6 rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
           <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3 gap-4">
-            <span className="text-sm font-semibold text-gray-900">Riwayat Penggajian</span>
+            <span className="text-sm font-semibold text-gray-800">Riwayat Penggajian</span>
             <div className="flex items-center gap-3">
               <label className="text-xs text-gray-500">Filter periode:</label>
               <select
                 value={filterPeriode}
                 onChange={(e) => setFilterPeriode(e.target.value)}
-                className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               >
                 <option value="">Semua Periode</option>
                 {allPeriods.map((p) => (
-                  <option key={p} value={p}>
-                    {formatPeriode(p)}
-                  </option>
+                  <option key={p} value={p}>{formatPeriode(p)}</option>
                 ))}
               </select>
             </div>
           </div>
 
           {errorMessage && (
-            <div className="bg-red-50 border-b border-red-100 px-5 py-3 text-sm text-red-700">{errorMessage}</div>
+            <div className="bg-rose-50 border-b border-rose-100 px-5 py-3 text-sm text-rose-600">{errorMessage}</div>
           )}
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm text-left">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-5 py-3">Karyawan</th>
-                  <th className="px-5 py-3">Role</th>
-                  <th className="px-5 py-3">Periode</th>
-                  <th className="px-5 py-3 text-right">Gaji Pokok</th>
-                  <th className="px-5 py-3 text-right">Bonus</th>
-                  <th className="px-5 py-3 text-right">Potongan</th>
-                  <th className="px-5 py-3 text-right">Total Bersih</th>
-                  <th className="px-5 py-3">Catatan</th>
-                  <th className="px-5 py-3">Aksi</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Karyawan</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Periode</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Gaji Pokok</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Bonus</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Potongan</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Total Bersih</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Catatan</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={9} className="px-5 py-8 text-center text-gray-400">
-                      Memuat data...
-                    </td>
-                  </tr>
+                  <tr><td colSpan={9} className="px-6 py-8 text-center text-sm text-gray-500">Memuat data...</td></tr>
                 ) : filteredPayrolls.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="px-5 py-10 text-center text-gray-400">
-                      Belum ada data penggajian.
-                    </td>
-                  </tr>
+                  <tr><td colSpan={9} className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data penggajian.</td></tr>
                 ) : (
                   filteredPayrolls.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50 transition">
-                      <td className="px-5 py-4 font-medium text-gray-900">{p.user?.name || '-'}</td>
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-blue-50 text-blue-700">
+                    <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                      <td className="px-6 py-4 font-medium text-gray-800">{p.user?.name || '-'}</td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize bg-blue-50 text-blue-600">
                           {p.user?.role || '-'}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-gray-700">{formatPeriode(p.periode)}</td>
-                      <td className="px-5 py-4 text-right text-gray-700">{formatIdr(p.base_salary)}</td>
-                      <td className="px-5 py-4 text-right text-green-600">
+                      <td className="px-6 py-4 text-sm text-gray-700">{formatPeriode(p.periode)}</td>
+                      <td className="px-6 py-4 text-right text-sm text-gray-700">{formatIdr(p.base_salary)}</td>
+                      <td className="px-6 py-4 text-right text-sm text-emerald-500">
                         {Number(p.bonus) > 0 ? `+${formatIdr(p.bonus)}` : '-'}
                       </td>
-                      <td className="px-5 py-4 text-right text-red-500">
+                      <td className="px-6 py-4 text-right text-sm text-rose-500">
                         {Number(p.deductions) > 0 ? `-${formatIdr(p.deductions)}` : '-'}
                       </td>
-                      <td className="px-5 py-4 text-right font-bold text-green-700">{formatIdr(p.total_salary)}</td>
-                      <td className="px-5 py-4 text-gray-500 max-w-[160px] truncate">{p.notes || '-'}</td>
-                      <td className="px-5 py-4">
+                      <td className="px-6 py-4 text-right font-bold text-emerald-500">{formatIdr(p.total_salary)}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-[160px] truncate">{p.notes || '-'}</td>
+                      <td className="px-6 py-4">
                         <button
                           onClick={() => handleDelete(p.id)}
-                          className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition"
+                          className="text-gray-400 hover:text-rose-500 transition duration-150"
+                          aria-label="Hapus"
                         >
-                          Hapus
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                         </button>
                       </td>
                     </tr>

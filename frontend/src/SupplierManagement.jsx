@@ -133,81 +133,64 @@ const SupplierManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 p-8">
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Manajemen Supplier
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Kelola supplier aktif berdasarkan cabang Anda.
-            </p>
+            <h1 className="text-2xl font-bold text-gray-800">Manajemen Supplier</h1>
+            <p className="text-sm text-gray-500">Kelola supplier aktif berdasarkan cabang Anda.</p>
           </div>
           <button
             onClick={() => openModal()}
-            className="mt-4 md:mt-0 flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium"
+            className="flex items-center gap-2 bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
           >
-            <Plus size={20} />
+            <Plus size={16} />
             Tambah Supplier
           </button>
         </div>
 
         {errorMessage ? (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-600">
             {errorMessage}
           </div>
         ) : null}
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm uppercase tracking-wider">
-                  <th className="p-4 font-semibold">Nama Supplier</th>
-                  <th className="p-4 font-semibold">PIC</th>
-                  <th className="p-4 font-semibold">No. WhatsApp</th>
-                  <th className="p-4 font-semibold">Alamat</th>
-                  <th className="p-4 font-semibold text-center">Aksi</th>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Supplier</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">PIC</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">No. WhatsApp</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Alamat</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-gray-700">
+              <tbody>
                 {loading ? (
-                  <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500">
-                      Memuat data...
-                    </td>
-                  </tr>
+                  <tr><td colSpan="5" className="px-6 py-10 text-center text-sm text-gray-500">Memuat data...</td></tr>
                 ) : suppliers.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500">
-                      Belum ada data supplier.
-                    </td>
-                  </tr>
+                  <tr><td colSpan="5" className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data supplier.</td></tr>
                 ) : (
                   suppliers.map((supplier) => (
-                    <tr
-                      key={supplier.id}
-                      className="hover:bg-gray-50 transition"
-                    >
-                      <td className="p-4 font-medium text-gray-900">
-                        {supplier.name}
-                      </td>
-                      <td className="p-4">{supplier.contact_person}</td>
-                      <td className="p-4">{supplier.phone}</td>
-                      <td className="p-4 text-sm">{supplier.address || "-"}</td>
-                      <td className="p-4">
+                    <tr key={supplier.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-800">{supplier.name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{supplier.contact_person}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{supplier.phone}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{supplier.address || "-"}</td>
+                      <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-3">
                           <button
                             onClick={() => openModal(supplier)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            className="text-gray-400 hover:text-blue-600 transition duration-150"
                             title="Edit"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(supplier.id)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            className="text-gray-400 hover:text-rose-500 transition duration-150"
                             title="Hapus"
                           >
                             <Trash2 size={18} />
@@ -227,90 +210,64 @@ const SupplierManagement = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-800">
                 {editingSupplier ? "Edit Supplier" : "Tambah Supplier Baru"}
               </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 transition"
-              >
+              <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 transition">
                 <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nama Supplier / PT <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    placeholder="Contoh: PT. Sumber Tirta"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nama PIC <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="contact_person"
-                    required
-                    value={formData.contact_person}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    placeholder="Nama PIC"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    No. WhatsApp <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="phone"
-                    required
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    placeholder="08123456789"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Alamat
-                  </label>
-                  <textarea
-                    name="address"
-                    rows="3"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
-                    placeholder="Alamat supplier..."
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama Supplier / PT <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text" name="name" required value={formData.name} onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                  placeholder="Contoh: PT. Sumber Tirta"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nama PIC <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text" name="contact_person" required value={formData.contact_person} onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                  placeholder="Nama PIC"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  No. WhatsApp <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text" name="phone" required value={formData.phone} onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                  placeholder="08123456789"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                <textarea
+                  name="address" rows="3" value={formData.address} onChange={handleInputChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all resize-none"
+                  placeholder="Alamat supplier..."
+                />
               </div>
 
-              <div className="mt-8 flex justify-end gap-3">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-5 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition font-medium"
+                  type="button" onClick={closeModal}
+                  className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition font-medium"
+                  className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
                 >
                   Simpan Data
                 </button>

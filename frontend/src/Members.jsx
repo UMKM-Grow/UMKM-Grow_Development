@@ -49,66 +49,68 @@ function MemberFormModal({ isOpen, initialMember, onClose, onSubmit }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">
-          {initialMember ? 'Edit Member' : 'Tambah Member'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+          <h2 className="text-lg font-bold text-gray-800">
+            {initialMember ? 'Edit Member' : 'Tambah Member'}
+          </h2>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Nama</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
             <input
               type="text"
               required
               value={nama}
               onChange={(e) => setNama(e.target.value)}
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Nomor Telepon</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
             <input
               type="text"
               required
               value={nomorTelepon}
               onChange={(e) => setNomorTelepon(e.target.value)}
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Alamat</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
             <textarea
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               rows={3}
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Total Poin</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Total Poin</label>
               <input
                 type="number"
                 value={loyaltyPoints}
                 onChange={(e) => setLoyaltyPoints(e.target.value)}
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Level</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
               <select
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               >
                 <option value="Bronze">Bronze</option>
                 <option value="Silver">Silver</option>
@@ -116,17 +118,17 @@ function MemberFormModal({ isOpen, initialMember, onClose, onSubmit }) {
               </select>
             </div>
           </div>
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="flex-1 bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="flex-1 bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
             >
               Simpan
             </button>
@@ -183,31 +185,28 @@ export default function Members() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
       <div className="mx-auto max-w-7xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Members</h1>
-          <div className="flex items-center gap-4">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Members</h1>
+            <p className="text-sm text-gray-500">Kelola data member dan program loyalitas.</p>
+          </div>
+          <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Cari member..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="w-72 rounded-md border border-gray-200 bg-white pl-10 pr-4 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-64 border border-gray-300 rounded-lg pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               />
             </div>
             <button
               type="button"
-              onClick={() => {
-                setEditingMember(null);
-                setIsModalOpen(true);
-              }}
-              className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              onClick={() => { setEditingMember(null); setIsModalOpen(true); }}
+              className="flex items-center gap-2 bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
             >
               <Plus className="h-4 w-4" />
               Tambah Member
@@ -216,58 +215,48 @@ export default function Members() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading...</div>
+          <div className="text-center py-12 text-sm text-gray-500">Loading...</div>
         ) : error ? (
-          <div className="text-center py-12 text-red-500">{error}</div>
+          <div className="text-center py-12 text-sm text-rose-500">{error}</div>
         ) : members.length === 0 ? (
-          <div className="rounded-2xl bg-white p-12 text-center">
-            <div className="text-gray-500">Belum ada member. Klik "Tambah Member" untuk mulai.</div>
+          <div className="rounded-xl bg-white border border-gray-100 p-12 text-center">
+            <div className="text-sm text-gray-500">Belum ada member. Klik "Tambah Member" untuk mulai.</div>
           </div>
         ) : (
           <>
-            <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nomor Telepon</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Poin</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Level</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nomor Telepon</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Poin</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Level</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {members.map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">{member.name || member.nama}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.phone || member.nomor_telepon}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">{member.loyalty_points || member.total_poin} pts</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={[
-                            'px-3 py-1 rounded-full text-xs font-bold',
-                            member.level === 'Gold'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : member.level === 'Silver'
-                              ? 'bg-gray-200 text-gray-800'
-                              : 'bg-orange-100 text-orange-800'
-                          ].join(' ')}
-                        >
+                    <tr key={member.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-800">{member.name || member.nama}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{member.phone || member.nomor_telepon}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{member.email || '-'}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-emerald-500">{member.loyalty_points || member.total_poin} pts</td>
+                      <td className="px-6 py-4">
+                        <span className={['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold',
+                          member.level === 'Gold' ? 'bg-yellow-100 text-yellow-800'
+                          : member.level === 'Silver' ? 'bg-gray-200 text-gray-700'
+                          : 'bg-orange-100 text-orange-700'].join(' ')}>
                           {member.level}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-6 py-4 text-right">
                         <button
                           type="button"
-                          onClick={() => {
-                            setEditingMember(member);
-                            setIsModalOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800"
+                          onClick={() => { setEditingMember(member); setIsModalOpen(true); }}
+                          className="text-gray-400 hover:text-blue-600 transition duration-150"
+                          aria-label="Edit member"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
@@ -278,14 +267,14 @@ export default function Members() {
               </table>
             </div>
 
-            <div className="mt-6 flex items-center justify-between">
+            <div className="mt-4 flex items-center justify-between">
               <div className="text-sm text-gray-500">Halaman {page} dari {totalPages}</div>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page <= 1}
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 disabled:opacity-50"
                 >
                   Prev
                 </button>
@@ -293,7 +282,7 @@ export default function Members() {
                   type="button"
                   onClick={() => setPage(page + 1)}
                   disabled={page >= totalPages}
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 disabled:opacity-50"
                 >
                   Next
                 </button>

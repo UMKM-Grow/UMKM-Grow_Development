@@ -836,24 +836,24 @@ export default function POS() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 py-6 md:pr-[32%]">
-          <div className="text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+      <div className="w-full h-full bg-gray-50">
+        <div className="mx-auto max-w-7xl px-6 py-6 md:p-8 md:pr-[32%]">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">
               Point of Sale
             </h1>
-            <div className="mt-1 text-sm text-gray-500">
-              Process customer transactions
-            </div>
+            <p className="text-sm text-gray-500">
+              Proses transaksi penjualan pelanggan
+            </p>
           </div>
 
           <div className="mt-6">
-            <div className="rounded-lg bg-white shadow-sm p-4">
+            <div className="rounded-xl bg-white shadow-sm border border-gray-100 p-5">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products"
-                className="w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Cari produk..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               />
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -865,10 +865,10 @@ export default function POS() {
                       type="button"
                       onClick={() => setActiveCategory(c)}
                       className={[
-                        "rounded-full px-4 py-2 text-sm font-semibold transition",
+                        "rounded-lg px-4 py-2 text-sm font-medium transition duration-200",
                         active
-                          ? "bg-black text-white"
-                          : "bg-transparent text-gray-700 hover:bg-gray-100",
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
                       ].join(" ")}
                     >
                       {c}
@@ -881,12 +881,12 @@ export default function POS() {
 
           <div className="mt-6">
             <div className="flex items-end justify-between gap-4">
-              <div className="text-left">
-                <div className="text-sm font-semibold text-gray-900">
-                  Products
+              <div>
+                <div className="text-sm font-semibold text-gray-800">
+                  Produk
                 </div>
                 <div className="text-xs text-gray-500">
-                  Tap an item to add it to cart
+                  Klik item untuk menambah ke keranjang
                 </div>
               </div>
               <div className="text-xs text-gray-500">
@@ -937,11 +937,11 @@ export default function POS() {
                       </div>
                       <div className="mt-3 text-xs text-gray-500">
                         {low ? (
-                          <span className="bg-red-500 text-white px-2 py-1 rounded">
-                            Stock: {p.stock ?? 0}
+                          <span className="bg-rose-500 text-white px-2 py-1 rounded-md text-xs font-semibold">
+                            Stok: {p.stock ?? 0}
                           </span>
                         ) : (
-                          <span>Stock: {p.stock ?? 0}</span>
+                          <span className="text-gray-500">Stok: {p.stock ?? 0}</span>
                         )}
                       </div>
                     </div>
@@ -952,22 +952,22 @@ export default function POS() {
           </div>
         </div>
 
-        <div className="mt-6 bg-white shadow-lg p-6 md:fixed md:inset-y-0 md:right-0 md:mt-0 md:w-[32%] md:min-w-[360px] md:max-w-[460px] md:overflow-y-auto">
-          <div className="text-left">
-            <div className="text-lg font-bold text-gray-900">Shopping Cart</div>
+        <div className="mt-6 bg-white shadow-sm border-l border-gray-200 p-6 md:fixed md:inset-y-0 md:right-0 md:mt-0 md:w-[32%] md:min-w-[360px] md:max-w-[460px] md:overflow-y-auto">
+          <div>
+            <div className="text-lg font-bold text-gray-800">Keranjang Belanja</div>
             <div className="mt-1 text-sm text-gray-500">
-              {cart.length} items
+              {cart.length} item
             </div>
           </div>
 
           <div className="mt-5">
-            <label className="block text-sm font-semibold text-gray-800">
-              Customer
+            <label className="block text-sm font-semibold text-gray-700">
+              Pelanggan
             </label>
             <select
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
-              className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-2 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
             >
               <option value="">General (no customer)</option>
               {customers.map((c) => (
@@ -979,7 +979,7 @@ export default function POS() {
           </div>
 
           <div className="mt-5">
-            <label className="block text-sm font-semibold text-gray-800">
+            <label className="block text-sm font-semibold text-gray-700">
               Customer / Member
             </label>
             <div className="mt-2 flex gap-2">
@@ -991,13 +991,13 @@ export default function POS() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") searchCustomer();
                 }}
-                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               />
               <button
                 type="button"
                 onClick={searchCustomer}
                 disabled={customerSearching}
-                className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:opacity-50"
               >
                 {customerSearching ? "Cari..." : "Cari"}
               </button>
@@ -1091,7 +1091,7 @@ export default function POS() {
           </div>
 
           <div className="mt-5">
-            <label className="block text-sm font-semibold text-gray-800">
+            <label className="block text-sm font-semibold text-gray-700">
               Input Kode Promo
             </label>
             <div className="mt-2 flex gap-2">
@@ -1106,14 +1106,14 @@ export default function POS() {
                   }
                 }}
                 type="text"
-                className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 placeholder="e.g. KEMERDEKAAN"
               />
               <button
                 type="button"
                 onClick={handleApplyPromo}
                 disabled={promoApplying || !promoCode.trim() || subtotal <= 0}
-                className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {promoApplying ? "Applying…" : "Terapkan"}
               </button>
@@ -1123,24 +1123,24 @@ export default function POS() {
             ) : null}
           </div>
 
-          <div className="mt-5 rounded-lg bg-gray-50 p-4">
+          <div className="mt-5 rounded-xl bg-gray-50 border border-gray-100 p-4">
             <div className="flex items-center justify-between text-sm text-gray-700">
               <div>Subtotal</div>
-              <div className="font-semibold text-gray-900">
+              <div className="font-semibold text-gray-800">
                 {formatIdr(subtotal)}
               </div>
             </div>
             <div className="mt-2 flex items-center justify-between text-sm text-gray-700">
               <div>Diskon</div>
-              <div className="font-semibold text-red-600">
+              <div className="font-semibold text-rose-500">
                 -{formatIdr(discount)}
               </div>
             </div>
-            <div className="mt-4 flex items-end justify-between">
+            <div className="mt-4 flex items-end justify-between border-t border-gray-200 pt-3">
               <div className="text-sm font-semibold text-gray-800">
                 Total Bayar
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-800">
                 {formatIdr(total)}
               </div>
             </div>
@@ -1148,7 +1148,7 @@ export default function POS() {
 
           <div className="mt-5">
             <div className="text-sm font-semibold text-gray-800">
-              Payment Method
+              Metode Pembayaran
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {["Cash", "Transfer", "QRIS"].map((m) => {
@@ -1159,10 +1159,10 @@ export default function POS() {
                     type="button"
                     onClick={() => setPaymentMethod(m)}
                     className={[
-                      "rounded-md border px-3 py-2 text-sm font-semibold transition",
+                      "rounded-lg border px-3 py-2 text-sm font-medium transition duration-200",
                       active
-                        ? "border-blue-500 text-blue-600 bg-white"
-                        : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50",
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50",
                     ].join(" ")}
                   >
                     {m}
@@ -1179,7 +1179,7 @@ export default function POS() {
                 type="button"
                 onClick={handleCloseShift}
                 disabled={loadingShift}
-                className="w-full rounded-md bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                className="w-full bg-white text-rose-500 font-medium text-sm py-2.5 rounded-lg border border-rose-300 hover:bg-rose-50 transition duration-200 disabled:opacity-50"
               >
                 {loadingShift ? "Menutup..." : "Tutup Shift"}
               </button>
@@ -1187,8 +1187,8 @@ export default function POS() {
           )}
 
           <div className="mt-5">
-            <label className="block text-sm font-semibold text-gray-800">
-              Cash Received
+            <label className="block text-sm font-semibold text-gray-700">
+              Uang Tunai Diterima
             </label>
             <input
               value={cashReceivedInput}
@@ -1196,7 +1196,7 @@ export default function POS() {
               type="number"
               inputMode="numeric"
               min="0"
-              className="mt-2 w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="mt-2 w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               placeholder="0"
             />
             {paymentMethod === "Cash" && cashReceivedInput ? (
@@ -1215,13 +1215,13 @@ export default function POS() {
             type="button"
             onClick={onCheckout}
             disabled={processing || cart.length === 0 || loadingShift}
-            className="mt-6 w-full rounded-md bg-gray-800 py-3 text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 w-full bg-blue-600 text-white font-medium text-sm py-3 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
             {processing
-              ? "Processing…"
+              ? "Memproses..."
               : loadingShift
-                ? "Checking shift…"
-                : "Pay"}
+                ? "Memeriksa shift..."
+                : "Bayar Sekarang"}
           </button>
 
           <div className="mt-4 flex items-center justify-between">
@@ -1229,17 +1229,17 @@ export default function POS() {
               type="button"
               onClick={clearCart}
               disabled={processing || cart.length === 0}
-              className="text-sm font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-50"
+              className="text-sm font-medium text-gray-500 hover:text-gray-800 disabled:opacity-50"
             >
-              Clear Cart
+              Kosongkan
             </button>
             <button
               type="button"
               onClick={holdCart}
               disabled={processing || cart.length === 0}
-              className="text-sm font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-50"
+              className="text-sm font-medium text-gray-500 hover:text-gray-800 disabled:opacity-50"
             >
-              Hold
+              Tahan
             </button>
           </div>
 
@@ -1263,15 +1263,15 @@ export default function POS() {
 
       {/* Shift Opening Modal */}
       {shiftStatus === "inactive" && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-lg font-bold text-gray-800 mb-1">
               Shift Belum Dibuka
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm text-gray-500 mb-5">
               Anda perlu membuka shift sebelum dapat melakukan transaksi.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Saldo Awal
               </label>
@@ -1279,16 +1279,16 @@ export default function POS() {
                 type="number"
                 value={saldoAwal}
                 onChange={(e) => setSaldoAwal(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 placeholder="Masukkan saldo awal"
                 min="0"
               />
             </div>
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
                 onClick={() => setShiftStatus("checking")}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
               >
                 Batal
               </button>
@@ -1296,7 +1296,7 @@ export default function POS() {
                 type="button"
                 onClick={handleOpenShift}
                 disabled={loadingShift || !saldoAwal}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:opacity-50"
               >
                 {loadingShift ? "Membuka..." : "Buka Shift"}
               </button>
@@ -1307,15 +1307,15 @@ export default function POS() {
 
       {/* Shift Closing Modal */}
       {showCloseModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-lg font-bold text-gray-800 mb-1">
               Tutup Shift
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm text-gray-500 mb-5">
               Masukkan saldo akhir untuk menutup shift ini.
             </p>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Saldo Akhir
               </label>
@@ -1323,16 +1323,16 @@ export default function POS() {
                 type="number"
                 value={saldoAkhir}
                 onChange={(e) => setSaldoAkhir(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 placeholder="Masukkan saldo akhir"
                 min="0"
               />
             </div>
-            <div className="flex justify-end space-x-3 mt-6">
+            <div className="flex justify-end gap-3 mt-6">
               <button
                 type="button"
                 onClick={() => setShowCloseModal(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
               >
                 Batal
               </button>
@@ -1340,7 +1340,7 @@ export default function POS() {
                 type="button"
                 onClick={handleConfirmCloseShift}
                 disabled={loadingShift || !saldoAkhir}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                className="bg-rose-500 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-rose-600 transition duration-200 shadow-sm disabled:opacity-50"
               >
                 {loadingShift ? "Menutup..." : "Tutup Shift"}
               </button>

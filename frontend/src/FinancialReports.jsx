@@ -223,30 +223,26 @@ export default function FinancialReports() {
   }, [report]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="text-left">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Financial Reports
-            </h1>
-            <div className="mt-1 text-sm text-gray-500">
-              View business performance and analytics
-            </div>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Financial Reports</h1>
+            <p className="text-sm text-gray-500">Lihat performa bisnis dan analitik keuangan.</p>
           </div>
 
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setActiveTab("financial")}
-              className={`rounded-md px-4 py-2 text-sm font-semibold ${activeTab === "financial" ? "bg-blue-600 text-white" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${activeTab === "financial" ? "bg-blue-600 text-white shadow-sm" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}
             >
               Financial Report
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("tax")}
-              className={`rounded-md px-4 py-2 text-sm font-semibold ${activeTab === "tax" ? "bg-blue-600 text-white" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${activeTab === "tax" ? "bg-blue-600 text-white shadow-sm" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}
             >
               Laporan Pajak
             </button>
@@ -255,14 +251,18 @@ export default function FinancialReports() {
 
         {activeTab === "financial" ? (
           <>
-            <div className="mt-5">
-              <label className="block text-sm font-semibold text-gray-700">
-                Filter Waktu
-              </label>
+          {errorMessage ? (
+              <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-600">
+                {errorMessage}
+              </div>
+            ) : null}
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Filter Waktu</label>
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="mt-2 w-full max-w-xs rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="w-full max-w-xs border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               >
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
@@ -271,26 +271,13 @@ export default function FinancialReports() {
               </select>
             </div>
 
-            {errorMessage ? (
-              <div className="mt-6 rounded-lg border border-red-200 bg-white p-4 text-sm font-semibold text-red-600">
-                {errorMessage}
-              </div>
-            ) : null}
-
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
               {cards.map((c) => (
-                <div
-                  key={c.label}
-                  className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-                >
-                  <div className="text-xs font-bold uppercase tracking-wide text-gray-500">
-                    {c.label}
-                  </div>
-                  <div
-                    className={`mt-2 text-xl font-black ${c.isNegative ? "text-red-600" : "text-gray-900"}`}
-                  >
-                    {loading ? "Loading…" : c.value}
-                  </div>
+                <div key={c.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{c.label}</p>
+                  <p className={`mt-2 text-xl font-bold ${c.isNegative ? "text-rose-500" : "text-gray-800"}`}>
+                    {loading ? "Memuat..." : c.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -408,25 +395,25 @@ export default function FinancialReports() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Mulai
                   </label>
                   <input
                     type="date"
                     value={taxStartDate}
                     onChange={(e) => setTaxStartDate(e.target.value)}
-                    className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Sampai
                   </label>
                   <input
                     type="date"
                     value={taxEndDate}
                     onChange={(e) => setTaxEndDate(e.target.value)}
-                    className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
               </div>
@@ -435,14 +422,14 @@ export default function FinancialReports() {
                 <button
                   type="button"
                   onClick={loadTaxReport}
-                  className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
                 >
-                  Tampilkan Laporan Pajak
+                  Tampilkan Laporan
                 </button>
                 <button
                   type="button"
                   onClick={handleDownloadTaxCsv}
-                  className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+                  className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
                 >
                   Unduh CSV Pajak
                 </button>
@@ -450,75 +437,41 @@ export default function FinancialReports() {
             </div>
 
             {taxErrorMessage ? (
-              <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">
+              <div className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-600">
                 {taxErrorMessage}
               </div>
             ) : null}
 
-            <div className="mt-6 overflow-x-auto rounded-lg border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50 text-gray-700">
+            <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      Tanggal
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold">
-                      No Transaksi
-                    </th>
-                    <th className="px-4 py-3 text-right font-semibold">
-                      Subtotal
-                    </th>
-                    <th className="px-4 py-3 text-right font-semibold">
-                      Service Charge
-                    </th>
-                    <th className="px-4 py-3 text-right font-semibold">
-                      Nominal Pajak
-                    </th>
-                    <th className="px-4 py-3 text-right font-semibold">
-                      Total
-                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">No Transaksi</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Subtotal</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Service Charge</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Nominal Pajak</th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
+                <tbody>
                   {taxLoading ? (
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="px-4 py-10 text-center text-sm text-gray-500"
-                      >
-                        Memuat laporan pajak...
-                      </td>
+                      <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">Memuat laporan pajak...</td>
                     </tr>
                   ) : taxReport.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="px-4 py-10 text-center text-sm text-gray-500"
-                      >
-                        Belum ada data laporan pajak.
-                      </td>
+                      <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data laporan pajak.</td>
                     </tr>
                   ) : (
                     taxReport.map((item, index) => (
-                      <tr key={`${item.no_transaksi}-${index}`}>
-                        <td className="px-4 py-3 text-gray-700">
-                          {item.tanggal}
-                        </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {item.no_transaksi}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-700">
-                          {formatIdr(item.subtotal)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-700">
-                          {formatIdr(item.service_charge_amount)}
-                        </td>
-                        <td className="px-4 py-3 text-right text-gray-700">
-                          {formatIdr(item.nominal_pajak)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                          {formatIdr(item.total)}
-                        </td>
+                      <tr key={`${item.no_transaksi}-${index}`} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                        <td className="px-6 py-4 text-sm text-gray-700">{item.tanggal}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{item.no_transaksi}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700 text-right">{formatIdr(item.subtotal)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700 text-right">{formatIdr(item.service_charge_amount)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700 text-right">{formatIdr(item.nominal_pajak)}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-gray-800 text-right">{formatIdr(item.total)}</td>
                       </tr>
                     ))
                   )}

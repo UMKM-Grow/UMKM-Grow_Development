@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { MapPin, Radar, Clock } from 'lucide-react';
+import { MapPin, Radar, Clock, RefreshCw } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api/attendance';
 
@@ -43,56 +43,36 @@ const Absensi = () => {
   const reverseGeocode = async (latitude, longitude) => {
     try {
       setLocationLabel('Mencari nama lokasi...');
-      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(
-        latitude
-      )}&longitude=${encodeURIComponent(longitude)}&localityLanguage=id`;
+      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&localityLanguage=id`;
       const res = await fetch(url);
-      if (!res.ok) {
-        setLocationLabel('');
-        return;
-      }
+      if (!res.ok) { setLocationLabel(''); return; }
       const data = await res.json();
       const daerah = data?.city || data?.locality || data?.principalSubdivision || '';
       const provinsi = data?.principalSubdivision || '';
       const negara = data?.countryName || data?.countryCode || '';
-
-      const parts = [daerah, provinsi, negara].filter(Boolean);
-      setLocationLabel(parts.join(', '));
-    } catch {
-      setLocationLabel('');
-    }
+      setLocationLabel([daerah, provinsi, negara].filter(Boolean).join(', '));
+    } catch { setLocationLabel(''); }
   };
 
   const requestLocation = () => {
     setGpsStatus('loading');
     setGpsMessage('');
     setLocationLabel('');
-
     if (!navigator.geolocation) {
       setGpsStatus('error');
       setGpsMessage('Browser Anda tidak mendukung geolocation.');
       return;
     }
-
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const latitude = pos.coords.latitude;
-        const longitude = pos.coords.longitude;
-        setCoords({
-          latitude,
-          longitude,
-        });
+        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
         setGpsStatus('ok');
         setGpsMessage('Lokasi Akurat');
-        reverseGeocode(latitude, longitude);
+        reverseGeocode(pos.coords.latitude, pos.coords.longitude);
       },
       (err) => {
         setCoords(null);
-        if (err.code === 1) {
-          setGpsStatus('denied');
-          setGpsMessage('Izinkan akses lokasi browser Anda!');
-          return;
-        }
+        if (err.code === 1) { setGpsStatus('denied'); setGpsMessage('Izinkan akses lokasi browser Anda!'); return; }
         setGpsStatus('error');
         setGpsMessage('Gagal mengambil lokasi. Coba ulangi.');
       },
@@ -104,45 +84,25 @@ const Absensi = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          const latitude = pos.coords.latitude;
-          const longitude = pos.coords.longitude;
-          setCoords({
-            latitude,
-            longitude,
-          });
+          setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
           setGpsStatus('ok');
           setGpsMessage('Lokasi Akurat');
-          reverseGeocode(latitude, longitude);
+          reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         },
         (err) => {
           setCoords(null);
-          if (err.code === 1) {
-            setGpsStatus('denied');
-            setGpsMessage('Izinkan akses lokasi browser Anda!');
-            return;
-          }
+          if (err.code === 1) { setGpsStatus('denied'); setGpsMessage('Izinkan akses lokasi browser Anda!'); return; }
           setGpsStatus('error');
           setGpsMessage('Gagal mengambil lokasi. Coba ulangi.');
         },
         { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
       );
     }
-
     if (!token) return;
-
-    axios
-      .get(`${API_URL}/my-history`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setHistory(Array.isArray(res?.data?.data) ? res.data.data : []);
-      })
-      .catch(() => {
-        setHistory([]);
-      })
-      .finally(() => {
-        setLoadingHistory(false);
-      });
+    axios.get(`${API_URL}/my-history`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => setHistory(Array.isArray(res?.data?.data) ? res.data.data : []))
+      .catch(() => setHistory([]))
+      .finally(() => setLoadingHistory(false));
   }, [token]);
 
   const groupedHistory = useMemo(() => {
@@ -153,7 +113,6 @@ const Absensi = () => {
       list.push(row);
       map.set(key, list);
     }
-
     const summary = [];
     for (const [key, list] of map.entries()) {
       const sorted = [...list].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -173,28 +132,17 @@ const Absensi = () => {
         withinRadius: sorted.every(r => r.within_radius !== false),
       });
     }
-
     return summary.sort((a, b) => (a.key > b.key ? -1 : 1));
   }, [history]);
 
   const submitAttendance = async (action) => {
     if (!token) return;
-    if (!coords) {
-      requestLocation();
-      return;
-    }
+    if (!coords) { requestLocation(); return; }
     if (submitting) return;
-
     try {
       setSubmitting(true);
-      await axios.post(
-        API_URL,
-        { action, latitude: coords.latitude, longitude: coords.longitude },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const res = await axios.get(`${API_URL}/my-history`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(API_URL, { action, latitude: coords.latitude, longitude: coords.longitude }, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API_URL}/my-history`, { headers: { Authorization: `Bearer ${token}` } });
       setHistory(Array.isArray(res?.data?.data) ? res.data.data : []);
     } catch (e) {
       const msg = e?.response?.data?.message;
@@ -205,91 +153,68 @@ const Absensi = () => {
     }
   };
 
-  const gpsColor =
-    gpsStatus === 'ok'
-      ? 'text-emerald-400'
-      : gpsStatus === 'denied'
-        ? 'text-red-400'
-        : gpsStatus === 'error'
-          ? 'text-red-400'
-          : 'text-white/60';
+  const gpsStatusConfig = {
+    ok: { color: 'text-emerald-500', bg: 'bg-emerald-50 border-emerald-200' },
+    denied: { color: 'text-rose-500', bg: 'bg-rose-50 border-rose-200' },
+    error: { color: 'text-rose-500', bg: 'bg-rose-50 border-rose-200' },
+    loading: { color: 'text-gray-500', bg: 'bg-gray-50 border-gray-200' },
+  };
+  const gpsConf = gpsStatusConfig[gpsStatus] || gpsStatusConfig.loading;
 
   return (
-    <div className="min-h-screen bg-brand-dark text-white p-8 md:p-12">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-10">
-        <div>
-          <h1 className="text-5xl md:text-7xl font-black text-brand-ice uppercase tracking-tighter">
-            Absensi
-          </h1>
-          <p className="text-white/60 font-semibold mt-2">
-            Mesin absensi berbasis lokasi dengan validasi radius.
-          </p>
-        </div>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Absensi</h1>
+        <p className="text-sm text-gray-500">Mesin absensi berbasis lokasi dengan validasi radius.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-        <div className="lg:col-span-1 bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* GPS Status Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <Radar size={22} className="text-brand-ice" />
+            <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
+              <Radar size={20} className="text-gray-500" />
             </div>
             <div>
-              <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Status GPS</div>
-              <div className={`text-lg font-black ${gpsColor}`}>
-                {gpsMessage || 'Mendeteksi lokasi...'}
-              </div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status GPS</p>
+              <p className={`text-sm font-bold ${gpsConf.color}`}>{gpsMessage || 'Mendeteksi lokasi...'}</p>
             </div>
           </div>
-
-          <div className="rounded-2xl bg-brand-dark/40 border border-white/10 p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Koordinat</div>
-                <div className="mt-2 font-mono text-sm text-white/80">
-                  {coords ? (
-                    <>
-                      <div>lat: {coords.latitude.toFixed(6)}</div>
-                      <div>lng: {coords.longitude.toFixed(6)}</div>
-                    </>
-                  ) : (
-                    <div>-</div>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Lokasi</div>
-                  <div className="mt-2 text-sm font-semibold text-white/80">
-                    {locationLabel || '-'}
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={requestLocation}
-                className="px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold text-sm"
-              >
-                Refresh
-              </button>
-            </div>
+          <div className={`rounded-lg border p-4 ${gpsConf.bg}`}>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Koordinat</p>
+            <p className="font-mono text-sm text-gray-700">
+              {coords ? `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}` : '-'}
+            </p>
+            {locationLabel && <p className="mt-2 text-sm text-gray-600">{locationLabel}</p>}
           </div>
+          <button
+            type="button"
+            onClick={requestLocation}
+            className="mt-3 w-full bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 flex items-center justify-center gap-2"
+          >
+            <RefreshCw size={14} />
+            Refresh Lokasi
+          </button>
         </div>
 
-        <div className="lg:col-span-2 bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-              <MapPin size={22} className="text-brand-ice" />
+        {/* Check In / Out Card */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
+              <MapPin size={20} className="text-gray-500" />
             </div>
             <div>
-              <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Aksi Absensi</div>
-              <div className="text-lg font-black text-white">Check In / Check Out</div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi Absensi</p>
+              <p className="text-sm font-bold text-gray-800">Check In / Check Out</p>
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               type="button"
               disabled={!token || submitting}
               onClick={() => submitAttendance('CHECK_IN')}
-              className="w-full bg-brand-ice text-brand-dark font-black py-5 rounded-2xl hover:bg-white hover:scale-[1.01] transition-all disabled:opacity-60 disabled:hover:scale-100"
+              className="w-full bg-blue-600 text-white font-medium text-sm py-4 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:opacity-60"
             >
               CHECK IN
             </button>
@@ -297,63 +222,53 @@ const Absensi = () => {
               type="button"
               disabled={!token || submitting}
               onClick={() => submitAttendance('CHECK_OUT')}
-              className="w-full bg-transparent border border-white/20 text-white font-black py-5 rounded-2xl hover:bg-white/5 hover:scale-[1.01] transition-all disabled:opacity-60 disabled:hover:scale-100"
+              className="w-full bg-white text-gray-700 font-medium text-sm py-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 disabled:opacity-60"
             >
               CHECK OUT
             </button>
           </div>
-
           {!token && (
-            <div className="mt-4 text-red-400 font-bold">
-              Anda belum login. Silakan login dulu untuk melakukan absensi.
-            </div>
+            <p className="mt-3 text-sm text-rose-500 font-medium">Anda belum login. Silakan login dulu untuk melakukan absensi.</p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-          <Clock size={22} className="text-brand-ice" />
+      {/* History Section */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
+          <Clock size={18} className="text-gray-500" />
         </div>
         <div>
-          <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Riwayat</div>
-          <div className="text-2xl font-black text-white">History Absensi</div>
+          <h2 className="text-base font-bold text-gray-800">History Absensi</h2>
         </div>
       </div>
 
       {loadingHistory ? (
-        <div className="text-brand-ice/80 font-semibold">Memuat riwayat...</div>
+        <p className="text-sm text-gray-500">Memuat riwayat...</p>
       ) : groupedHistory.length === 0 ? (
-        <div className="text-white/60 font-semibold">Belum ada riwayat absensi.</div>
+        <p className="text-sm text-gray-500">Belum ada riwayat absensi.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {groupedHistory.map((item) => (
-            <div
-              key={item.key}
-              className="bg-brand-slate/30 backdrop-blur-xl border border-white/10 rounded-2xl p-5"
-            >
-              <div className="text-brand-ice font-black uppercase tracking-wider">
-                {item.dateLabel}
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="bg-brand-dark/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Check In</div>
-                  <div className="text-lg font-black text-white mt-1">{formatTime(item.checkInAt)}</div>
+            <div key={item.key} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <p className="text-sm font-semibold text-gray-800 mb-4">{item.dateLabel}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Check In</p>
+                  <p className="text-lg font-bold text-gray-800 mt-1">{formatTime(item.checkInAt)}</p>
                 </div>
-                <div className="bg-brand-dark/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-xs uppercase tracking-widest text-white/60 font-bold">Check Out</div>
-                  <div className="text-lg font-black text-white mt-1">{formatTime(item.checkOutAt)}</div>
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Check Out</p>
+                  <p className="text-lg font-bold text-gray-800 mt-1">{formatTime(item.checkOutAt)}</p>
                 </div>
               </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-white/70 font-semibold">
-                  {Number.isFinite(item.minDistanceMeters) ? `${item.minDistanceMeters}m` : '-'}
-                </div>
-                <div className={item.withinRadius ? 'text-emerald-400 font-black' : 'text-red-400 font-black'}>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-xs text-gray-500">
+                  {Number.isFinite(item.minDistanceMeters) ? `${item.minDistanceMeters}m dari kantor` : ''}
+                </span>
+                <span className={`text-xs font-semibold ${item.withinRadius ? 'text-emerald-500' : 'text-rose-500'}`}>
                   {item.withinRadius ? 'Dalam Radius' : 'Di Luar Radius'}
-                </div>
+                </span>
               </div>
             </div>
           ))}

@@ -5,10 +5,16 @@ import {
   Building2,
   ClipboardList,
   CreditCard,
+  GitBranch,
+  MessageCircle,
   Settings,
   ShoppingCart,
+  Truck,
   Users,
   Wallet,
+  Banknote,
+  UserCheck,
+  ChartNoAxesColumn,
 } from "lucide-react";
 import BestSellerCard from "./BestSellerCard";
 import LowStockAlert from "./LowStockAlert";
@@ -27,116 +33,61 @@ export default function Dashboard() {
 
   const menu = useMemo(
     () => [
-      {
-        to: "/pos",
-        title: "Kasir (POS)",
-        desc: "Transaksi penjualan & checkout",
-        Icon: ShoppingCart,
-      },
-      {
-        to: "/inventory",
-        title: "Inventory",
-        desc: "Produk & stok",
-        Icon: Boxes,
-      },
-      {
-        to: "/crm",
-        title: "CRM",
-        desc: "Pelanggan & relasi",
-        Icon: Users,
-      },
-      {
-        to: "/finance",
-        title: "Keuangan",
-        desc: "Modul manajemen keuangan",
-        Icon: Wallet,
-      },
-      {
-        to: "/finance/expenses",
-        title: "Operational Expenses",
-        desc: "Catat pengeluaran operasional",
-        Icon: CreditCard,
-        highlight: true,
-      },
-      {
-        to: "/absensi",
-        title: "Absensi",
-        desc: "Check-in/out & riwayat",
-        Icon: ClipboardList,
-      },
-      {
-        to: "/hrm",
-        title: "HRM",
-        desc: "Manajemen karyawan",
-        Icon: Building2,
-      },
-      {
-        to: "/settings",
-        title: "Settings",
-        desc: "Pengaturan aplikasi",
-        Icon: Settings,
-      },
+      { to: "/pos", title: "Kasir (POS)", desc: "Transaksi penjualan & checkout", Icon: ShoppingCart },
+      { to: "/inventory", title: "Inventory", desc: "Produk & stok", Icon: Boxes },
+      { to: "/inventory/mutations", title: "Mutasi Stok", desc: "Transfer stok antar cabang", Icon: GitBranch },
+      { to: "/admin/branches", title: "Cabang", desc: "Manajemen cabang toko", Icon: Users },
+      { to: "/members", title: "Members", desc: "Loyalitas & poin member", Icon: UserCheck },
+      { to: "/suppliers", title: "Suppliers", desc: "Manajemen supplier", Icon: Truck },
+      { to: "/debts", title: "Hutang & Piutang", desc: "Kewajiban & piutang toko", Icon: CreditCard },
+      { to: "/payroll", title: "Gaji Karyawan", desc: "Penggajian & bonus", Icon: Banknote },
+      { to: "/absensi", title: "Absensi", desc: "Check-in/out & riwayat", Icon: ClipboardList },
+      { to: "/crm", title: "CRM", desc: "Pelanggan & relasi", Icon: ChartNoAxesColumn },
+      { to: "/finance", title: "Keuangan", desc: "Modul manajemen keuangan", Icon: Wallet },
+      { to: "/broadcast", title: "Broadcast Promo", desc: "Kirim promo via WhatsApp", Icon: MessageCircle },
+      { to: "/hrm", title: "HRM", desc: "Manajemen karyawan", Icon: Building2 },
+      { to: "/settings", title: "Settings", desc: "Pengaturan aplikasi", Icon: Settings },
     ],
     [],
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="text-left">
-              <h1 className="text-2xl font-bold text-gray-900">Menu Fitur</h1>
-              <div className="mt-1 text-sm text-gray-500">
-                {user?.name
-                  ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.`
-                  : "Pilih modul untuk mulai bekerja."}
-              </div>
-            </div>
-          </div>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+        <p className="text-sm text-gray-500">
+          {user?.name
+            ? `Halo, ${user.name}. Pilih modul untuk mulai bekerja.`
+            : "Pilih modul untuk mulai bekerja."}
+        </p>
+      </div>
 
-          <div className="mt-6 grid gap-4">
-            <LowStockAlert />
-            <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr]">
-              <BestSellerCard />
+      {/* Widgets */}
+      <div className="grid gap-4 mb-6">
+        <LowStockAlert />
+        <BestSellerCard />
+      </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                {menu.map(({ to, title, desc, Icon, highlight }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    className={[
-                      "rounded-[24px] border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-                      highlight
-                        ? "border-brand-200 ring-1 ring-brand-100 bg-brand-50/70 hover:bg-brand-50"
-                        : "border-slate-200 hover:bg-slate-50",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={[
-                          "flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm",
-                          highlight
-                            ? "bg-brand-600 text-white"
-                            : "bg-slate-100 text-slate-700",
-                        ].join(" ")}
-                      >
-                        {createElement(Icon, { size: 18 })}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-slate-900">
-                          {title}
-                        </div>
-                        <div className="mt-1 text-sm text-slate-500">
-                          {desc}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+      {/* Feature Menu Grid */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Menu Fitur</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3">
+          {menu.map(({ to, title, desc, Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex flex-col items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 p-4 text-center hover:bg-blue-50 hover:border-blue-200 transition duration-150 group"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-gray-200 shadow-sm group-hover:bg-blue-600 group-hover:border-blue-600 transition duration-150">
+                {createElement(Icon, { size: 18, className: "text-gray-500 group-hover:text-white transition duration-150" })}
               </div>
-            </div>
-          </div>
+              <div>
+                <div className="text-xs font-semibold text-gray-800 leading-tight">{title}</div>
+                <div className="mt-0.5 text-[10px] text-gray-500 leading-tight hidden sm:block">{desc}</div>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

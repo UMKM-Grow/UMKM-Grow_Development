@@ -101,24 +101,17 @@ if (!fs.existsSync(concurrentlyBin) && !fs.existsSync(concurrentlyBin + ".cmd"))
 console.log(`\n${c.bold}${c.green}▶ Menjalankan backend & frontend...${c.reset}\n`);
 
 const isWin = process.platform === "win32";
-const concurrentlyCmd = isWin ? "concurrently.cmd" : "concurrently";
-const concurrentlyPath = path.join(ROOT, "node_modules", ".bin", concurrentlyCmd);
 
-const child = spawn(
-  concurrentlyPath,
-  [
-    "--names", "backend,frontend",
-    "--prefix-colors", "magenta,cyan",
-    "--kill-others-on-fail",
-    "npm --prefix backend start",
-    "npm --prefix frontend run dev",
-  ],
-  {
-    cwd: ROOT,
-    stdio: "inherit",
-    shell: true,
-  }
-);
+// Gunakan shell command langsung agar concurrently menerima argumen dengan benar
+const devCmd = isWin
+  ? `node_modules\\.bin\\concurrently.cmd -n backend,frontend -c magenta,cyan "npm --prefix backend start" "npm --prefix frontend run dev"`
+  : `node_modules/.bin/concurrently -n backend,frontend -c magenta,cyan "npm --prefix backend start" "npm --prefix frontend run dev"`;
+
+const child = spawn(devCmd, [], {
+  cwd: ROOT,
+  stdio: "inherit",
+  shell: true,
+});
 
 child.on("error", (e) => {
   err(`Gagal menjalankan server: ${e.message}`);

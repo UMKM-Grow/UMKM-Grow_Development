@@ -117,79 +117,63 @@ export default function Expenses() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="text-left">
-            <h1 className="text-2xl font-bold text-gray-900">Operational Expenses</h1>
-            <div className="mt-1 text-sm text-gray-500">Catatan pengeluaran operasional</div>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Pengeluaran Operasional</h1>
+            <p className="text-sm text-gray-500">Catatan pengeluaran operasional toko.</p>
           </div>
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
           >
             + Catat Pengeluaran
           </button>
         </div>
 
-        <div className="mt-6 rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-            <div className="text-sm font-semibold text-gray-900">Daftar Pengeluaran</div>
-            <div className="text-sm text-gray-500">
-              Total: <span className="font-semibold text-gray-900">{formatIdr(totalNominal)}</span>
-            </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+            <span className="text-sm font-semibold text-gray-800">Daftar Pengeluaran</span>
+            <span className="text-sm text-gray-500">
+              Total: <span className="font-semibold text-rose-500">{formatIdr(totalNominal)}</span>
+            </span>
           </div>
 
           {errorMessage ? (
-            <div className="border-b border-gray-200 bg-white px-4 py-3 text-sm text-red-600">
-              {errorMessage}
-            </div>
+            <div className="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm text-rose-600">{errorMessage}</div>
           ) : null}
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3">Tanggal</th>
-                  <th className="px-4 py-3">Kategori</th>
-                  <th className="px-4 py-3">Nominal</th>
-                  <th className="px-4 py-3">Keterangan</th>
-                  <th className="px-4 py-3">Bukti</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nominal</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Keterangan</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Bukti</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {loading ? (
-                  <tr>
-                    <td className="px-4 py-4 text-gray-500" colSpan={5}>
-                      Loading…
-                    </td>
-                  </tr>
+                  <tr><td className="px-6 py-10 text-center text-sm text-gray-500" colSpan={5}>Memuat data...</td></tr>
                 ) : items.length === 0 ? (
-                  <tr>
-                    <td className="px-4 py-6 text-gray-500" colSpan={5}>
-                      Belum ada data pengeluaran.
-                    </td>
-                  </tr>
+                  <tr><td className="px-6 py-10 text-center text-sm text-gray-500" colSpan={5}>Belum ada data pengeluaran.</td></tr>
                 ) : (
                   items.map((x) => {
                     const proofUrl = x?.bukti_foto ? `${SERVER_BASE}/uploads/${x.bukti_foto}` : null;
                     return (
-                      <tr key={x.id}>
-                        <td className="px-4 py-4 text-gray-700">{x.tanggal || '-'}</td>
-                        <td className="px-4 py-4 font-semibold text-gray-900">{x.kategori || '-'}</td>
-                        <td className="px-4 py-4 font-semibold text-red-600">
-                          -{formatIdr(Number(x?.nominal) || 0)}
-                        </td>
-                        <td className="px-4 py-4 text-gray-700">{x.keterangan || '-'}</td>
-                        <td className="px-4 py-4">
+                      <tr key={x.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                        <td className="px-6 py-4 text-sm text-gray-700">{x.tanggal || '-'}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-800">{x.kategori || '-'}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-rose-500">-{formatIdr(Number(x?.nominal) || 0)}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{x.keterangan || '-'}</td>
+                        <td className="px-6 py-4">
                           {proofUrl ? (
-                            <a
-                              href={proofUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center rounded-md border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                            >
+                            <a href={proofUrl} target="_blank" rel="noreferrer"
+                              className="bg-white text-gray-700 font-medium text-xs px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200">
                               Lihat Struk
                             </a>
                           ) : (

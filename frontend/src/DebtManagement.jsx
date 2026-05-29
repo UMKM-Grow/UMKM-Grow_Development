@@ -152,29 +152,29 @@ export default function DebtManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6">
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Manajemen Hutang & Piutang</h1>
-            <p className="mt-1 text-sm text-gray-500">Kelola kewajiban toko ke supplier dan piutang pelanggan per cabang.</p>
+            <h1 className="text-2xl font-bold text-gray-800">Hutang & Piutang</h1>
+            <p className="text-sm text-gray-500">Kelola kewajiban toko ke supplier dan piutang pelanggan per cabang.</p>
           </div>
           <button
             type="button"
             onClick={openModal}
-            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
           >
             Tambah {activeTab}
           </button>
         </div>
 
-        <div className="mt-6 flex gap-2">
+        <div className="mb-4 flex gap-2">
           {['Hutang', 'Piutang'].map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`rounded-md px-4 py-2 text-sm font-semibold ${activeTab === tab ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'}`}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition duration-200 ${activeTab === tab ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`}
             >
               {tab === 'Hutang' ? 'Hutang (Toko)' : 'Piutang (Pelanggan)'}
             </button>
@@ -182,69 +182,67 @@ export default function DebtManagement() {
         </div>
 
         {errorMessage ? (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
+          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-600">
             {errorMessage}
           </div>
         ) : null}
 
-        <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 uppercase tracking-wider">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Pihak</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Nominal</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Jatuh Tempo</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Nama Pihak</th>
-                  <th className="px-4 py-3 font-semibold text-right">Nominal</th>
-                  <th className="px-4 py-3 font-semibold">Jatuh Tempo</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold text-center">Aksi</th>
+                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">Memuat data...</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-gray-500">Memuat data...</td>
+              ) : items.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data {activeTab.toLowerCase()}.</td>
+                </tr>
+              ) : (
+                items.map((item) => (
+                  <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-800">
+                      {item.type === 'Hutang' ? item.supplier?.name || '-' : item.customer_name || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 text-right">{formatIdr(item.amount)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{formatDate(item.due_date)}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${item.status === 'Lunas' ? 'bg-emerald-100 text-emerald-600' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleMarkPaid(item.id)}
+                          className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-100 transition duration-150"
+                        >
+                          Tandai Lunas
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id)}
+                          className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-100 transition duration-150"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                ) : items.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-gray-500">Belum ada data {activeTab.toLowerCase()}.</td>
-                  </tr>
-                ) : (
-                  items.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-4 py-3 text-gray-900 font-medium">
-                        {item.type === 'Hutang' ? item.supplier?.name || '-' : item.customer_name || '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right text-gray-700">{formatIdr(item.amount)}</td>
-                      <td className="px-4 py-3 text-gray-700">{formatDate(item.due_date)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.status === 'Lunas' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleMarkPaid(item.id)}
-                            className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700"
-                          >
-                            Tandai Lunas
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(item.id)}
-                            className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
-                          >
-                            Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -252,7 +250,7 @@ export default function DebtManagement() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
             <div className="border-b border-gray-100 px-6 py-4">
-              <h2 className="text-xl font-bold text-gray-900">Tambah {activeTab}</h2>
+              <h2 className="text-lg font-bold text-gray-800">Tambah {activeTab}</h2>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
               <div>
@@ -263,7 +261,7 @@ export default function DebtManagement() {
                   required
                   value={form.amount}
                   onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   placeholder="Masukkan nominal"
                 />
               </div>
@@ -275,7 +273,7 @@ export default function DebtManagement() {
                   required
                   value={form.due_date}
                   onChange={(e) => setForm((prev) => ({ ...prev, due_date: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 />
               </div>
 
@@ -286,13 +284,11 @@ export default function DebtManagement() {
                     required
                     value={form.supplier_id}
                     onChange={(e) => setForm((prev) => ({ ...prev, supplier_id: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   >
                     <option value="">Pilih Supplier</option>
                     {suppliers.map((supplier) => (
-                      <option key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </option>
+                      <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
                     ))}
                   </select>
                 </div>
@@ -304,24 +300,24 @@ export default function DebtManagement() {
                     required
                     value={form.customer_name}
                     onChange={(e) => setForm((prev) => ({ ...prev, customer_name: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                     placeholder="Masukkan nama pelanggan"
                   />
                 </div>
               )}
 
-              <div className="flex justify-end gap-3 pt-2">
+                      <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200"
+                  className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm disabled:opacity-50"
                 >
                   {saving ? 'Menyimpan...' : 'Simpan'}
                 </button>

@@ -8,3 +8,7 @@ dist/
 build/
 .DS_Store
 .claude/
+
+# WhatsApp Web session (data sensitif & besar)
+backend/.wwebjs_auth/
+backend/.wwebjs_cache/

@@ -93,117 +93,114 @@ const Settings = () => {
   };
 
   if (loading) {
-    return <div className="p-6"><p className="text-center">Loading...</p></div>;
-  }
-
-  if (error) {
     return (
-      <div className="p-6 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-        <p>{error}</p>
+      <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+        <p className="text-sm text-gray-500">Memuat pengaturan...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Pengaturan Toko</h1>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Pengaturan Toko</h1>
+        <p className="text-sm text-gray-500">Konfigurasi informasi dan parameter toko Anda.</p>
+      </div>
 
-      {successMessage && (
-        <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
-          <p>{successMessage}</p>
+      {error && (
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-600">
+          {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="max-w-2xl">
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Nama Toko</label>
-          <input
-            type="text"
-            value={namaToko}
-            onChange={(e) => setNamaToko(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Masukkan nama toko"
-          />
+      {successMessage && (
+        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-600">
+          {successMessage}
         </div>
+      )}
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Alamat</label>
-          <textarea
-            value={alamat}
-            onChange={(e) => setAlamat(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows="3"
-            placeholder="Masukkan alamat toko"
-          />
-        </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-2xl">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Toko</label>
+            <input
+              type="text"
+              value={namaToko}
+              onChange={(e) => setNamaToko(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+              placeholder="Masukkan nama toko"
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Nomor Telepon</label>
-          <input
-            type="tel"
-            value={nomorTelepon}
-            onChange={(e) => setNomorTelepon(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Masukkan nomor telepon"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+            <textarea
+              value={alamat}
+              onChange={(e) => setAlamat(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+              rows="3"
+              placeholder="Masukkan alamat toko"
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Service Charge (%)</label>
-          <input
-            type="number"
-            value={serviceCharge}
-            onChange={(e) => setServiceCharge(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min="0"
-            max="100"
-            step="0.01"
-            placeholder="Masukkan persentase service charge (misal: 5.0)"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            Service charge akan ditambahkan ke total belanja
-          </p>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
+            <input
+              type="tel"
+              value={nomorTelepon}
+              onChange={(e) => setNomorTelepon(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+              placeholder="Masukkan nomor telepon"
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Pajak (%)</label>
-          <input
-            type="number"
-            value={taxPercent}
-            onChange={(e) => setTaxPercent(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min="0"
-            max="100"
-            step="0.01"
-            placeholder="Masukkan persentase pajak (misal: 11.0 untuk PPN)"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            Pajak akan ditambahkan ke total belanja setelah service charge
-          </p>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Service Charge (%)</label>
+            <input
+              type="number"
+              value={serviceCharge}
+              onChange={(e) => setServiceCharge(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+              min="0" max="100" step="0.01"
+              placeholder="Contoh: 5.0"
+            />
+            <p className="mt-1 text-xs text-gray-500">Service charge akan ditambahkan ke total belanja</p>
+          </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            Simpan Pengaturan
-          </button>
-        </div>
-      </form>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Pajak (%)</label>
+            <input
+              type="number"
+              value={taxPercent}
+              onChange={(e) => setTaxPercent(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+              min="0" max="100" step="0.01"
+              placeholder="Contoh: 11.0 untuk PPN"
+            />
+            <p className="mt-1 text-xs text-gray-500">Pajak akan ditambahkan ke total belanja setelah service charge</p>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm"
+            >
+              Simpan Pengaturan
+            </button>
+          </div>
+        </form>
+      </div>
 
       {setting && (
-        <div className="mt-8 p-4 bg-gray-50 rounded-md">
-          <h2 className="text-lg font-bold mb-2">Nilai Pengaturan Saat Ini</h2>
-          <p className="text-sm"><strong>Nama Toko:</strong> {setting.nama_toko}</p>
-          {setting.alamat && (
-            <p className="text-sm"><strong>Alamat:</strong> {setting.alamat}</p>
-          )}
-          {setting.nomor_telepon && (
-            <p className="text-sm"><strong>Nomor Telepon:</strong> {setting.nomor_telepon}</p>
-          )}
-          <p className="text-sm"><strong>Service Charge:</strong> {setting.service_charge_percent}%</p>
-          <p className="text-sm"><strong>Pajak:</strong> {setting.tax_percent}%</p>
+        <div className="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 p-5 max-w-2xl">
+          <h2 className="text-sm font-semibold text-gray-800 mb-3">Nilai Pengaturan Saat Ini</h2>
+          <div className="space-y-1.5 text-sm text-gray-700">
+            <p><span className="font-medium text-gray-500">Nama Toko:</span> {setting.nama_toko}</p>
+            {setting.alamat && <p><span className="font-medium text-gray-500">Alamat:</span> {setting.alamat}</p>}
+            {setting.nomor_telepon && <p><span className="font-medium text-gray-500">Telepon:</span> {setting.nomor_telepon}</p>}
+            <p><span className="font-medium text-gray-500">Service Charge:</span> {setting.service_charge_percent}%</p>
+            <p><span className="font-medium text-gray-500">Pajak:</span> {setting.tax_percent}%</p>
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { Clock, Edit2, Search } from 'lucide-react';
+import { Clock, Edit2, Plus, Search, Trash2 } from 'lucide-react';
 import CustomerFormModal from './CustomerFormModal';
 import CustomerHistoryModal from './CustomerHistoryModal';
 
@@ -19,7 +19,7 @@ const Customers = () => {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [limit] = useState(9);
+  const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalData, setTotalData] = useState(0);
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -76,41 +76,22 @@ const Customers = () => {
         setLoading(false);
       });
 
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [debouncedSearch, limit, page, reloadNonce]);
 
   useEffect(() => {
-    const handle = setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-    }, 300);
+    const handle = setTimeout(() => setDebouncedSearch(searchInput.trim()), 300);
     return () => clearTimeout(handle);
   }, [searchInput]);
 
-  const openCreateModal = () => {
-    setEditingCustomer(null);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (customer) => {
-    setEditingCustomer(customer);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingCustomer(null);
-  };
+  const openCreateModal = () => { setEditingCustomer(null); setIsModalOpen(true); };
+  const openEditModal = (customer) => { setEditingCustomer(customer); setIsModalOpen(true); };
+  const closeModal = () => { setIsModalOpen(false); setEditingCustomer(null); };
 
   const handleSubmitCustomer = async (payload, customerId) => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      setErrorMessage('Silakan login terlebih dahulu.');
-      throw new Error('NO_TOKEN');
-    }
+    if (!token) { setErrorMessage('Silakan login terlebih dahulu.'); throw new Error('NO_TOKEN'); }
     if (isSavingRef.current) return;
-
     try {
       isSavingRef.current = true;
       setErrorMessage('');
@@ -128,14 +109,9 @@ const Customers = () => {
 
   const handleDeleteCustomer = async (customer) => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      setErrorMessage('Silakan login terlebih dahulu.');
-      return;
-    }
-
+    if (!token) { setErrorMessage('Silakan login terlebih dahulu.'); return; }
     const ok = window.confirm(`Hapus pelanggan "${customer?.name || ''}"?`);
     if (!ok) return;
-
     try {
       setErrorMessage('');
       await axios.delete(`${API_URL}/${customer.id}`, { headers: { Authorization: `Bearer ${token}` } });
@@ -157,9 +133,7 @@ const Customers = () => {
 
   const fetchHistory = useCallback(async (customer, nextPage) => {
     const token = localStorage.getItem('token');
-    if (!token) return;
-    if (!customer?.id) return;
-
+    if (!token || !customer?.id) return;
     try {
       setHistoryLoading(true);
       setHistoryError('');
@@ -182,165 +156,153 @@ const Customers = () => {
 
   const openHistoryModal = async (customer) => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      setErrorMessage('Silakan login terlebih dahulu.');
-      return;
-    }
+    if (!token) { setErrorMessage('Silakan login terlebih dahulu.'); return; }
     setHistoryCustomer(customer);
     setIsHistoryOpen(true);
     await fetchHistory(customer, 1);
   };
 
-  const goPrevPage = () => {
-    const next = Math.max(1, page - 1);
-    if (next !== page) setPage(next);
-  };
-
-  const goNextPage = () => {
-    const next = Math.min(totalPages, page + 1);
-    if (next !== page) setPage(next);
-  };
-
   return (
-    <div className="min-h-screen bg-brand-dark text-white p-8 md:p-12">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-12">
-        <h1 className="text-5xl md:text-7xl font-black text-brand-ice uppercase tracking-tighter">
-          Database Pelanggan
-        </h1>
-
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-end w-full md:w-auto">
-          <div className="relative w-full md:w-80">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60">
-              <Search size={18} />
-            </span>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      {/* Page Header */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Database Pelanggan</h1>
+          <p className="text-sm text-gray-500">Kelola data pelanggan dan riwayat transaksi.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               value={searchInput}
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                if (page !== 1) setPage(1);
-              }}
-              className="w-full bg-brand-slate/30 backdrop-blur-md border border-white/10 text-white placeholder:text-white/50 focus:border-brand-ice focus:outline-none rounded-full pl-11 pr-4 py-3 font-semibold"
+              onChange={(e) => { setSearchInput(e.target.value); if (page !== 1) setPage(1); }}
+              className="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
               placeholder="Cari nama / no HP..."
             />
           </div>
-
           <button
             type="button"
             onClick={openCreateModal}
-            className="bg-brand-ice text-brand-dark font-black px-6 py-3 rounded-full hover:bg-white hover:scale-105 transition-all w-fit"
+            className="bg-blue-600 text-white font-medium text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 shadow-sm flex items-center gap-2 whitespace-nowrap"
           >
-            + Tambah Pelanggan
+            <Plus size={16} />
+            Tambah Pelanggan
           </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-brand-ice/80 font-semibold">Memuat...</div>
-      ) : errorMessage ? (
-        <div className="text-brand-ice/80 font-semibold">{errorMessage}</div>
-      ) : customers.length === 0 ? (
-        <div className="bg-brand-slate/30 backdrop-blur-md rounded-2xl border border-white/10 p-6 text-white/80 font-semibold">
-          Belum ada pelanggan. Klik "+ Tambah Pelanggan" untuk mulai.
+      {errorMessage && (
+        <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-600">
+          {errorMessage}
         </div>
-      ) : (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {customers.map((customer, index) => (
-              <div
-                key={customer?.id ?? `${customer?.phone ?? 'customer'}-${index}`}
-                className="relative bg-brand-slate/30 backdrop-blur-md rounded-2xl border border-white/10 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(163,193,214,0.15)]"
-              >
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openHistoryModal(customer)}
-                    className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-brand-dark/60 transition-colors"
-                    aria-label="Riwayat transaksi"
-                  >
-                    <Clock size={16} className="text-white" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(customer)}
-                    className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-brand-dark/60 transition-colors"
-                    aria-label="Edit pelanggan"
-                  >
-                    <Edit2 size={16} className="text-white" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCustomer(customer)}
-                    className="p-2 rounded-full bg-brand-dark/40 border border-white/10 hover:bg-red-500/70 transition-colors"
-                    aria-label="Hapus pelanggan"
-                  >
-                    🗑️
-                  </button>
-                </div>
+      )}
 
-                <img
-                  src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(
-                    customer?.name || 'customer'
-                  )}`}
-                  alt="Avatar"
-                  className="w-16 h-16 rounded-full bg-brand-ice/20 p-1 mb-4"
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                />
-
-                <div className="text-xl font-black text-white tracking-wide">
-                  {customer?.name || 'Nama Pelanggan'}
-                </div>
-                <div className="mt-1 text-brand-ice font-semibold">{customer?.phone || '-'}</div>
-
-                <div className="mt-4 space-y-2 text-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-white/60 font-bold uppercase tracking-widest text-[11px]">Email</div>
-                    <div className="text-white/80 font-semibold text-right break-all">
-                      {customer?.email || '-'}
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">No. HP</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Poin</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Alamat</th>
+              <th className="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">Memuat data...</td>
+              </tr>
+            ) : customers.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">
+                  Belum ada pelanggan. Klik "Tambah Pelanggan" untuk mulai.
+                </td>
+              </tr>
+            ) : (
+              customers.map((customer, index) => (
+                <tr
+                  key={customer?.id ?? `${customer?.phone ?? 'customer'}-${index}`}
+                  className="border-b border-gray-100 hover:bg-gray-50 transition duration-150"
+                >
+                  <td className="px-6 py-4 text-sm text-gray-700">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(customer?.name || 'customer')}`}
+                        alt="Avatar"
+                        className="w-8 h-8 rounded-full bg-gray-100"
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                      />
+                      <span className="font-medium text-gray-800">{customer?.name || '-'}</span>
                     </div>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="text-white/60 font-bold uppercase tracking-widest text-[11px]">Poin</div>
-                    <div className="text-white/80 font-semibold text-right">
-                      {Number.isFinite(Number(customer?.loyalty_points))
-                        ? Number(customer.loyalty_points)
-                        : 0}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{customer?.phone || '-'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{customer?.email || '-'}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-emerald-500">
+                    {Number.isFinite(Number(customer?.loyalty_points)) ? Number(customer.loyalty_points) : 0} pts
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 max-w-[180px] truncate">{customer?.address || '-'}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => openHistoryModal(customer)}
+                        className="text-gray-400 hover:text-blue-600 transition duration-150"
+                        aria-label="Riwayat transaksi"
+                      >
+                        <Clock size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(customer)}
+                        className="text-gray-400 hover:text-blue-600 transition duration-150"
+                        aria-label="Edit pelanggan"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCustomer(customer)}
+                        className="text-gray-400 hover:text-rose-500 transition duration-150"
+                        aria-label="Hapus pelanggan"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
-                  </div>
-                </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                <div className="mt-4">
-                  <div className="text-white/60 font-bold uppercase tracking-widest text-[11px]">Alamat</div>
-                  <div className="mt-2 text-white/80 font-semibold text-sm whitespace-pre-line">
-                    {customer?.address || '-'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-white/60 font-bold text-sm">
-              Total {totalData} pelanggan • Halaman {page} / {totalPages}
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={goPrevPage}
-                disabled={loading || page <= 1}
-                className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold disabled:opacity-60"
-              >
-                Prev
-              </button>
-              <button
-                type="button"
-                onClick={goNextPage}
-                disabled={loading || totalPages <= page}
-                className="px-5 py-2.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors font-bold disabled:opacity-60"
-              >
-                Next
-              </button>
-            </div>
+      {/* Pagination */}
+      {!loading && customers.length > 0 && (
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Total {totalData} pelanggan &bull; Halaman {page} / {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={loading || page <= 1}
+              className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={loading || totalPages <= page}
+              className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200 disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}

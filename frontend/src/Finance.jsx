@@ -2,29 +2,31 @@ import { Link } from 'react-router-dom';
 
 export default function Finance() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm p-6">
-          <div className="text-left">
-            <h1 className="text-2xl font-bold text-gray-900">Manajemen Keuangan</h1>
-            <div className="mt-1 text-sm text-gray-500">Pilih modul yang ingin dikelola</div>
-          </div>
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Manajemen Keuangan</h1>
+        <p className="text-sm text-gray-500">Pilih modul keuangan yang ingin dikelola.</p>
+      </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              to="/finance/expenses"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              Pengeluaran Operasional
-            </Link>
-            <Link
-              to="/finance/reports"
-              className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Financial Reports
-            </Link>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+        <Link
+          to="/finance/expenses"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:border-blue-200 hover:bg-blue-50 transition duration-150 group"
+        >
+          <div className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition duration-150">
+            Pengeluaran Operasional
           </div>
-        </div>
+          <p className="mt-1 text-xs text-gray-500">Catat dan kelola pengeluaran harian toko</p>
+        </Link>
+        <Link
+          to="/finance/reports"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:border-blue-200 hover:bg-blue-50 transition duration-150 group"
+        >
+          <div className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition duration-150">
+            Financial Reports
+          </div>
+          <p className="mt-1 text-xs text-gray-500">Laporan keuangan dan analisis performa</p>
+        </Link>
       </div>
     </div>
   );

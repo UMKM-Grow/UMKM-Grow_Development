@@ -294,13 +294,13 @@ export default function Broadcast() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="w-full h-full p-6 md:p-8 bg-gray-50">
+      <div className="mx-auto max-w-7xl">
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Broadcast Promo WhatsApp</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Broadcast Promo WhatsApp</h1>
             <p className="mt-1 text-sm text-gray-500">
               Kirim pesan promo langsung ke WhatsApp semua member &amp; customer aktif
               {selectedBranch?.nama_cabang ? ` — Cabang ${selectedBranch.nama_cabang}` : ''}
@@ -310,7 +310,7 @@ export default function Broadcast() {
             <WaStatusBadge status={waStatus} />
             <button
               onClick={loadTargets}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition"
+              className="bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition duration-200"
             >
               ↻ Refresh
             </button>
@@ -454,7 +454,7 @@ export default function Broadcast() {
             </div>
           </div>
         </div>
-      </div>
+    </div>
 
       <ResultModal
         open={resultModal}

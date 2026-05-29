@@ -1,0 +1,10 @@
+{
+  "validUser": {
+    "email": "owner@umkmgrow.com",
+    "password": "rahasia123"
+  },
+  "invalidUser": {
+    "email": "salah@email.com",
+    "password": "passwordsalah"
+  }
+}

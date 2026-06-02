@@ -39,6 +39,16 @@ Port default:
 - Backend: `http://localhost:5000`
 - Frontend: `http://localhost:5173`
 
+## 🚀 Quick Start
+
+### **📦 For Windows Users:**
+Follow the instructions below.
+
+### **🍎 For macOS/Linux Users:**
+See **[README-MAC.md](README-MAC.md)** for complete macOS/Linux guide.
+
+---
+
 ## Setup dari Awal (Git Clone → Run)
 
 ### 1) Clone Repo

@@ -61,6 +61,9 @@ npm run cy:run:login
 
 # Jalankan test dashboard saja
 npm run cy:run:dashboard
+
+# Jalankan test POS saja
+npm run cy:run:pos
 ```
 
 ---

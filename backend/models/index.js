@@ -158,7 +158,8 @@ const initDb = async () => {
     console.log("Connection to database has been established successfully.");
 
     // Sync models (In production, use migrations)
-    await sequelize.sync({ alter: true });
+    // Changed from { alter: true } to { force: false } to prevent index conflicts
+    await sequelize.sync({ force: false });
     console.log("Database models synchronized.");
     dbReady = true;
     return true;

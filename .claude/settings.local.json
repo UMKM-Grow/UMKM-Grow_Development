@@ -17,7 +17,8 @@
       "Bash(timeout 10)",
       "Bash(git reset *)",
       "Bash(npm run *)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(git status *)"
     ]
   }
 }
